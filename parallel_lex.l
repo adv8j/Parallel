@@ -26,6 +26,10 @@
 "/="                { return DIV_ASSIGN; }
 "%="                { return MOD_ASSIGN; }
 
+/*comments*/
+"//".*            ;
+"/*"([^*]|\*+[^/])*"*/"  ;
+
 /* Symbols and Separators */
 ";"                 { return SEMICOLON; }
 "("                 { return LPAREN; }
