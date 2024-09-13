@@ -1,130 +1,131 @@
 %{
 
   //these #define are temporary
-#define ASSIGN printf("assign\n");
-#define PLUS printf("plus\n");
-#define MINUS 3
-#define MUL 4
-#define DIV 5
-#define MOD 6
-#define EQ 7
-#define NEQ 8
-#define GT 9
-#define LT 10
-#define GTE 11
-#define LTE 12
-#define AND 13
-#define OR 14
-#define NOT 15
-#define ADD_ASSIGN 16
-#define SUB_ASSIGN 17
-#define MUL_ASSIGN 18
-#define DIV_ASSIGN 19
-#define MOD_ASSIGN 20
-#define SEMICOLON 21
-#define COLON 22
-#define LPAREN 23
-#define RPAREN 24
-#define LBRACKET 25
-#define RBRACKET 26
-#define LBRACE 27
-#define RBRACE 28
-#define COMMA 29
-#define DOT 30
-#define RANGE 31
-#define RANGE_INCL 32
-#define QUOTE 33
-#define REFERENCE 34
-#define FLOAT 35
-#define STRING 36
-#define CHAR 37
-#define TASKGROUP 38
-#define TASK 39
-#define PROPERTIES 40
-#define ORDER 41
-#define CHANNEL 42
-#define MEM 43
-#define _SHARED 44
-#define SUPERVISOR 45
-#define ALL 46
-#define UNSAFE 47
-#define JOIN 48
-#define CALL 49
-#define CHN_SEND 50
-#define CHANNEL_WAIT 51
-#define TASK_CHANNEL 52
-#define LOG 53
-#define ARROW 54
-#define PARALLEL 55
-#define SHARED 56
-#define PRIVATE 57
-#define SCHEDULE 58
-#define NUM_THREADS 59
-#define DYNAMIC_SCHEDULE 60
-#define STATIC_SCHEDULE 61
-#define INT 62
-#define LONG 63
-#define BOOL 64
-#define IDENTIFIER 65
-#define SHARED_IDENTIFIER 66
-#define REDUCTION 67
-#define MUT 68
-#define FUNC 69
-#define RETURN 70
-#define STRUCT 71
-#define IF 72
-#define ELSE 73
-#define FOR 74
-#define IN 75
+#define ASSIGN printf("ASSIGN\n");
+#define PLUS printf("PLUS\n");
+#define MINUS printf("MINUS\n");
+#define MUL printf("MUL\n");
+#define DIV printf("DIV\n");
+#define MOD printf("MOD\n");
+#define EQ printf("EQ\n");
+#define NEQ printf("NEQ\n");
+#define GT printf("GT\n");
+#define LT printf("LT\n");
+#define GTE printf("GTE\n");
+#define LTE printf("LTE\n");
+#define AND printf("AND\n");
+#define OR printf("OR\n");
+#define NOT printf("NOT\n");
+#define ADD_ASSIGN printf("ADD_ASSIGN\n");
+#define SUB_ASSIGN printf("SUB_ASSIGN\n");
+#define MUL_ASSIGN printf("MUL_ASSIGN\n");
+#define DIV_ASSIGN printf("DIV_ASSIGN\n");
+#define MOD_ASSIGN printf("MOD_ASSIGN\n");
+#define SEMICOLON printf("SEMICOLON\n");
+#define COLON printf("COLON\n");
+#define LPAREN printf("LPAREN\n");
+#define RPAREN printf("RPAREN\n");
+#define LBRACKET printf("LBRACKET\n");
+#define RBRACKET printf("RBRACKET\n");
+#define LBRACE printf("LBRACE\n");
+#define RBRACE printf("RBRACE\n");
+#define COMMA printf("COMMA\n");
+#define DOT printf("DOT\n");
+#define RANGE printf("RANGE\n");
+#define RANGE_INCL printf("RANGE_INCL\n");
+#define QUOTE printf("QUOTE\n");
+#define REFERENCE printf("REFERENCE\n");
+#define NUMBER printf("NUMBER\n");
+#define STRING printf("STRING\n");
+#define CHAR printf("CHAR\n");
+#define TASKGROUP printf("TASKGROUP\n");
+#define TASK printf("TASK\n");
+#define PROPERTIES printf("PROPERTIES\n");
+#define ORDER printf("ORDER\n");
+#define CHANNEL printf("CHANNEL\n");
+#define MEM printf("MEM\n");
+#define _SHARED printf("_SHARED\n");
+#define SUPERVISOR printf("SUPERVISOR\n");
+#define ALL printf("ALL\n");
+#define UNSAFE printf("UNSAFE\n");
+#define JOIN printf("JOIN\n");
+#define CALL printf("CALL\n");
+#define CHN_SEND printf("CHN_SEND\n");
+#define CHANNEL_WAIT printf("CHANNEL_WAIT\n");
+#define TASK_CHANNEL printf("TASK_CHANNEL\n");
+#define LOG printf("LOG\n");
+#define ARROW printf("ARROW\n");
+#define PARALLEL printf("PARALLEL\n");
+#define SHARED printf("SHARED\n");
+#define PRIVATE printf("PRIVATE\n");
+#define SCHEDULE printf("SCHEDULE\n");
+#define NUM_THREADS printf("NUM_THREADS\n");
+#define DYNAMIC_SCHEDULE printf("DYNAMIC_SCHEDULE\n");
+#define STATIC_SCHEDULE printf("STATIC_SCHEDULE\n");
+#define INT printf("INT\n");
+#define LONG printf("LONG\n");
+#define BOOL printf("BOOL\n");
+#define IDENTIFIER printf("IDENTIFIER\n");
+#define SHARED_IDENTIFIER printf("SHARED_IDENTIFIER\n");
+#define REDUCTION printf("REDUCTION\n");
+#define MUT printf("MUT\n");
+#define FUNC printf("FUNC\n");
+#define RETURN printf("RETURN\n");
+#define STRUCT printf("STRUCT\n");
+#define IF printf("IF\n");
+#define ELSE printf("ELSE\n");
+#define FOR printf("FOR\n");
+#define IN printf("IN\n");
+#define FLOAT printf("FLOAT\n");
 
 %}
 
 %%
 
-\=                 { printf("====");return ASSIGN;   /*operators*/ }
-"+"                 { return PLUS; }
-"-"                 { return MINUS; }
-"*"                 { return MUL; }
-"/"                 { return DIV; }
-"%"                 { return MOD; }
-"=="                { return EQ; }
-"!="                { return NEQ; }
-">"                 { return GT; }
-"<"                 { return LT; }
-">="                { return GTE; }
-"<="                { return LTE; }
-"&&"                { return AND; }
-"||"                { return OR; }
-"!"                 { return NOT; }
-"+="                { return ADD_ASSIGN; }
-"-="                { return SUB_ASSIGN; }
-"*="                { return MUL_ASSIGN; }
-"/="                { return DIV_ASSIGN; }
-"%="                { return MOD_ASSIGN; }
+=                 { return ASSIGN;   /*operators*/ }
+\+                 { return PLUS; }
+\-               { return MINUS; }
+\*                 { return MUL; }
+\/                 { return DIV; }
+\%                 { return MOD; }
+==                { return EQ; }
+!=                { return NEQ; }
+>                 { return GT; }
+\<                 { return LT; }
+>=                { return GTE; }
+\<=                { return LTE; }
+\&&               { return AND; }
+\|\|               { return OR; }
+\!                { return NOT; }
+\+=                { return ADD_ASSIGN; }
+\-=                { return SUB_ASSIGN; }
+\*=                { return MUL_ASSIGN; }
+\/=                { return DIV_ASSIGN; }
+\%=                { return MOD_ASSIGN; }
 
 
 "//".*           {/*comments*/ printf("single line comment");} 
 "/*"([^(\*\/)])*"*/"  printf("multi line comment");
 
 
-";"                 { return SEMICOLON; /* Symbols and Separators */}
-":"                 { return COLON; /* will be useful for type inference at many places, like shared variables and all.*/} 
-"("                 { return LPAREN; }
-")"                 { return RPAREN; }
-"["                 { return LBRACKET; }
-"]"                 { return RBRACKET; }
-"{"                 { return LBRACE; }
-"}"                 { return RBRACE; }
-","                 { return COMMA; }
-"."                 { return DOT; }
-".."                { return RANGE; }
-"..="               { return RANGE_INCL; } 
- "\""                { return QUOTE; }
-"&"                { return REFERENCE; }
+\;                 { return SEMICOLON; /* Symbols and Separators */}
+\:                 { return COLON; /* will be useful for type inference at many places, like shared variables and all.*/} 
+\(                 { return LPAREN; }
+\)                 { return RPAREN; }
+\[                 { return LBRACKET; }
+\]                 { return RBRACKET; }
+\{                 { return LBRACE; }
+\}                 { return RBRACE; }
+\,                 { return COMMA; }
+\.                 { return DOT; }
+\.\.                { return RANGE; }
+\..=               { return RANGE_INCL; } 
+\"                { return QUOTE; }
+\&                { return REFERENCE; }
 
 
-[0-9]+(\.[0-9]+)?   { return FLOAT; }
-\"([^"(\\\")]*(\\\")?)*\"        { printf("string\n");return STRING; } 
+[0-9]+(\.[0-9]+)?   { return NUMBER; }
+\"([^"(\\\")\n]*(\\\")?)*\"        { return STRING; } 
 \'.\'        { return CHAR;}
 
 @TaskGroup  {return TASKGROUP;}
@@ -140,11 +141,11 @@ unsafe {return UNSAFE;}
 join {return JOIN; /* note that now join is a keyword called as join tid;*/ }  
 call      {return CALL;}
 
-"<-"                { return CHN_SEND; }
-"\.wt"             { return CHANNEL_WAIT; }
-"\.ct"             { return TASK_CHANNEL; }
+\<-                { return CHN_SEND; }
+\.wt             { return CHANNEL_WAIT; }
+\.ct             { return TASK_CHANNEL; }
 log               { return LOG;  /*what should we do about k*/}
-"->"                { return ARROW; }
+\->                { return ARROW; }
 
 @parallel {return PARALLEL;}
 shared {return SHARED;}
