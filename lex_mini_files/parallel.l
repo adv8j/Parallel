@@ -1,6 +1,9 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
+
+// Declare the yyerror function
+void yyerror(const char *s);
 %}
 
 identifier [a-zA-Z][a-zA-Z_0-9]*
@@ -14,7 +17,7 @@ identifier [a-zA-Z][a-zA-Z_0-9]*
 . {yyerror("Invalid Character");}
 %%
 
-yyerror(char *s){
+void yyerror(const char *s){
     fprintf(stderr, "%s\n", s);
 }
 int yywrap(){
