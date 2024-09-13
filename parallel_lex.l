@@ -77,7 +77,8 @@
 #define FOR printf("FOR\n");
 #define IN printf("IN\n");
 #define FLOAT printf("FLOAT\n");
-
+#define STRING_LITERAL printf("STRING_LITERAL\n");
+#define CHARACTER printf("CHARACTER\n");
 %}
 
 %%
@@ -125,8 +126,8 @@
 
 
 [0-9]+(\.[0-9]+)?   { return NUMBER; }
-\"([^"(\\\")\n]*(\\\")?)*\"        { return STRING; } 
-\'.\'        { return CHAR;}
+\"([^"(\\\")\n]*(\\\")?)*\"        { return STRING_LITERAL; } 
+\'.\'        { return CHARACTER;}
 
 @TaskGroup  {return TASKGROUP;}
 @Task      {return TASK;}
