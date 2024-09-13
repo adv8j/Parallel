@@ -1,8 +1,8 @@
 %{
 
   //these #define are temporary
-#define ASSIGN 1
-#define PLUS 2
+#define ASSIGN printf("assign\n");
+#define PLUS printf("plus\n");
 #define MINUS 3
 #define MUL 4
 #define DIV 5
@@ -67,11 +67,21 @@
 #define BOOL 64
 #define IDENTIFIER 65
 #define SHARED_IDENTIFIER 66
+#define REDUCTION 67
+#define MUT 68
+#define FUNC 69
+#define RETURN 70
+#define STRUCT 71
+#define IF 72
+#define ELSE 73
+#define FOR 74
+#define IN 75
+
 %}
 
 %%
 
-"="                 { return ASSIGN;   /*operators*/ }
+\=                 { printf("====");return ASSIGN;   /*operators*/ }
 "+"                 { return PLUS; }
 "-"                 { return MINUS; }
 "*"                 { return MUL; }
@@ -114,8 +124,8 @@
 
 
 [0-9]+(\.[0-9]+)?   { return FLOAT; }
-\".*\"        { printf("string\n");return STRING; } 
-\'.\'        { return CHAR; }
+\"([^"(\\\")]*(\\\")?)*\"        { printf("string\n");return STRING; } 
+\'.\'        { return CHAR;}
 
 @TaskGroup  {return TASKGROUP;}
 @Task      {return TASK;}
@@ -131,18 +141,20 @@ join {return JOIN; /* note that now join is a keyword called as join tid;*/ }
 call      {return CALL;}
 
 "<-"                { return CHN_SEND; }
-"\\.wt"             { return CHANNEL_WAIT; }
-"\\.ct"             { return TASK_CHANNEL; }
-"log"               { return LOG; }
+"\.wt"             { return CHANNEL_WAIT; }
+"\.ct"             { return TASK_CHANNEL; }
+log               { return LOG;  /*what should we do about k*/}
 "->"                { return ARROW; }
 
 @parallel {return PARALLEL;}
 shared {return SHARED;}
 private {return PRIVATE;}
+reduction {return REDUCTION;}
 schedule {return SCHEDULE;}
 num_threads {return NUM_THREADS;}
 dynamic {return DYNAMIC_SCHEDULE;}
 static {return STATIC_SCHEDULE;}
+mut {return MUT;}
 
 int {return INT;}
 char {return CHAR;}
@@ -150,6 +162,15 @@ long {return LONG;}
 bool {return BOOL;}
 float {return FLOAT;}
 string {return STRING;}
+
+func {return FUNC;}
+return {return RETURN;}
+struct {return STRUCT;}
+if {return IF;}
+else {return ELSE;}
+for {return FOR;}
+in {return IN;}
+
 
 [a-zA-Z][a-zA-Z0-9_]*  { return IDENTIFIER; }
 [a-zA-Z0-9_]+ {return SHARED_IDENTIFIER; /*dont shared variables always start with an underscore*/}
@@ -173,7 +194,7 @@ int yywrap(void) {
 int main(){
 
     /*also shouldn't we give something like scanf and printf and also handle the format specifiers*/
-
-    yylex();
+    while(1)
+        yylex();
     return 0;
 }

@@ -5,3 +5,4 @@
 There cannot be nested comments.
 There cannot be any comments in between a keyword.
 “ This is /*  Not a comment */ “
+5. Remove range() from everywhere in the whitepaper
