@@ -33,12 +33,12 @@ int main()
             output_file = fopen(out_name, "w");
             if (!inp)
             {
-                printf("\033[1;31mCan't open\033[0m %s\n", inp_name);
+                printf("%s : \033[1;31mCan't open\033[0m %s\n", ent->d_name,inp_name);
                 goto end;
             }
             if (!output_file)
             {
-                printf("\033[1;31mCan't open\033[0m %s\n", out_name);
+                printf("%s : \033[1;31mCan't open\033[0m %s\n", ent->d_name,out_name);
                 goto end;
             }
             char expected_out_name[300];
@@ -47,7 +47,7 @@ int main()
             FILE *expected_out = fopen(expected_out_name, "r");
             if (!expected_out)
             {
-                printf("\033[1;31mCan't open\033[0m %s\n", expected_out_name);
+                printf("%s : \033[1;31mCan't open\033[0m %s\n", ent->d_name,expected_out_name);
                 goto end;
             }
 
