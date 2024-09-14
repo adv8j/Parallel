@@ -599,8 +599,15 @@ char *yytext;
 #line 1 "parallel_lex.l"
 #line 2 "parallel_lex.l"
 #include "y.tab.h"
-#line 603 "lex.yy.c"
-#line 604 "lex.yy.c"
+#include <stdio.h>
+
+extern void yyerror(const char *s);
+extern int yywrap(void) ;
+
+
+FILE *output_file;
+#line 610 "lex.yy.c"
+#line 611 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -817,10 +824,10 @@ YY_DECL
 		}
 
 	{
-#line 5 "parallel_lex.l"
+#line 12 "parallel_lex.l"
 
 
-#line 824 "lex.yy.c"
+#line 831 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -879,422 +886,422 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 7 "parallel_lex.l"
-{ return ASSIGN;   /*operators*/ }
+#line 14 "parallel_lex.l"
+{ fprintf(output_file,"ASSIGN\n");return ASSIGN;   /*operators*/ }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 8 "parallel_lex.l"
-{ return PLUS; }
+#line 15 "parallel_lex.l"
+{ fprintf(output_file,"PLUS\n");return PLUS; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 9 "parallel_lex.l"
-{ return MINUS; }
+#line 16 "parallel_lex.l"
+{ fprintf(output_file,"MINUS\n");return MINUS; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 10 "parallel_lex.l"
-{ return MUL; }
+#line 17 "parallel_lex.l"
+{ fprintf(output_file,"MUL\n");return MUL; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 11 "parallel_lex.l"
-{ return DIV; }
+#line 18 "parallel_lex.l"
+{ fprintf(output_file,"DIV\n");return DIV; }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 12 "parallel_lex.l"
-{ return MOD; }
+#line 19 "parallel_lex.l"
+{ fprintf(output_file,"MOD\n");return MOD; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 13 "parallel_lex.l"
-{ return EQ; }
+#line 20 "parallel_lex.l"
+{ fprintf(output_file,"EQ\n");return EQ; }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 14 "parallel_lex.l"
-{ return NEQ; }
+#line 21 "parallel_lex.l"
+{ fprintf(output_file,"NEQ\n");return NEQ; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 15 "parallel_lex.l"
-{ return GT; }
+#line 22 "parallel_lex.l"
+{ fprintf(output_file,"GT\n");return GT; }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 16 "parallel_lex.l"
-{ return LT; }
+#line 23 "parallel_lex.l"
+{ fprintf(output_file,"LT\n");return LT; }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 17 "parallel_lex.l"
-{ return GTE; }
+#line 24 "parallel_lex.l"
+{ fprintf(output_file,"GTE\n");return GTE; }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 18 "parallel_lex.l"
-{ return LTE; }
+#line 25 "parallel_lex.l"
+{ fprintf(output_file,"LTE\n");return LTE; }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 19 "parallel_lex.l"
-{ return AND; }
+#line 26 "parallel_lex.l"
+{ fprintf(output_file,"AND\n");return AND; }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 20 "parallel_lex.l"
-{ return OR; }
+#line 27 "parallel_lex.l"
+{ fprintf(output_file,"OR\n");return OR; }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 21 "parallel_lex.l"
-{ return NOT; }
+#line 28 "parallel_lex.l"
+{ fprintf(output_file,"NOT\n");return NOT; }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 22 "parallel_lex.l"
-{ return ADD_ASSIGN; }
+#line 29 "parallel_lex.l"
+{ fprintf(output_file,"ADD_ASSIGN\n");return ADD_ASSIGN; }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 23 "parallel_lex.l"
-{ return SUB_ASSIGN; }
+#line 30 "parallel_lex.l"
+{ fprintf(output_file,"SUB_ASSIGN\n");return SUB_ASSIGN; }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 24 "parallel_lex.l"
-{ return MUL_ASSIGN; }
+#line 31 "parallel_lex.l"
+{ fprintf(output_file,"MUL_ASSIGN\n");return MUL_ASSIGN; }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 25 "parallel_lex.l"
-{ return DIV_ASSIGN; }
+#line 32 "parallel_lex.l"
+{ fprintf(output_file,"DIV_ASSIGN\n");return DIV_ASSIGN; }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 26 "parallel_lex.l"
-{ return MOD_ASSIGN; }
+#line 33 "parallel_lex.l"
+{ fprintf(output_file,"MOD_ASSIGN\n");return MOD_ASSIGN; }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 29 "parallel_lex.l"
-{/*comments*/ printf("single line comment");} 
+#line 36 "parallel_lex.l"
+{/*comments*/ fprintf(output_file,"single line comment\n");} 
 	YY_BREAK
 case 22:
 /* rule 22 can match eol */
 YY_RULE_SETUP
-#line 30 "parallel_lex.l"
-printf("multi line comment");
+#line 37 "parallel_lex.l"
+fprintf(output_file,"multi line comment\n");
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 33 "parallel_lex.l"
-{ return SEMICOLON; /* Symbols and Separators */}
+#line 40 "parallel_lex.l"
+{ fprintf(output_file,"SEMICOLON\n");return SEMICOLON; /* Symbols and Separators */}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 34 "parallel_lex.l"
-{ return COLON; /* will be useful for type inference at many places, like shared variables and all.*/} 
+#line 41 "parallel_lex.l"
+{ fprintf(output_file,"COLON\n");return COLON; /* will be useful for type inference at many places, like shared variables and all.*/} 
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 35 "parallel_lex.l"
-{ return LPAREN; }
+#line 42 "parallel_lex.l"
+{ fprintf(output_file,"LPAREN\n");return LPAREN; }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 36 "parallel_lex.l"
-{ return RPAREN; }
+#line 43 "parallel_lex.l"
+{ fprintf(output_file,"RPAREN\n");return RPAREN; }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 37 "parallel_lex.l"
-{ return LBRACKET; }
+#line 44 "parallel_lex.l"
+{ fprintf(output_file,"LBRACKET\n");return LBRACKET; }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 38 "parallel_lex.l"
-{ return RBRACKET; }
+#line 45 "parallel_lex.l"
+{ fprintf(output_file,"RBRACKET\n");return RBRACKET; }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 39 "parallel_lex.l"
-{ return LBRACE; }
+#line 46 "parallel_lex.l"
+{ fprintf(output_file,"LBRACE\n");return LBRACE; }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 40 "parallel_lex.l"
-{ return RBRACE; }
+#line 47 "parallel_lex.l"
+{ fprintf(output_file,"RBRACE\n");return RBRACE; }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 41 "parallel_lex.l"
-{ return COMMA; }
+#line 48 "parallel_lex.l"
+{ fprintf(output_file,"COMMA\n");return COMMA; }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 42 "parallel_lex.l"
-{ return DOT; }
+#line 49 "parallel_lex.l"
+{ fprintf(output_file,"DOT\n");return DOT; }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 43 "parallel_lex.l"
-{ return RANGE; }
+#line 50 "parallel_lex.l"
+{ fprintf(output_file,"RANGE\n");return RANGE; }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 44 "parallel_lex.l"
-{ return RANGE_INCL; } 
+#line 51 "parallel_lex.l"
+{ fprintf(output_file,"RANGE_INCL\n");return RANGE_INCL; } 
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 45 "parallel_lex.l"
-{ return QUOTE; }
+#line 52 "parallel_lex.l"
+{ fprintf(output_file,"QUOTE\n");return QUOTE; }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 46 "parallel_lex.l"
-{ return REFERENCE; }
+#line 53 "parallel_lex.l"
+{ fprintf(output_file,"REFERENCE\n");return REFERENCE; }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 49 "parallel_lex.l"
-{ return NUMBER; }
+#line 56 "parallel_lex.l"
+{ fprintf(output_file,"NUMBER\n");return NUMBER; }
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 50 "parallel_lex.l"
-{ return STRING_LITERAL; } 
+#line 57 "parallel_lex.l"
+{ fprintf(output_file,"STRING_LITERAL\n");return STRING_LITERAL; } 
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 51 "parallel_lex.l"
-{ return CHARACTER;}
+#line 58 "parallel_lex.l"
+{ fprintf(output_file,"CHARACTER\n");return CHARACTER;}
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 53 "parallel_lex.l"
-{return TASKGROUP;}
+#line 60 "parallel_lex.l"
+{fprintf(output_file,"TASKGROUP\n");return TASKGROUP;}
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 54 "parallel_lex.l"
-{return TASK;}
+#line 61 "parallel_lex.l"
+{fprintf(output_file,"TASK\n");return TASK;}
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 55 "parallel_lex.l"
-{return PROPERTIES;}
+#line 62 "parallel_lex.l"
+{fprintf(output_file,"PROPERTIES\n");return PROPERTIES;}
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 56 "parallel_lex.l"
-{return ORDER;}
+#line 63 "parallel_lex.l"
+{fprintf(output_file,"ORDER\n");return ORDER;}
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 57 "parallel_lex.l"
-{return CHANNEL;}
+#line 64 "parallel_lex.l"
+{fprintf(output_file,"CHANNEL\n");return CHANNEL;}
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 58 "parallel_lex.l"
-{return MEM;}
+#line 65 "parallel_lex.l"
+{fprintf(output_file,"MEM\n");return MEM;}
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 59 "parallel_lex.l"
-{return _SHARED;}
+#line 66 "parallel_lex.l"
+{fprintf(output_file,"_SHARED\n");return _SHARED;}
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 60 "parallel_lex.l"
-{return SUPERVISOR;}
+#line 67 "parallel_lex.l"
+{fprintf(output_file,"SUPERVISOR\n");return SUPERVISOR;}
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 61 "parallel_lex.l"
-{return ALL;}
+#line 68 "parallel_lex.l"
+{fprintf(output_file,"ALL\n");return ALL;}
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 62 "parallel_lex.l"
-{return UNSAFE;}
+#line 69 "parallel_lex.l"
+{fprintf(output_file,"UNSAFE\n");return UNSAFE;}
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 63 "parallel_lex.l"
-{return JOIN; /* note that now join is a keyword called as join tid;*/ }  
+#line 70 "parallel_lex.l"
+{fprintf(output_file,"JOIN\n");return JOIN; /* note that now join is a keyword called as join tid;*/ }  
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 64 "parallel_lex.l"
-{return CALL;}
+#line 71 "parallel_lex.l"
+{fprintf(output_file,"CALL\n");return CALL;}
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 66 "parallel_lex.l"
-{ return CHN_SEND; }
+#line 73 "parallel_lex.l"
+{ fprintf(output_file,"CHN_SEND\n");return CHN_SEND; }
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 67 "parallel_lex.l"
-{ return CHANNEL_WAIT; }
+#line 74 "parallel_lex.l"
+{ fprintf(output_file,"CHANNEL_WAIT\n");return CHANNEL_WAIT; }
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 68 "parallel_lex.l"
-{ return TASK_CHANNEL; }
+#line 75 "parallel_lex.l"
+{ fprintf(output_file,"TASK_CHANNEL\n");return TASK_CHANNEL; }
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 69 "parallel_lex.l"
-{ return LOG;  /*what should we do about k*/}
+#line 76 "parallel_lex.l"
+{ fprintf(output_file,"LOG\n");return LOG;  /*what should we do about k*/}
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 70 "parallel_lex.l"
-{ return ARROW; }
+#line 77 "parallel_lex.l"
+{ fprintf(output_file,"ARROW\n");return ARROW; }
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 72 "parallel_lex.l"
-{return PARALLEL;}
+#line 79 "parallel_lex.l"
+{fprintf(output_file,"PARALLEL\n");return PARALLEL;}
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 73 "parallel_lex.l"
-{return SHARED;}
+#line 80 "parallel_lex.l"
+{fprintf(output_file,"SHARED\n");return SHARED;}
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 74 "parallel_lex.l"
-{return PRIVATE;}
+#line 81 "parallel_lex.l"
+{fprintf(output_file,"PRIVATE\n");return PRIVATE;}
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 75 "parallel_lex.l"
-{return REDUCTION;}
+#line 82 "parallel_lex.l"
+{fprintf(output_file,"REDUCTION\n");return REDUCTION;}
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 76 "parallel_lex.l"
-{return SCHEDULE;}
+#line 83 "parallel_lex.l"
+{fprintf(output_file,"SCHEDULE\n");return SCHEDULE;}
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 77 "parallel_lex.l"
-{return NUM_THREADS;}
+#line 84 "parallel_lex.l"
+{fprintf(output_file,"NUM_THREADS\n");return NUM_THREADS;}
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 78 "parallel_lex.l"
-{return DYNAMIC_SCHEDULE;}
+#line 85 "parallel_lex.l"
+{fprintf(output_file,"DYNAMIC_SCHEDULE\n");return DYNAMIC_SCHEDULE;}
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 79 "parallel_lex.l"
-{return STATIC_SCHEDULE;}
+#line 86 "parallel_lex.l"
+{fprintf(output_file,"STATIC_SCHEDULE\n");return STATIC_SCHEDULE;}
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 80 "parallel_lex.l"
-{return MUT;}
+#line 87 "parallel_lex.l"
+{fprintf(output_file,"MUT\n");return MUT;}
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 82 "parallel_lex.l"
-{return INT;}
+#line 89 "parallel_lex.l"
+{fprintf(output_file,"INT\n");return INT;}
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 83 "parallel_lex.l"
-{return CHAR;}
+#line 90 "parallel_lex.l"
+{fprintf(output_file,"CHAR\n");return CHAR;}
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 84 "parallel_lex.l"
-{return LONG;}
+#line 91 "parallel_lex.l"
+{fprintf(output_file,"LONG\n");return LONG;}
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 85 "parallel_lex.l"
-{return BOOL;}
+#line 92 "parallel_lex.l"
+{fprintf(output_file,"BOOL\n");return BOOL;}
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
-#line 86 "parallel_lex.l"
-{return FLOAT;}
+#line 93 "parallel_lex.l"
+{fprintf(output_file,"FLOAT\n");return FLOAT;}
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 87 "parallel_lex.l"
-{return STRING;}
+#line 94 "parallel_lex.l"
+{fprintf(output_file,"STRING\n");return STRING;}
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
-#line 89 "parallel_lex.l"
-{return FUNC;}
+#line 96 "parallel_lex.l"
+{fprintf(output_file,"FUNC\n");return FUNC;}
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 90 "parallel_lex.l"
-{return RETURN;}
+#line 97 "parallel_lex.l"
+{fprintf(output_file,"RETURN\n");return RETURN;}
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 91 "parallel_lex.l"
-{return STRUCT;}
+#line 98 "parallel_lex.l"
+{fprintf(output_file,"STRUCT\n");return STRUCT;}
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
-#line 92 "parallel_lex.l"
-{return IF;}
+#line 99 "parallel_lex.l"
+{fprintf(output_file,"IF\n");return IF;}
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
-#line 93 "parallel_lex.l"
-{return ELSE;}
+#line 100 "parallel_lex.l"
+{fprintf(output_file,"ELSE\n");return ELSE;}
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
-#line 94 "parallel_lex.l"
-{return FOR;}
+#line 101 "parallel_lex.l"
+{fprintf(output_file,"FOR\n");return FOR;}
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
-#line 95 "parallel_lex.l"
-{return IN;}
+#line 102 "parallel_lex.l"
+{fprintf(output_file,"IN\n");return IN;}
 	YY_BREAK
 case 79:
 YY_RULE_SETUP
-#line 98 "parallel_lex.l"
-{ return IDENTIFIER; }
+#line 105 "parallel_lex.l"
+{ fprintf(output_file,"IDENTIFIER\n");return IDENTIFIER; }
 	YY_BREAK
 case 80:
 YY_RULE_SETUP
-#line 99 "parallel_lex.l"
-{return SHARED_IDENTIFIER; /*dont shared variables always start with an underscore*/}
+#line 106 "parallel_lex.l"
+{fprintf(output_file,"SHARED_IDENTIFIER\n");return SHARED_IDENTIFIER; /*dont shared variables always start with an underscore*/}
 	YY_BREAK
 case 81:
 /* rule 81 can match eol */
 YY_RULE_SETUP
-#line 101 "parallel_lex.l"
+#line 108 "parallel_lex.l"
 { /* Ignore whitespace */ }
 	YY_BREAK
 case 82:
 YY_RULE_SETUP
-#line 103 "parallel_lex.l"
+#line 110 "parallel_lex.l"
 { yyerror("Syntax Error!!!"); }
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
-#line 105 "parallel_lex.l"
+#line 112 "parallel_lex.l"
 ECHO;
 	YY_BREAK
-#line 1298 "lex.yy.c"
+#line 1305 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2299,7 +2306,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 105 "parallel_lex.l"
+#line 112 "parallel_lex.l"
 
 
 void yyerror(const char *s){
@@ -2312,10 +2319,4 @@ int yywrap(void) {
 }
 
 
-int main(){
 
-    /*also shouldn't we give something like scanf and printf and also handle the format specifiers*/
-    while(1)
-        yylex();
-    return 0;
-}

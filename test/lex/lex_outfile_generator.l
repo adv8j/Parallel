@@ -3,7 +3,6 @@
 FILE *inp;
 FILE *out;
 
-  //these #define are temporary
 #define ASSIGN fprintf(out, "ASSIGN\n");
 #define PLUS fprintf(out, "PLUS\n");
 #define MINUS fprintf(out, "MINUS\n");
