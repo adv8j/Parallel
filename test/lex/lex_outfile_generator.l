@@ -197,7 +197,6 @@ int yywrap(void) {
 
 int main(){
 
-    /*also shouldn't we give something like scanf and printf and also handle the format specifiers*/
     for(int i=0;i<23;i++)
     {
         char in_name[10];
