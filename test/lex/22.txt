@@ -1,0 +1,4 @@
+@parallel(threads='4')
+{
+    process_data(data);
+}

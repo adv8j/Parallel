@@ -1,0 +1,4 @@
+@parallel(reduction=[+:sum])
+for c in 0..100 {
+    sum += someArray(a[d]);
+}

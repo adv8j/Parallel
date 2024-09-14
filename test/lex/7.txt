@@ -1,0 +1,2 @@
+@TaskGroup g1
+{@Properties{@Mem{var1->t1;var2->t2mut;var3->t3 mut;}}}

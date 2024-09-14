@@ -1,0 +1,4 @@
+@parallel(shared=[sum], private=[c, d], threads=4, schedule='static')
+for c in 0..100 {
+    sum += someArray(a[d]);
+}

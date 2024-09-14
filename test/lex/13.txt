@@ -1,0 +1,6 @@
+@Task
+{
+    .ct <   -
+    5;
+    .wt{someIdentifier, 56};
+}

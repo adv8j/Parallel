@@ -1,0 +1,4 @@
+@Supervisor{
+    call = call t2;
+    call.join();
+}
