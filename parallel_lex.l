@@ -9,6 +9,9 @@ FILE *output_file;
 
 %%
 
+"//".*           {/*comments*/ fprintf(output_file,"single line comment\n");} 
+"/*"([^(\*\/)])*"*/"  fprintf(output_file,"multi line comment\n");
+
 =                 { fprintf(output_file,"ASSIGN\n");return ASSIGN;   /*operators*/ }
 \+                 { fprintf(output_file,"PLUS\n");return PLUS; }
 \-               { fprintf(output_file,"MINUS\n");return MINUS; }
@@ -21,9 +24,9 @@ FILE *output_file;
 \<                 { fprintf(output_file,"LT\n");return LT; }
 >=                { fprintf(output_file,"GTE\n");return GTE; }
 \<=                { fprintf(output_file,"LTE\n");return LTE; }
-\&&               { fprintf(output_file,"AND\n");return AND; }
+&&               { fprintf(output_file,"AND\n");return AND; }
 \|\|               { fprintf(output_file,"OR\n");return OR; }
-\!                { fprintf(output_file,"NOT\n");return NOT; }
+!                { fprintf(output_file,"NOT\n");return NOT; }
 \+=                { fprintf(output_file,"ADD_ASSIGN\n");return ADD_ASSIGN; }
 \-=                { fprintf(output_file,"SUB_ASSIGN\n");return SUB_ASSIGN; }
 \*=                { fprintf(output_file,"MUL_ASSIGN\n");return MUL_ASSIGN; }
@@ -31,29 +34,22 @@ FILE *output_file;
 \%=                { fprintf(output_file,"MOD_ASSIGN\n");return MOD_ASSIGN; }
 
 
-"//".*           {/*comments*/ fprintf(output_file,"single line comment\n");} 
-"/*"([^(\*\/)])*"*/"  fprintf(output_file,"multi line comment\n");
 
-
-\;                 { fprintf(output_file,"SEMICOLON\n");return SEMICOLON; /* Symbols and Separators */}
-\:                 { fprintf(output_file,"COLON\n");return COLON; /* will be useful for type inference at many places, like shared variables and all.*/} 
+;                 { fprintf(output_file,"SEMICOLON\n");return SEMICOLON; /* Symbols and Separators */}
+:                 { fprintf(output_file,"COLON\n");return COLON; /* will be useful for type inference at many places, like shared variables and all.*/} 
 \(                 { fprintf(output_file,"LPAREN\n");return LPAREN; }
 \)                 { fprintf(output_file,"RPAREN\n");return RPAREN; }
 \[                 { fprintf(output_file,"LBRACKET\n");return LBRACKET; }
 \]                 { fprintf(output_file,"RBRACKET\n");return RBRACKET; }
 \{                 { fprintf(output_file,"LBRACE\n");return LBRACE; }
 \}                 { fprintf(output_file,"RBRACE\n");return RBRACE; }
-\,                 { fprintf(output_file,"COMMA\n");return COMMA; }
+,                 { fprintf(output_file,"COMMA\n");return COMMA; }
 \.                 { fprintf(output_file,"DOT\n");return DOT; }
 \.\.                { fprintf(output_file,"RANGE\n");return RANGE; }
-\..=               { fprintf(output_file,"RANGE_INCL\n");return RANGE_INCL; } 
-\"                { fprintf(output_file,"QUOTE\n");return QUOTE; }
-\&                { fprintf(output_file,"REFERENCE\n");return REFERENCE; }
+\.\.=               { fprintf(output_file,"RANGE_INCL\n");return RANGE_INCL; }
+&                { fprintf(output_file,"REFERENCE\n");return REFERENCE; }
 
 
-[0-9]+(\.[0-9]+)?   { fprintf(output_file,"NUMBER\n");return NUMBER; }
-\"([^"(\\\")\n]*(\\\")?)*\"        { fprintf(output_file,"STRING_LITERAL\n");return STRING_LITERAL; } 
-\'.\'        { fprintf(output_file,"CHARACTER\n");return CHARACTER;}
 
 @TaskGroup  {fprintf(output_file,"TASKGROUP\n");return TASKGROUP;}
 @Task      {fprintf(output_file,"TASK\n");return TASK;}
@@ -75,7 +71,7 @@ log               { fprintf(output_file,"LOG\n");return LOG;  /*what should we d
 \->                { fprintf(output_file,"ARROW\n");return ARROW; }
 
 @parallel {fprintf(output_file,"PARALLEL\n");return PARALLEL;}
-shared {fprintf(output_file,"SHARED\n");return SHARED;}
+shared {fprintf(output_file,"SHARED_DIRECTIVE\n");return SHARED_DIRECTIVE;}
 private {fprintf(output_file,"PRIVATE\n");return PRIVATE;}
 reduction {fprintf(output_file,"REDUCTION\n");return REDUCTION;}
 schedule {fprintf(output_file,"SCHEDULE\n");return SCHEDULE;}
@@ -101,12 +97,16 @@ in {fprintf(output_file,"IN\n");return IN;}
 
 
 [a-zA-Z][a-zA-Z0-9_]*  { fprintf(output_file,"IDENTIFIER\n");return IDENTIFIER; }
-[a-zA-Z0-9_]+ {fprintf(output_file,"SHARED_IDENTIFIER\n");return SHARED_IDENTIFIER; /*dont shared variables always start with an underscore*/}
+[a-zA-Z_][a-zA-Z0-9_]* {fprintf(output_file,"SHARED_IDENTIFIER\n");return SHARED_IDENTIFIER; /*dont shared variables always start with an underscore*/}
+
+[0-9]+(\.[0-9]+)?   { fprintf(output_file,"FLOAT_LITERAL\n");return FLOAT_LITERAL; }
+([1-9][0-9]+) | 0   { fprintf(output_file,"INT_LITERAL\n");return INT_LITERAL; } 
+\"([^\"]|(\\\"))*\"        { fprintf(output_file,"STRING_LITERAL\n");return STRING_LITERAL; } 
+\'([^\\\']|(\\[nr\'\"]))\'        { fprintf(output_file,"CHARACTER_LITERAL\n");return CHARACTER_LITERAL;} 
+
 
 [ \t\n]+            { /* Ignore whitespace */ }
-
 .                   { yyerror("Syntax Error"); }
-
 %%
 
 

@@ -25,6 +25,7 @@ extern void yyerror(char *s);
 %token MUL_ASSIGN
 %token DIV_ASSIGN
 %token MOD_ASSIGN
+
 %token SEMICOLON
 %token COLON
 %token LPAREN
@@ -37,11 +38,8 @@ extern void yyerror(char *s);
 %token DOT
 %token RANGE
 %token RANGE_INCL
-%token QUOTE
 %token REFERENCE
-%token NUMBER
-%token STRING
-%token CHAR
+
 %token TASKGROUP
 %token TASK
 %token PROPERTIES
@@ -54,25 +52,30 @@ extern void yyerror(char *s);
 %token UNSAFE
 %token JOIN
 %token CALL
+
 %token CHN_SEND
 %token CHANNEL_WAIT
 %token TASK_CHANNEL
 %token LOG
 %token ARROW
+
 %token PARALLEL
-%token SHARED
 %token PRIVATE
+%token SHARED_DIRECTIVE
 %token SCHEDULE
 %token NUM_THREADS
+%token REDUCTION
 %token DYNAMIC_SCHEDULE
 %token STATIC_SCHEDULE
+%token MUT
+
 %token INT
+%token CHAR
 %token LONG
 %token BOOL
-%token IDENTIFIER
-%token SHARED_IDENTIFIER
-%token REDUCTION
-%token MUT
+%token FLOAT
+%token STRING
+
 %token FUNC
 %token RETURN
 %token STRUCT
@@ -80,9 +83,14 @@ extern void yyerror(char *s);
 %token ELSE
 %token FOR
 %token IN
-%token FLOAT
+
+%token IDENTIFIER
+%token SHARED_IDENTIFIER
+
+%token INT_LITERAL
+%token FLOAT_LITERAL
 %token STRING_LITERAL
-%token CHARACTER
+%token CHARACTER_LITERAL
 
 %%
 statement:;
