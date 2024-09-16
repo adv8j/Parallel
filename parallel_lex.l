@@ -9,8 +9,8 @@ FILE *output_file;
 
 %%
 
-"//".*           {/*comments*/ fprintf(output_file,"single line comment\n");} 
-"/*"([^(\*\/)])*"*/"  fprintf(output_file,"multi line comment\n");
+"//".*           {/*comments*/ fprintf(output_file,"single_line_comment\n");} 
+"/*"([^(\*\/)])*"*/"  fprintf(output_file,"multi_line_comment\n");
 
 =                 { fprintf(output_file,"ASSIGN\n");return ASSIGN;   /*operators*/ }
 \+                 { fprintf(output_file,"PLUS\n");return PLUS; }
@@ -44,7 +44,6 @@ FILE *output_file;
 \{                 { fprintf(output_file,"LBRACE\n");return LBRACE; }
 \}                 { fprintf(output_file,"RBRACE\n");return RBRACE; }
 ,                 { fprintf(output_file,"COMMA\n");return COMMA; }
-\.                 { fprintf(output_file,"DOT\n");return DOT; }
 \.\.                { fprintf(output_file,"RANGE\n");return RANGE; }
 \.\.=               { fprintf(output_file,"RANGE_INCL\n");return RANGE_INCL; }
 &                { fprintf(output_file,"REFERENCE\n");return REFERENCE; }
@@ -55,9 +54,8 @@ FILE *output_file;
 @Task      {fprintf(output_file,"TASK\n");return TASK;}
 @Properties {fprintf(output_file,"PROPERTIES\n");return PROPERTIES;}
 @Order   {fprintf(output_file,"ORDER\n");return ORDER;}
-@Channel {fprintf(output_file,"CHANNEL\n");return CHANNEL;}
 @Mem    {fprintf(output_file,"MEM\n");return MEM;}
-@Shared {fprintf(output_file,"_SHARED\n");return _SHARED;}
+@Shared {fprintf(output_file,"SHARED_DIRECTIVE\n");return SHARED_DIRECTIVE;}
 @Supervisor {fprintf(output_file,"SUPERVISOR\n");return SUPERVISOR;}
 all {fprintf(output_file,"ALL\n");return ALL;}
 unsafe {fprintf(output_file,"UNSAFE\n");return UNSAFE;}
@@ -71,7 +69,7 @@ log               { fprintf(output_file,"LOG\n");return LOG;  /*what should we d
 \->                { fprintf(output_file,"ARROW\n");return ARROW; }
 
 @parallel {fprintf(output_file,"PARALLEL\n");return PARALLEL;}
-shared {fprintf(output_file,"SHARED_DIRECTIVE\n");return SHARED_DIRECTIVE;}
+shared {fprintf(output_file,"SHARED\n");return SHARED;}
 private {fprintf(output_file,"PRIVATE\n");return PRIVATE;}
 reduction {fprintf(output_file,"REDUCTION\n");return REDUCTION;}
 schedule {fprintf(output_file,"SCHEDULE\n");return SCHEDULE;}
@@ -95,18 +93,23 @@ else {fprintf(output_file,"ELSE\n");return ELSE;}
 for {fprintf(output_file,"FOR\n");return FOR;}
 in {fprintf(output_file,"IN\n");return IN;}
 
-
+true {fprintf(output_file,"TRUE\n");return TRUE;}
+false {fprintf(output_file,"FALSE\n");return FALSE;}
 [a-zA-Z][a-zA-Z0-9_]*  { fprintf(output_file,"IDENTIFIER\n");return IDENTIFIER; }
 [a-zA-Z_][a-zA-Z0-9_]* {fprintf(output_file,"SHARED_IDENTIFIER\n");return SHARED_IDENTIFIER; /*dont shared variables always start with an underscore*/}
 
-[0-9]+(\.[0-9]+)?   { fprintf(output_file,"FLOAT_LITERAL\n");return FLOAT_LITERAL; }
-([1-9][0-9]+) | 0   { fprintf(output_file,"INT_LITERAL\n");return INT_LITERAL; } 
+([1-9][0-9]*)|0   { fprintf(output_file,"INT_LITERAL\n");return INT_LITERAL; } 
+[0-9]+\.[0-9]*   { fprintf(output_file,"FLOAT_LITERAL\n");return FLOAT_LITERAL; /* it needs to be caught before INT and RANGE*/}
+(([1-9][0-9]*)|0)e(([1-9][0-9]*)|0) { fprintf(output_file,"FLOAT_LITERAL\n");return FLOAT_LITERAL; }
+
 \"([^\"]|(\\\"))*\"        { fprintf(output_file,"STRING_LITERAL\n");return STRING_LITERAL; } 
 \'([^\\\']|(\\[nr\'\"]))\'        { fprintf(output_file,"CHARACTER_LITERAL\n");return CHARACTER_LITERAL;} 
 
+\.                 { fprintf(output_file,"DOT\n");return DOT; }
+
 
 [ \t\n]+            { /* Ignore whitespace */ }
-.                   { yyerror("Syntax Error"); }
+.                   { yyerror("Syntax Error!!!"); }
 %%
 
 

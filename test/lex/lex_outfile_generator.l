@@ -23,6 +23,7 @@ FILE *out;
 #define MUL_ASSIGN fprintf(out, "MUL_ASSIGN\n");
 #define DIV_ASSIGN fprintf(out, "DIV_ASSIGN\n");
 #define MOD_ASSIGN fprintf(out, "MOD_ASSIGN\n");
+
 #define SEMICOLON fprintf(out, "SEMICOLON\n");
 #define COLON fprintf(out, "COLON\n");
 #define LPAREN fprintf(out, "LPAREN\n");
@@ -35,28 +36,26 @@ FILE *out;
 #define DOT fprintf(out, "DOT\n");
 #define RANGE fprintf(out, "RANGE\n");
 #define RANGE_INCL fprintf(out, "RANGE_INCL\n");
-#define QUOTE fprintf(out, "QUOTE\n");
 #define REFERENCE fprintf(out, "REFERENCE\n");
-#define NUMBER fprintf(out, "NUMBER\n");
-#define STRING fprintf(out, "STRING\n");
-#define CHAR fprintf(out, "CHAR\n");
+
 #define TASKGROUP fprintf(out, "TASKGROUP\n");
 #define TASK fprintf(out, "TASK\n");
 #define PROPERTIES fprintf(out, "PROPERTIES\n");
+#define SHARED_DIRECTIVE fprintf(out, "SHARED_DIRECTIVE\n");
 #define ORDER fprintf(out, "ORDER\n");
-#define CHANNEL fprintf(out, "CHANNEL\n");
 #define MEM fprintf(out, "MEM\n");
-#define _SHARED fprintf(out, "_SHARED\n");
 #define SUPERVISOR fprintf(out, "SUPERVISOR\n");
 #define ALL fprintf(out, "ALL\n");
 #define UNSAFE fprintf(out, "UNSAFE\n");
 #define JOIN fprintf(out, "JOIN\n");
 #define CALL fprintf(out, "CALL\n");
+
 #define CHN_SEND fprintf(out, "CHN_SEND\n");
 #define CHANNEL_WAIT fprintf(out, "CHANNEL_WAIT\n");
 #define TASK_CHANNEL fprintf(out, "TASK_CHANNEL\n");
 #define LOG fprintf(out, "LOG\n");
 #define ARROW fprintf(out, "ARROW\n");
+
 #define PARALLEL fprintf(out, "PARALLEL\n");
 #define SHARED fprintf(out, "SHARED\n");
 #define PRIVATE fprintf(out, "PRIVATE\n");
@@ -64,13 +63,17 @@ FILE *out;
 #define NUM_THREADS fprintf(out, "NUM_THREADS\n");
 #define DYNAMIC_SCHEDULE fprintf(out, "DYNAMIC_SCHEDULE\n");
 #define STATIC_SCHEDULE fprintf(out, "STATIC_SCHEDULE\n");
+#define REDUCTION fprintf(out, "REDUCTION\n");
+#define MUT fprintf(out, "MUT\n");
+
+
 #define INT fprintf(out, "INT\n");
 #define LONG fprintf(out, "LONG\n");
 #define BOOL fprintf(out, "BOOL\n");
-#define IDENTIFIER fprintf(out, "IDENTIFIER\n");
-#define SHARED_IDENTIFIER fprintf(out, "SHARED_IDENTIFIER\n");
-#define REDUCTION fprintf(out, "REDUCTION\n");
-#define MUT fprintf(out, "MUT\n");
+#define CHAR fprintf(out, "CHAR\n");
+#define FLOAT fprintf(out, "FLOAT\n");
+#define STRING fprintf(out, "STRING\n");
+
 #define FUNC fprintf(out, "FUNC\n");
 #define RETURN fprintf(out, "RETURN\n");
 #define STRUCT fprintf(out, "STRUCT\n");
@@ -78,110 +81,115 @@ FILE *out;
 #define ELSE fprintf(out, "ELSE\n");
 #define FOR fprintf(out, "FOR\n");
 #define IN fprintf(out, "IN\n");
-#define FLOAT fprintf(out, "FLOAT\n");
+
+#define INT_LITERAL fprintf(out, "INT_LITERAL\n");
+#define FLOAT_LITERAL fprintf(out, "FLOAT_LITERAL\n");
 #define STRING_LITERAL fprintf(out, "STRING_LITERAL\n");
-#define CHARACTER fprintf(out, "CHARACTER\n");
+#define CHARACTER_LITERAL fprintf(out, "CHARACTER\n");
+
+#define IDENTIFIER fprintf(out, "IDENTIFIER\n");
+#define SHARED_IDENTIFIER fprintf(out, "SHARED_IDENTIFIER\n");
 %}
 
 %%
 
-=                 {  ASSIGN;   /*operators*/ }
-\+                 {  PLUS; }
-\-               {  MINUS; }
-\*                 {  MUL; }
-\/                 {  DIV; }
-\%                 {  MOD; }
-==                {  EQ; }
-!=                {  NEQ; }
->                 {  GT; }
-\<                 {  LT; }
->=                {  GTE; }
-\<=                {  LTE; }
-\&&               {  AND; }
-\|\|               {  OR; }
-\!                {  NOT; }
-\+=                {  ADD_ASSIGN; }
-\-=                {  SUB_ASSIGN; }
-\*=                {  MUL_ASSIGN; }
-\/=                {  DIV_ASSIGN; }
-\%=                {  MOD_ASSIGN; }
+"//".*           ;
+"/*"([^(\*\/)])*"*/"  ;
+
+=                 { ASSIGN   /*operators*/ }
+\+                 {  PLUS }
+\-               {  MINUS }
+\*                 { MUL }
+\/                 { DIV }
+\%                 { MOD }
+==                { EQ }
+!=                { NEQ }
+>                 { GT }
+\<                 { LT }
+>=                { GTE }
+\<=                { LTE }
+&&               { AND }
+\|\|               { OR }
+!                { NOT }
+\+=                { ADD_ASSIGN }
+\-=                { SUB_ASSIGN }
+\*=                { MUL_ASSIGN }
+\/=                { DIV_ASSIGN }
+\%=                { MOD_ASSIGN }
 
 
-"//".*           {/*comments*/ fprintf(out, "single line comment");} 
-"/*"([^(\*\/)])*"*/"  fprintf(out, "multi line comment");
+
+;                 { SEMICOLON /* Symbols and Separators */}
+:                 { COLON /* will be useful for type inference at many places, like shared variables and all.*/} 
+\(                 { LPAREN }
+\)                 { RPAREN }
+\[                 { LBRACKET }
+\]                 { RBRACKET }
+\{                 { LBRACE }
+\}                 { RBRACE }
+,                 { COMMA }
+\.                 { DOT }
+\.\.                { RANGE }
+\.\.=               { RANGE_INCL }
+&                { REFERENCE }
 
 
-\;                 {  SEMICOLON; /* Symbols and Separators */}
-\:                 {  COLON; /* will be useful for type inference at many places, like shared variables and all.*/} 
-\(                 {  LPAREN; }
-\)                 {  RPAREN; }
-\[                 {  LBRACKET; }
-\]                 {  RBRACKET; }
-\{                 {  LBRACE; }
-\}                 {  RBRACE; }
-\,                 {  COMMA; }
-\.                 {  DOT; }
-\.\.                {  RANGE; }
-\..=               {  RANGE_INCL; } 
-\"                {  QUOTE; }
-\&                {  REFERENCE; }
+
+@TaskGroup  {TASKGROUP}
+@Task      {TASK}
+@Properties {PROPERTIES}
+@Order   {ORDER}
+@Mem    {MEM}
+@Shared {SHARED_DIRECTIVE}
+@Supervisor {SUPERVISOR}
+all {ALL}
+unsafe {UNSAFE}
+join {JOIN /* note that now join is a keyword called as join tid*/ }  
+call      {CALL}
+
+\<-                { CHN_SEND }
+\.wt             { CHANNEL_WAIT }
+\.ct             { TASK_CHANNEL }
+log               { LOG  /*what should we do about k*/}
+\->                { ARROW }
+
+@parallel {PARALLEL}
+shared {SHARED}
+private {PRIVATE}
+reduction {REDUCTION}
+schedule {SCHEDULE}
+num_threads {NUM_THREADS}
+dynamic {DYNAMIC_SCHEDULE}
+static {STATIC_SCHEDULE}
+mut {MUT}
+
+int {INT}
+char {CHAR}
+long {LONG}
+bool {BOOL}
+float {FLOAT}
+string {STRING}
+
+func {FUNC}
+return {RETURN}
+struct {STRUCT}
+if {IF}
+else {ELSE}
+for {FOR}
+in {IN}
 
 
-[0-9]+(\.[0-9]+)?   {  NUMBER; }
-\"([^"(\\\")\n]*(\\\")?)*\"        {  STRING_LITERAL; } 
-\'.\'        {  CHARACTER;}
+[a-zA-Z][a-zA-Z0-9_]*  { IDENTIFIER }
+[a-zA-Z_][a-zA-Z0-9_]* {SHARED_IDENTIFIER /*dont shared variables always start with an underscore*/}
 
-@TaskGroup  { TASKGROUP;}
-@Task      { TASK;}
-@Properties { PROPERTIES;}
-@Order   { ORDER;}
-@Channel { CHANNEL;}
-@Mem    { MEM;}
-@Shared { _SHARED;}
-@Supervisor { SUPERVISOR;}
-all { ALL;}
-unsafe { UNSAFE;}
-join { JOIN; /* note that now join is a keyword called as join tid;*/ }  
-call      { CALL;}
+[0-9]+(\.[0-9]+)?   { FLOAT_LITERAL }
+([1-9][0-9]+) | 0   { INT_LITERAL } 
+\"([^\"]|(\\\"))*\"        { STRING_LITERAL } 
+\'([^\\\']|(\\[nr\'\"]))\'        { CHARACTER_LITERAL} 
 
-\<-                {  CHN_SEND; }
-\.wt             {  CHANNEL_WAIT; }
-\.ct             {  TASK_CHANNEL; }
-log               {  LOG;  /*what should we do about k*/}
-\->                {  ARROW; }
-
-@parallel { PARALLEL;}
-shared { SHARED;}
-private { PRIVATE;}
-reduction { REDUCTION;}
-schedule { SCHEDULE;}
-num_threads { NUM_THREADS;}
-dynamic { DYNAMIC_SCHEDULE;}
-static { STATIC_SCHEDULE;}
-mut { MUT;}
-
-int { INT;}
-char { CHAR;}
-long { LONG;}
-bool { BOOL;}
-float { FLOAT;}
-string { STRING;}
-
-func { FUNC;}
-return { RETURN;}
-struct { STRUCT;}
-if { IF;}
-else { ELSE;}
-for { FOR;}
-in { IN;}
-
-
-[a-zA-Z][a-zA-Z0-9_]*  {  IDENTIFIER; }
-[a-zA-Z0-9_]+ { SHARED_IDENTIFIER; /*dont shared variables always start with an underscore*/}
 
 [ \t\n]+            { /* Ignore whitespace */ }
-
-.                   { yyerror("Syntax Error!!!"); }
+.                   { yyerror("Syntax Error"); }
 
 %%
 

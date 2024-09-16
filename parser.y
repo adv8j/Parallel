@@ -44,9 +44,8 @@ extern void yyerror(char *s);
 %token TASK
 %token PROPERTIES
 %token ORDER
-%token CHANNEL
 %token MEM
-%token _SHARED
+%token SHARED_DIRECTIVE
 %token SUPERVISOR
 %token ALL
 %token UNSAFE
@@ -61,7 +60,7 @@ extern void yyerror(char *s);
 
 %token PARALLEL
 %token PRIVATE
-%token SHARED_DIRECTIVE
+%token SHARED
 %token SCHEDULE
 %token NUM_THREADS
 %token REDUCTION
@@ -83,6 +82,9 @@ extern void yyerror(char *s);
 %token ELSE
 %token FOR
 %token IN
+
+%token TRUE
+%token FALSE
 
 %token IDENTIFIER
 %token SHARED_IDENTIFIER

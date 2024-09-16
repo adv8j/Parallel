@@ -1,8 +1,10 @@
-all:
+all: lex
+	
+	./a.out
+lex: 
 	yacc -d parser.y
 	lex parallel_lex.l
 	gcc lex.yy.c y.tab.c
-	./a.out
 lex_tests:
 	yacc -d parser.y
 	lex parallel_lex.l
