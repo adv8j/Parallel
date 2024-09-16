@@ -9,7 +9,5 @@ int ad=7vait=7;
 long dik.psd = 17; 
     int a ='a' ; 
     
-bool v =5;
+bool v =true;
 float k=1.78;
-
-

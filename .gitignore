@@ -1,3 +1,5 @@
 .vscode
 *.out
 test/lex/output/*.txt
+lex_tester
+parser

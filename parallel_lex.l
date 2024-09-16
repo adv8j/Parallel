@@ -10,7 +10,7 @@ FILE *output_file;
 %%
 
 "//".*           {/*comments*/ fprintf(output_file,"single_line_comment\n");} 
-\/\*([^*]|\*+[^*/])*\**\/\* {fprintf(output_file,"multi_line_comment\n");}
+\/\*([^*]|\*+[^*/])*\**\*\/ {fprintf(output_file,"multi_line_comment\n");}
 
 \+=                { fprintf(output_file,"ADD_ASSIGN\n");return ADD_ASSIGN; }
 \-=                { fprintf(output_file,"SUB_ASSIGN\n");return SUB_ASSIGN; }
@@ -33,7 +33,6 @@ FILE *output_file;
 \|\|               { fprintf(output_file,"OR\n");return OR; }
 !                { fprintf(output_file,"NOT\n");return NOT; }
 
-([1-9][0-9]*)|0   { fprintf(output_file,"INT_LITERAL\n");return INT_LITERAL; } 
 
 ;                 { fprintf(output_file,"SEMICOLON\n");return SEMICOLON; /* Symbols and Separators */}
 :                 { fprintf(output_file,"COLON\n");return COLON; /* will be useful for type inference at many places, like shared variables and all.*/} 
@@ -98,7 +97,8 @@ false {fprintf(output_file,"FALSE\n");return FALSE;}
 [a-zA-Z][a-zA-Z0-9_]*  { fprintf(output_file,"IDENTIFIER\n");return IDENTIFIER; }
 [a-zA-Z_][a-zA-Z0-9_]* {fprintf(output_file,"SHARED_IDENTIFIER\n");return SHARED_IDENTIFIER; /*dont shared variables always start with an underscore*/}
 
-[0-9]+\.[0-9]*   { fprintf(output_file,"FLOAT_LITERAL\n");return FLOAT_LITERAL; /* it needs to be caught before INT and RANGE*/}
+([1-9][0-9]*)|0   { fprintf(output_file,"INT_LITERAL\n");return INT_LITERAL; } 
+[0-9]+\.[^\.][0-9]*   { fprintf(output_file,"FLOAT_LITERAL\n");return FLOAT_LITERAL; /* it needs to be caught before INT and RANGE*/}
 (([1-9][0-9]*)|0)e(([1-9][0-9]*)|0) { fprintf(output_file,"FLOAT_LITERAL\n");return FLOAT_LITERAL; }
 
 \"([^\"\n]|(\\\"))*\"        { fprintf(output_file,"STRING_LITERAL\n");return STRING_LITERAL; } 
