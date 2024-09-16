@@ -1292,7 +1292,7 @@ YY_RULE_SETUP
 case 82:
 YY_RULE_SETUP
 #line 108 "parallel_lex.l"
-{ yyerror("Syntax Error!!!"); }
+{ yyerror("Syntax Error"); }
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
@@ -2309,7 +2309,7 @@ void yyfree (void * ptr )
 
 
 void yyerror(char *s) {
-	fprintf(stderr, "%s\n", s);
+	fprintf(output_file, "%s\n", s);
 }
 
 int yywrap(void) {

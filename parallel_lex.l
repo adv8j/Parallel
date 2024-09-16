@@ -105,13 +105,13 @@ in {fprintf(output_file,"IN\n");return IN;}
 
 [ \t\n]+            { /* Ignore whitespace */ }
 
-.                   { yyerror("Syntax Error!!!"); }
+.                   { yyerror("Syntax Error"); }
 
 %%
 
 
 void yyerror(char *s) {
-	fprintf(stderr, "%s\n", s);
+	fprintf(output_file, "%s\n", s);
 }
 
 int yywrap(void) {

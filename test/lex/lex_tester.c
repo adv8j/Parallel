@@ -77,8 +77,9 @@ int main()
                 {
                     if ((*line_temp == '\0' || *line_temp == '\0') || (*line_temp != *line2_temp))
                     {
-                        printf("%s : \033[1;31mTest Failed\033[0m at line : %d char number : %d\n", ent->d_name, line_num, (int)(line_temp - line + 1));
-                        printf("\033[1;34mGot\n\033[0m : %s\033[1;34mExpected\n\033[0m : %s", line_temp, line2_temp);
+                        // printf("%s : \033[1;31mTest Failed\033[0m at line : %d char number : %d\n", ent->d_name, line_num, (int)(line_temp - line + 1));
+                        printf("%s : \033[1;31mTest Failed\033[0m\n", ent->d_name);
+                        printf("\033[1;34mGot\n\033[0m : %s\033[1;34mExpected\n\033[0m : %s", line, line2);
                         goto end;
                     }
                     line_temp++;

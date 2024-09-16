@@ -1,4 +1,0 @@
-myFunction()
-myVariable.var
- anotherVariable ()
-functionCall()
