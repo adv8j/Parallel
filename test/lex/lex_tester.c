@@ -3,6 +3,7 @@
 #include <string.h>
 #include <dirent.h>
 #include "../../lex.yy.c"
+// #include "../../y.tab.c"
 #define MAX_LINE_LEN 1000
 #define MAX_FILE_LEN 10000
 #define MAX_FILES 1000
@@ -54,7 +55,6 @@ int main() {
         char out_name[300];
         sprintf(inp_name, "input/%s", filenames[i]);
         sprintf(out_name, "output/%s", filenames[i]);
-
         inp = fopen(inp_name, "r");
         output_file = fopen(out_name, "w");
         if (!inp) {
@@ -77,7 +77,7 @@ int main() {
         while (fgets(line, sizeof(line), inp) != NULL) {
             strcat(inp_contents, line);
         }
-
+        yylineno = 1;
         yy_scan_string(inp_contents);
         while (yylex() != 0)
             ;
