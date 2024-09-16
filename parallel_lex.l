@@ -2,9 +2,7 @@
 #include "y.tab.h"
 #include <stdio.h>
 
-extern void yyerror(const char *s);
-extern int yywrap(void) ;
-
+void yyerror(const char *s);
 
 FILE *output_file;
 %}
@@ -110,11 +108,6 @@ in {fprintf(output_file,"IN\n");return IN;}
 .                   { yyerror("Syntax Error!!!"); }
 
 %%
-
-void yyerror(const char *s){
-    fprintf(stderr, "%s\n", s);
-}
-
 
 int yywrap(void) {
     return 1;
