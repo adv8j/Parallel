@@ -10,7 +10,7 @@ FILE *output_file;
 %%
 
 "//".*           {/*comments*/ fprintf(output_file,"single_line_comment\n");} 
-"/*"([^(\*\/)])*"*/"  fprintf(output_file,"multi_line_comment\n");
+\/\*([^*]|\*+[^*/])*\**\/\* {fprintf(output_file,"multi_line_comment\n");}
 
 \+=                { fprintf(output_file,"ADD_ASSIGN\n");return ADD_ASSIGN; }
 \-=                { fprintf(output_file,"SUB_ASSIGN\n");return SUB_ASSIGN; }
@@ -101,7 +101,7 @@ false {fprintf(output_file,"FALSE\n");return FALSE;}
 [0-9]+\.[0-9]*   { fprintf(output_file,"FLOAT_LITERAL\n");return FLOAT_LITERAL; /* it needs to be caught before INT and RANGE*/}
 (([1-9][0-9]*)|0)e(([1-9][0-9]*)|0) { fprintf(output_file,"FLOAT_LITERAL\n");return FLOAT_LITERAL; }
 
-\"([^\"]|(\\\"))*\"        { fprintf(output_file,"STRING_LITERAL\n");return STRING_LITERAL; } 
+\"([^\"\n]|(\\\"))*\"        { fprintf(output_file,"STRING_LITERAL\n");return STRING_LITERAL; } 
 \'([^\\\']|(\\[nr\'\"]))\'        { fprintf(output_file,"CHARACTER_LITERAL\n");return CHARACTER_LITERAL;} 
 
 \.                 { fprintf(output_file,"DOT\n");return DOT; }

@@ -1,13 +1,13 @@
 INT
 IDENTIFIER
 ASSIGN
-NUMBER
+INT_LITERAL
 SEMICOLON
-single line comment
+single_line_comment
 INT
 IDENTIFIER
 ASSIGN
-NUMBER
+INT_LITERAL
 SEMICOLON
 DIV
 IDENTIFIER
@@ -17,22 +17,22 @@ DIV
 INT
 IDENTIFIER
 ASSIGN
-NUMBER
+INT_LITERAL
 SEMICOLON
 DIV
 DIV
-multi line comment
-multi line comment
-multi line comment
-multi line comment
-multi line comment
-single line comment
-multi line comment
-single line comment
-multi line comment
-single line comment
+multi_line_comment
+multi_line_comment
+multi_line_comment
+multi_line_comment
+multi_line_comment
+single_line_comment
+multi_line_comment
+single_line_comment
+multi_line_comment
+single_line_comment
 DIV
 MUL
 MUL
 DIV
-single line comment
+single_line_comment

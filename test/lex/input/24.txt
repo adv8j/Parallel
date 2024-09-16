@@ -1,16 +1,8 @@
-int x = 5; // this is a comment using // // // "no error"
-int y= 21;/ try this "error" /
-int z=32; /   /
 
-/**/
 
-/*don't 
-even
-try*/
+/**//*/*/ /**/  // gives no error its correct
 
- /**//*/*/ /**/  // gives no error its correct
-
- /**************:)********/  //gives no error
- /*//////////////////////*********///////// 
- /    *     *     /  // error
+/**************:)********/  //gives no error
+/*//////////////////////*********///////// 
+/    *     *     /  // error
 
