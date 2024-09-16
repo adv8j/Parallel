@@ -10,7 +10,7 @@ int main()
 
     DIR *dir;
     struct dirent *ent;
-    const char *inputDir = "input"; // Directory name
+    const char *inputDir = "input"; // dir name
     if ((dir = opendir(inputDir)) != NULL)
     {
         while ((ent = readdir(dir)) != NULL)
@@ -20,7 +20,7 @@ int main()
             char line[MAX_LINE_LEN];
             memset(inp_contents, 0, sizeof(inp_contents));
             memset(line, 0, sizeof(line));
-            if (ent->d_name[0] == '.' || ent->d_name == "..")
+            if (ent->d_name[0] == '.')
                 continue;
             char inp_name[300];
             char out_name[300];
@@ -55,8 +55,6 @@ int main()
             {
                 strcat(inp_contents, line);
             }
-            // if ((strcmp(inp_name, "input/24.txt"))==0)
-                // printf("%s", inp_contents);
 
             yy_scan_string(inp_contents);
             while (yylex() != 0)
