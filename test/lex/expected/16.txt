@@ -2,8 +2,11 @@ TASKGROUP
 LPAREN
 LOG
 ASSIGN
-STRING_LITERAL
-<ERROR?>
+Syntax Error!!!
+IDENTIFIER
+DOT
+IDENTIFIER
+RPAREN
 LBRACE
-single line comment
+single_line_comment
 RBRACE
