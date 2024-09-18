@@ -1,4 +1,3 @@
-single_line_comment
 INT
 IDENTIFIER
 SEMICOLON

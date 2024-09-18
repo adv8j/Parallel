@@ -2,460 +2,633 @@
 #include "y.tab.h"
 #include <stdio.h>
 #include <string.h>
+
+#define CUR_MAX_LEN 10000
+
 void yyerror(char *s);
 int cur_char = 1;
-FILE *output_file;
+int syntax_error_flag = 0;
+char cur_line[CUR_MAX_LEN];
 %}
+
 
 %%
 "//".*           {
-    fprintf(output_file,"single_line_comment\n");
+	strcat(cur_line, yytext);
     int len = strlen(yytext);
     cur_char += len;
-
 } 
-\/\*([^*]|\*+[^*/])*\**\*\/ {fprintf(output_file,"multi_line_comment\n");
+\/\*([^*]|\*+[^*/])*\**\*\/ {
+	strcat(cur_line, yytext);
     int len = strlen(yytext);
     cur_char += len;
 }
 
-\+=                { fprintf(output_file,"ADD_ASSIGN\n");return ADD_ASSIGN; 
+\+=                {
+	strcat(cur_line, yytext);
     int len = strlen(yytext);
     cur_char += len;
+	return ADD_ASSIGN; 
 }
 
-\-=                { fprintf(output_file,"SUB_ASSIGN\n");return SUB_ASSIGN;
+\-=                {
+	strcat(cur_line, yytext);
     int len = strlen(yytext);
     cur_char += len;
+	return SUB_ASSIGN;
 }
 
-\*=                { fprintf(output_file,"MUL_ASSIGN\n");return MUL_ASSIGN; 
+\*=                {
+	strcat(cur_line, yytext);
     int len = strlen(yytext);
     cur_char += len;
+	return MUL_ASSIGN; 
 }
 
-\/=                { fprintf(output_file,"DIV_ASSIGN\n");return DIV_ASSIGN; 
+\/=                {
+	strcat(cur_line, yytext);
     int len = strlen(yytext);
     cur_char += len;
+	return DIV_ASSIGN; 
 }
 
-\%=                { fprintf(output_file,"MOD_ASSIGN\n");return MOD_ASSIGN;
+\%=                {
+	strcat(cur_line, yytext);
     int len = strlen(yytext);
     cur_char += len;
+	return MOD_ASSIGN;
 }
 
-=                 { fprintf(output_file,"ASSIGN\n");return ASSIGN; 
+=                 {
+	strcat(cur_line, yytext);
     int len = strlen(yytext);
     cur_char += len;
+	return ASSIGN; 
 }
 
 
-\+                 { fprintf(output_file,"PLUS\n");return PLUS;
+\+                 {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return PLUS;
 }
 
-\-               { fprintf(output_file,"MINUS\n");return MINUS;
+\-               {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return MINUS;
 }
 
-\*                 { fprintf(output_file,"MUL\n");return MUL;
+\*                 {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return MUL;
 }
 
-\/                 { fprintf(output_file,"DIV\n");return DIV;
+\/                 {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return DIV;
 }
 
-\%                 { fprintf(output_file,"MOD\n");return MOD;
+\%                 {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return MOD;
 }
 
-==                { fprintf(output_file,"EQ\n");return EQ;
+==                {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return EQ;
 }
 
-!=                { fprintf(output_file,"NEQ\n");return NEQ;
+!=                {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return NEQ;
 }
 
->                 { fprintf(output_file,"GT\n");return GT;
+>                 {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return GT;
 }
 
-\<                 { fprintf(output_file,"LT\n");return LT;
+\<                 {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return LT;
 }
 
->=                { fprintf(output_file,"GTE\n");return GTE;
+>=                {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return GTE;
 }
 
-\<=                { fprintf(output_file,"LTE\n");return LTE;
+\<=                {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return LTE;
 }
 
-&&               { fprintf(output_file,"AND\n");return AND;
+&&               {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return AND;
 }
 
-\|\|               { fprintf(output_file,"OR\n");return OR;
+\|\|               {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return OR;
 }
 
-!                { fprintf(output_file,"NOT\n");return NOT;
+!                {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return NOT;
 }
 
 
 
-;                 { fprintf(output_file,"SEMICOLON\n");return SEMICOLON;
+;                 {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return SEMICOLON;
 }
 
-:                 { fprintf(output_file,"COLON\n");return COLON;
+:                 {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return COLON;
 }
  
-\(                 { fprintf(output_file,"LPAREN\n");return LPAREN;
+\(                 {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return LPAREN;
 }
 
-\)                 { fprintf(output_file,"RPAREN\n");return RPAREN;
+\)                 {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return RPAREN;
 }
 
-\[                 { fprintf(output_file,"LBRACKET\n");return LBRACKET;
+\[                 {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return LBRACKET;
 }
 
-\]                 { fprintf(output_file,"RBRACKET\n");return RBRACKET;
+\]                 {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return RBRACKET;
 }
 
-\{                 { fprintf(output_file,"LBRACE\n");return LBRACE;
+\{				{
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return LBRACE;
 }
 
-\}                 { fprintf(output_file,"RBRACE\n");return RBRACE;
+\}                 {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return RBRACE;
 }
 
-,                 { fprintf(output_file,"COMMA\n");return COMMA;
+,                 {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return COMMA;
 }
 
-\.\.                { fprintf(output_file,"RANGE\n");return RANGE;
+\.\.                {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return RANGE;
 }
 
-\.\.=               { fprintf(output_file,"RANGE_INCL\n");return RANGE_INCL;
+\.\.=               {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return RANGE_INCL;
 }
 
-&                { fprintf(output_file,"REFERENCE\n");return REFERENCE;
+&                {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return REFERENCE;
+}
+	
+@TaskGroup  {
+	strcat(cur_line, yytext);
+	int len = strlen(yytext);
+	cur_char += len;
+	return TASKGROUP;
 }
 
-
-
-
-@TaskGroup  {fprintf(output_file,"TASKGROUP\n");return TASKGROUP;
+@Task      {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return TASK;
 }
 
-@Task      {fprintf(output_file,"TASK\n");return TASK;
+@Properties {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return PROPERTIES;
 }
 
-@Properties {fprintf(output_file,"PROPERTIES\n");return PROPERTIES;
+@Order   {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return ORDER;
 }
 
-@Order   {fprintf(output_file,"ORDER\n");return ORDER;
+@Mem    {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return MEM;
 }
 
-@Mem    {fprintf(output_file,"MEM\n");return MEM;
+@Shared {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return SHARED_DIRECTIVE;
 }
 
-@Shared {fprintf(output_file,"SHARED_DIRECTIVE\n");return SHARED_DIRECTIVE;
+@Supervisor {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return SUPERVISOR;
 }
 
-@Supervisor {fprintf(output_file,"SUPERVISOR\n");return SUPERVISOR;
+all {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return ALL;
 }
 
-all {fprintf(output_file,"ALL\n");return ALL;
+unsafe {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return UNSAFE;
 }
 
-unsafe {fprintf(output_file,"UNSAFE\n");return UNSAFE;
+join {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
-}
-
-join {fprintf(output_file,"JOIN\n");return JOIN;
-	int len = strlen(yytext);
-	cur_char += len;
+	return JOIN;
 }
   
-call      {fprintf(output_file,"CALL\n");return CALL;
+call      {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return CALL;
 }
 
 
-\<-                { fprintf(output_file,"CHN_SEND\n");return CHN_SEND;
+\<-                {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return CHN_SEND;
 }
 
-\.wt             { fprintf(output_file,"CHANNEL_WAIT\n");return CHANNEL_WAIT;
+\.wt             {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return CHANNEL_WAIT;
 }
 
-\.ct             { fprintf(output_file,"TASK_CHANNEL\n");return TASK_CHANNEL;
+\.ct             {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return TASK_CHANNEL;
 }
 
-log               { fprintf(output_file,"LOG\n");return LOG;
+log               {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return LOG;
 }
 
-\->                { fprintf(output_file,"ARROW\n");return ARROW;
+\->                {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
-}
-
-
-@parallel {fprintf(output_file,"PARALLEL\n");return PARALLEL;
-	int len = strlen(yytext);
-	cur_char += len;
-}
-
-shared {fprintf(output_file,"SHARED\n");return SHARED;
-	int len = strlen(yytext);
-	cur_char += len;
-}
-
-private {fprintf(output_file,"PRIVATE\n");return PRIVATE;
-	int len = strlen(yytext);
-	cur_char += len;
-}
-
-reduction {fprintf(output_file,"REDUCTION\n");return REDUCTION;
-	int len = strlen(yytext);
-	cur_char += len;
-}
-
-schedule {fprintf(output_file,"SCHEDULE\n");return SCHEDULE;
-	int len = strlen(yytext);
-	cur_char += len;
-}
-
-num_threads {fprintf(output_file,"NUM_THREADS\n");return NUM_THREADS;
-	int len = strlen(yytext);
-	cur_char += len;
-}
-
-dynamic {fprintf(output_file,"DYNAMIC_SCHEDULE\n");return DYNAMIC_SCHEDULE;
-	int len = strlen(yytext);
-	cur_char += len;
-}
-
-static {fprintf(output_file,"STATIC_SCHEDULE\n");return STATIC_SCHEDULE;
-	int len = strlen(yytext);
-	cur_char += len;
-}
-
-mut {fprintf(output_file,"MUT\n");return MUT;
-	int len = strlen(yytext);
-	cur_char += len;
+	return ARROW;
 }
 
 
-int {fprintf(output_file,"INT\n");return INT;
+@parallel {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return PARALLEL;
 }
 
-char {fprintf(output_file,"CHAR\n");return CHAR;
+shared {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return SHARED;
 }
 
-long {fprintf(output_file,"LONG\n");return LONG;
+private {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return PRIVATE;
 }
 
-bool {fprintf(output_file,"BOOL\n");return BOOL;
+reduction {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return REDUCTION;
 }
 
-float {fprintf(output_file,"FLOAT\n");return FLOAT;
+schedule {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return SCHEDULE;
 }
 
-string {fprintf(output_file,"STRING\n");return STRING;
+num_threads {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return NUM_THREADS;
 }
 
-
-func {fprintf(output_file,"FUNC\n");return FUNC;
+dynamic {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return DYNAMIC_SCHEDULE;
 }
 
-return {fprintf(output_file,"RETURN\n");return RETURN;
+static {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return STATIC_SCHEDULE;
 }
 
-struct {fprintf(output_file,"STRUCT\n");return STRUCT;
+mut {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
-}
-
-if {fprintf(output_file,"IF\n");return IF;
-	int len = strlen(yytext);
-	cur_char += len;
-}
-
-else {fprintf(output_file,"ELSE\n");return ELSE;
-	int len = strlen(yytext);
-	cur_char += len;
-}
-
-for {fprintf(output_file,"FOR\n");return FOR;
-	int len = strlen(yytext);
-	cur_char += len;
-}
-
-in {fprintf(output_file,"IN\n");return IN;
-	int len = strlen(yytext);
-	cur_char += len;
+	return MUT;
 }
 
 
-true {fprintf(output_file,"TRUE\n");return TRUE;
+int {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return INT;
 }
 
-false {fprintf(output_file,"FALSE\n");return FALSE;
+char {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return CHAR;
 }
 
-[a-zA-Z][a-zA-Z0-9_]*  { fprintf(output_file,"IDENTIFIER\n");return IDENTIFIER;
+long {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return LONG;
 }
 
-[a-zA-Z_][a-zA-Z0-9_]* {fprintf(output_file,"SHARED_IDENTIFIER\n");return SHARED_IDENTIFIER;
+bool {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return BOOL;
+}
+
+float {
+	strcat(cur_line, yytext);
+	int len = strlen(yytext);
+	cur_char += len;
+	return FLOAT;
+}
+
+string {
+	strcat(cur_line, yytext);
+	int len = strlen(yytext);
+	cur_char += len;
+	return STRING;
 }
 
 
-([1-9][0-9]*)|0   { fprintf(output_file,"INT_LITERAL\n");return INT_LITERAL;
+func {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return FUNC;
+}
+
+	
+return {
+	strcat(cur_line, yytext);
+	int len = strlen(yytext);
+	cur_char += len;
+	return RETURN;
+}
+
+struct {
+	strcat(cur_line, yytext);
+	int len = strlen(yytext);
+	cur_char += len;
+	return STRUCT;
+}
+
+if {
+	strcat(cur_line, yytext);
+	int len = strlen(yytext);
+	cur_char += len;
+	return IF;
+}
+
+else {
+	strcat(cur_line, yytext);
+	int len = strlen(yytext);
+	cur_char += len;
+	return ELSE;
+}
+
+for {
+	strcat(cur_line, yytext);
+	int len = strlen(yytext);
+	cur_char += len;
+	return FOR;
+}
+
+in {
+	strcat(cur_line, yytext);
+	int len = strlen(yytext);
+	cur_char += len;
+	return IN;
+}
+
+
+true {
+	strcat(cur_line, yytext);
+	int len = strlen(yytext);
+	cur_char += len;
+	return TRUE;
+}
+
+false {
+	strcat(cur_line, yytext);
+	int len = strlen(yytext);
+	cur_char += len;
+	return FALSE;
+}
+
+[a-zA-Z][a-zA-Z0-9_]*  {
+	strcat(cur_line, yytext);
+	int len = strlen(yytext);
+	cur_char += len;
+	return IDENTIFIER;
+}
+
+[a-zA-Z_][a-zA-Z0-9_]* {
+	strcat(cur_line, yytext);
+	int len = strlen(yytext);
+	cur_char += len;
+	return SHARED_IDENTIFIER;
+}
+
+
+([1-9][0-9]*)|0   {
+	strcat(cur_line, yytext);
+	int len = strlen(yytext);
+	cur_char += len;
+	return INT_LITERAL;
 }
  
-[0-9]+\.[^\.][0-9]*   { fprintf(output_file,"FLOAT_LITERAL\n");return FLOAT_LITERAL;
+[0-9]+\.[^\.][0-9]*   {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return FLOAT_LITERAL;
 }
 
-(([1-9][0-9]*)|0)e(([1-9][0-9]*)|0) { fprintf(output_file,"FLOAT_LITERAL\n");return FLOAT_LITERAL;
+(([1-9][0-9]*)|0)e(([1-9][0-9]*)|0) {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return FLOAT_LITERAL;
 }
 
 
-\"([^\"\n]|(\\\"))*\"        { fprintf(output_file,"STRING_LITERAL\n");return STRING_LITERAL;
+\"([^\"\n]|(\\\"))*\"        {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return STRING_LITERAL;
 }
  
-\'([^\\\']|(\\[nr\'\"]))\'        { fprintf(output_file,"CHARACTER_LITERAL\n");return CHARACTER_LITERAL;
+\'([^\\\']|(\\[nr\'\"]))\'        {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return CHARACTER_LITERAL;
 }
  
 
-\.                 { fprintf(output_file,"DOT\n");return DOT;
+\.                 {
+	strcat(cur_line, yytext);
 	int len = strlen(yytext);
 	cur_char += len;
+	return DOT;
 }
 
 
 
-[ \t]+            { /* Ignore whitespace */ }
+[ \t]+            {
+	strcat(cur_line, yytext);
+	int len = strlen(yytext);
+	cur_char += len;
+}
+
 \n    {
+	memset(cur_line, 0, 10000);
     yylineno++; 
     cur_char = 1; 
 }
 
 . {
-    yyerror("Syntax Error!!!");
-    printf("\033[1;31mSyntax Error\033[0m ");
+	
+    printf("\n\033[1;31mSyntax Error:\033[0m\n");
+	printf("Line \033[1;36m%3d\033[0m: %s",yylineno ,cur_line);
+	printf("\033[1;31m%s\033[0m\n", yytext);
     printf("Unrecognized character \033[1;33m%s\033[0m ", yytext); 
     printf("at line \033[1;36m%d\033[0m, character \033[1;36m%d\033[0m\n", yylineno, cur_char);
+	memset(cur_line, 0, 10000);
+	return YYerror;
 }
 %%
 
-
-void yyerror(char *s) {
-	fprintf(output_file, "%s\n", s);
+void yyerror(char* s){
+	printf("\n");
 }
-
 int yywrap(void) {
-    return 1;
+	strcat(cur_line, yytext);
+	return 1;
 }
 
+    
 

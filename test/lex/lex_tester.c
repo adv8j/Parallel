@@ -3,31 +3,41 @@
 #include <string.h>
 #include <dirent.h>
 #include "../../lex.yy.c"
-// #include "../../y.tab.c"
+#include "./tokens.h"
+
 #define MAX_LINE_LEN 1000
 #define MAX_FILE_LEN 10000
 #define MAX_FILES 1000
 
 extern FILE *output_file;
 
-// Comparator function for qsort
+int extract_file_num(const char *filename) {
+    int num = 0;
+    for (int i = 0; filename[i] != '\0'; i++) {
+        if (filename[i] >= '0' && filename[i] <= '9') {
+            num = num * 10 + (filename[i] - '0');
+        }
+    }
+    return num;
+}
+
 int compare(const void *a, const void *b) {
-    return strcmp(*(const char **)a, *(const char **)b);
+    int num1 = extract_file_num(*(const char **)a);
+    int num2 = extract_file_num(*(const char **)b);
+    return num1 - num2;
 }
 
 int main() {
     DIR *dir;
     struct dirent *ent;
-    const char *inputDir = "input"; // dir name
+    const char *inputDir = "input";
     char *filenames[MAX_FILES];
     int file_count = 0;
-
-    // Read all filenames into an array
     if ((dir = opendir(inputDir)) != NULL) {
         while ((ent = readdir(dir)) != NULL) {
-            if (ent->d_name[0] == '.') // Skip hidden files and directories
+            if (ent->d_name[0] == '.')
                 continue;
-            filenames[file_count] = strdup(ent->d_name); // Copy the filename
+            filenames[file_count] = strdup(ent->d_name);
             file_count++;
             if (file_count >= MAX_FILES) {
                 printf("Too many files in directory.\n");
@@ -39,11 +49,9 @@ int main() {
         perror("opendir");
         return 1;
     }
-
-    // Sort filenames in lexicographic order
+    // sorting the file names.
     qsort(filenames, file_count, sizeof(char *), compare);
-
-    // Process each file in sorted order
+    FILE* logfile = fopen("logs", "w");
     for (int i = 0; i < file_count; i++) {
         FILE *inp;
         char inp_contents[MAX_FILE_LEN];
@@ -54,67 +62,90 @@ int main() {
         char inp_name[300];
         char out_name[300];
         sprintf(inp_name, "input/%s", filenames[i]);
-        sprintf(out_name, "output/%s", filenames[i]);
         inp = fopen(inp_name, "r");
-        output_file = fopen(out_name, "w");
+
         if (!inp) {
             printf("%s : \033[1;31mCan't open\033[0m %s\n", filenames[i], inp_name);
             goto end;
         }
-        if (!output_file) {
-            printf("%s : \033[1;31mCan't open\033[0m %s\n", filenames[i], out_name);
-            goto end;
-        }
+
         char expected_out_name[300];
         sprintf(expected_out_name, "expected/%s", filenames[i]);
 
-        FILE *expected_out = fopen(expected_out_name, "r");
-        if (!expected_out) {
-            printf("%s : \033[1;31mCan't open\033[0m %s\n", filenames[i], expected_out_name);
-            goto end;
-        }
-
+        // reinitializing variables in lex file.
+        yylineno = 1;
         while (fgets(line, sizeof(line), inp) != NULL) {
             strcat(inp_contents, line);
         }
-        yylineno = 1;
+
         yy_scan_string(inp_contents);
-        while (yylex() != 0)
-            ;
-
-        fclose(output_file);
-
-        output_file = fopen(out_name, "r");
-
-        char line2[MAX_LINE_LEN];
-        int line_num = 1;
-        char *out1 = fgets(line, sizeof(line), output_file);
-        char *out2 = fgets(line2, sizeof(line2), expected_out);
-        while (out1 != NULL || out2 != NULL) {
-            char *line_temp = line;
-            char *line2_temp = line2;
-            while (*line_temp != '\0' || *line2_temp != '\0') {
-                if ((*line_temp == '\0' || *line2_temp == '\0') || (*line_temp != *line2_temp)) {
-                    printf("%s : \033[1;31mTest Failed\033[0m at line : %d char number : %d\n", filenames[i], line_num, (int)(line_temp - line + 1));
-                    printf("\033[1;34mGot\n\033[0m : %s\033[1;34mExpected\n\033[0m : %s\n", line, line2);
-                    goto end;
+        FILE *expected_out = fopen(expected_out_name, "r");
+        // If expected out file doesn't exist, then Syntax error is expected.
+        if (!expected_out) {
+            int token;
+            while((token = yylex()) != 0) {
+                // printf("Token: %d", token);
+                if (token == YYEOF) {
+                    break;
                 }
-                line_temp++;
-                line2_temp++;
+
+                if(token == YYerror){
+                    printf("%s : \033[1;32mTest Passed\n\033[0m", filenames[i]);
+                    fprintf(logfile, "%s : Test Passed\n", filenames[i]);
+                    break;
+                }
             }
+            if(token != YYerror){
+                printf("%s : \033[1;31mTest Failed\n\033[0m", filenames[i]);
+                fprintf(logfile, "%s : Test Failed\n", filenames[i]);
+
+            }    
+            continue;
+        }
+
+        
+
+        int token;
+        while ((token = yylex()) != 0) {
+            
+            // printf("Token: %d, Name=%s\n", token, yytname[token-258]); // Print tokens for debugging
+            if (token == YYEOF) {
+                break;
+            }
+
+            char line2[MAX_LINE_LEN];
+            int line_num = 1;
+            char *out2 = fgets(line2, sizeof(line2), expected_out);
+
+            if(out2 == NULL) {
+                printf("%s : \033[1;31mTest Failed\033[0m at line : %d\n", filenames[i], line_num);
+                fprintf(logfile, "%s : Test Failed\n", filenames[i]);
+                goto end;
+            }
+            int tok = token - 258;
+            int len = strlen(out2);
+            if(out2[len - 1] == '\n') {
+                out2[len - 1] = '\0';
+            }
+
+            if(strcmp(yytname[tok], line2) != 0) {
+                printf("%s : \033[1;31mTest Failed\033[0m at line : %d\n", filenames[i], line_num);
+                printf("\033[1;34mGot\n\033[0m : %s\033[1;34mExpected\n\033[0m : %s\n", yytname[tok], line2);
+                fprintf(logfile, "%s : Test Failed\n", filenames[i]);
+                goto end;
+            }
+
             line_num++;
-            out1 = fgets(line, sizeof(line), output_file);
-            out2 = fgets(line2, sizeof(line2), expected_out);
         }
         printf("%s : \033[1;32mTest Passed\n\033[0m", filenames[i]);
+        fprintf(logfile, "%s : Test Passed\n", filenames[i]);
+
     end:
         if (inp)
             fclose(inp);
-        if (output_file)
-            fclose(output_file);
         if (expected_out)
             fclose(expected_out);
-        free(filenames[i]); // Free the allocated memory for the filename
+        free(filenames[i]);
     }
 
     return 0;

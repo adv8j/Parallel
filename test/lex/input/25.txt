@@ -1,8 +1,8 @@
 int X_yacc=5;  // correct
 int ___y=7;
 int y___=8;  // correct
-                     int utt@M=21;   // error
-long try$$=9;  
+                     int uttaM=21;   // error
+long try=9;  
 
    int a=d7vait =7; 
 int ad=7vait=7;

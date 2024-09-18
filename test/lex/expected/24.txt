@@ -1,13 +1,4 @@
-multi_line_comment
-multi_line_comment
-multi_line_comment
-single_line_comment
-multi_line_comment
-single_line_comment
-multi_line_comment
-single_line_comment
 DIV
 MUL
 MUL
 DIV
-single_line_comment
