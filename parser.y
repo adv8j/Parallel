@@ -93,11 +93,48 @@ extern void yyerror(char *s);
 %token FLOAT_LITERAL
 %token STRING_LITERAL
 %token CHARACTER_LITERAL
+%start program
 
 %%
-statement:;
-%%
+program:statement_list;
+statement_list:statement_list statement|statement;
 
+statement:
+iterative_statement
+|selection_statement
+|expression_statement
+|compound_statement
+|function_declaration
+|taskgroup_statement
+|declaration_statement
+|parallel_statement;
+
+inner_statement:
+iterative_statement
+|selection_statement
+|expression_statement
+|compound_statement
+|declaration_statement
+|parallel_statement;
+
+compound_statement:
+LBRACE inner_statement RBRACE
+;
+
+iterative_statement: 
+FOR LPAREN expression_statement expression_statement expression RPAREN inner_statement
+|FOR IDENTIFIER IN IDENTIFIER range IDENTIFIER inner_statement // this is flawed
+|FOR LPAREN temp1 IN IDENTIFIER inner_statement;
+
+temp1: IDENTIFIER|REFERENCE IDENTIFIER;
+range: RANGE|RANGE_INCL;
+
+selection_statement: 
+IF LPAREN expression RPAREN inner_statement
+|IF LPAREN expression RPAREN inner_statement ELSE inner_statement;
+
+expression
+%%
 int main(void) {
 	yyparse();
 }
