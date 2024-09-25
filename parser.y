@@ -97,25 +97,26 @@ extern void yyerror(char *s);
 
 %%
 program:statement_list;
-statement_list:statement_list statement|statement;
+statement_list:statement_list statement
+|	statement;
 
 statement:
 iterative_statement
-|selection_statement
-|expression_statement
-|compound_statement
-|function_declaration
-|taskgroup_statement
-|declaration_statement
-|parallel_statement;
+|	selection_statement
+|	expression_statement
+|	compound_statement
+|	function_declaration
+|	taskgroup_statement
+|	declaration_statement
+|	parallel_statement;
 
 inner_statement:
 iterative_statement
-|selection_statement
-|expression_statement
-|compound_statement
-|declaration_statement
-|parallel_statement;
+|	selection_statement
+|	expression_statement
+|	compound_statement
+|	declaration_statement
+|	parallel_statement;
 
 compound_statement:
 LBRACE inner_statement RBRACE
@@ -123,17 +124,42 @@ LBRACE inner_statement RBRACE
 
 iterative_statement: 
 FOR LPAREN expression_statement expression_statement expression RPAREN inner_statement
-|FOR IDENTIFIER IN IDENTIFIER range IDENTIFIER inner_statement // this is flawed
-|FOR LPAREN temp1 IN IDENTIFIER inner_statement;
+|	FOR IDENTIFIER IN IDENTIFIER range IDENTIFIER inner_statement // this is flawed
+|	FOR LPAREN temp1 IN IDENTIFIER inner_statement;
 
-temp1: IDENTIFIER|REFERENCE IDENTIFIER;
-range: RANGE|RANGE_INCL;
+temp1: IDENTIFIER|	REFERENCE IDENTIFIER;
+range: RANGE|	RANGE_INCL;
 
 selection_statement: 
 IF LPAREN expression RPAREN inner_statement
-|IF LPAREN expression RPAREN inner_statement ELSE inner_statement;
+|	IF LPAREN expression RPAREN inner_statement ELSE inner_statement;
 
-expression
+parallel_statement: PARALLEL LPAREN parallel_stmt_argument_list RPAREN compound_statement
+|	PARALLEL LPAREN parallel_stmt_argument_list RPAREN iterative_statement;
+
+parallel_stmt_argument_list: parallel_stmt_argument_list COMMA parallel_stmt_argument
+|	parallel_stmt_argument;
+
+parallel_stmt_argument: SHARED ASSIGN LBRACKET parallel_identifier_list RBRACKET 
+|	PRIVATE ASSIGN LBRACKET parallel_identifier_list RBRACKET 
+|	REDUCTION ASSIGN LBRACKET reduction_list RBRACKET;
+| 	SCHEDULE ASSIGN schedule_list
+| 	NUM_THREADS ASSIGN INT_LITERAL;
+
+schedule_list: STATIC_SCHEDULE|	DYNAMIC_SCHEDULE;
+
+parallel_identifier_list: parallel_identifier_list COMMA IDENTIFIER
+|	IDENTIFIER;
+
+reduction_list: reduction_list COMMA reduction_operator_list COLON parallel_identifier_list
+|	reduction_operator_list COLON parallel_identifier_list;
+
+reduction_operator_list: PLUS
+|	MINUS
+|	MUL
+|	DIV
+|	MOD;
+
 %%
 int main(void) {
 	yyparse();
