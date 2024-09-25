@@ -123,15 +123,36 @@ LBRACE inner_statement RBRACE
 
 iterative_statement: 
 FOR LPAREN expression_statement expression_statement expression RPAREN inner_statement
-|FOR IDENTIFIER IN IDENTIFIER range IDENTIFIER inner_statement // this is flawed
-|FOR LPAREN temp1 IN IDENTIFIER inner_statement;
+|FOR LPAREN IDENTIFIER IN number range number RPAREN inner_statement
+|FOR LPAREN iterator IN IDENTIFIER RPAREN inner_statement;
 
-temp1: IDENTIFIER|REFERENCE IDENTIFIER;
+iterator: IDENTIFIER|REFERENCE IDENTIFIER;
 range: RANGE|RANGE_INCL;
+number: INT_LITERAL|IDENTIFIER;
 
 selection_statement: 
 IF LPAREN expression RPAREN inner_statement
 |IF LPAREN expression RPAREN inner_statement ELSE inner_statement;
+
+
+// not complete
+function_declaration: FUNC IDENTIFIER return_datatype LPAREN 
+data_type: INT| CHAR| LONG| BOOL| FLOAT| STRING| IDENTIFIER		//here identifier is for struct datatypes
+return_datatype: data_type| data_type REFERENCE;
+
+//not complete
+argument_list: argument_declaration
+			| argument_list COMMA argument_declaraction;
+
+
+// array declaraction 
+array_declaration: data_type number array_dimension_list;
+array_dimension_list : LBRACKET number array_dimension_tail;
+array_dimension_tail:RBRACKET array_dimension_increase
+	 				|  COMMA number RBRACKET;
+array_dimension_increase: LBRACKET number array_dimension_tail;
+
+//array initialisation is left
 
 expression
 %%
