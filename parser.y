@@ -197,8 +197,8 @@ signal_statement: TASK_CHANNEL
 wait_statement: CHANNEL_WAIT LBRACE IDENTIFIER COMMA number RBRACE
 | CHANNEL_WAIT LBRACE IDENTIFIER COMMA number RBRACE ARROW IDENTIFIER;
 
-taskgroup_statement: TASKGROUP IDENTIFIER LPAREN LOG EQ STRING_LITERAL RPAREN RBRACE LPAREN taskgroup_definition RBRACE SEMICOLON
-	| TASKGROUP IDENTIFIER  RBRACE LPAREN taskgroup_definition RBRACE SEMICOLON
+taskgroup_statement: TASKGROUP IDENTIFIER LPAREN LOG EQ STRING_LITERAL RPAREN LBRACE taskgroup_definition RBRACE SEMICOLON
+	| TASKGROUP IDENTIFIER  LBRACE  taskgroup_definition RBRACE SEMICOLON
 	;  // this non-terminal is for @TaskGroup t1{ taskgroup_definition}
 
 taskgroup_definition:  task_declaration_list properties_declaration 
@@ -257,7 +257,7 @@ order_rule_start: ALL ARROW     // this non-terminal is for writing order rule s
     // ALL ->
 
 order_rule_mid: order_rule_mid ARROW identifier_list   // this non-terminal is for writing order rule mid
-    | ARROW identifier_list
+    | identifier_list
     ;
     // IDENTIFIER, IDENTIFIER -> IDENTIFIER
 
