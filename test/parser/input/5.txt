@@ -1,0 +1,6 @@
+if(a>b){
+        sum=sum-9;
+    }
+    else{
+        sum=sum+9;
+    }

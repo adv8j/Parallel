@@ -1,0 +1,3 @@
+for (z in myarr){
+    sum=sum+z;
+}
