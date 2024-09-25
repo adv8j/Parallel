@@ -97,25 +97,26 @@ extern void yyerror(char *s);
 
 %%
 program:statement_list;
-statement_list:statement_list statement|statement;
+statement_list:statement_list statement
+|	statement;
 
 statement:
 iterative_statement
-|selection_statement
-|expression_statement
-|compound_statement
-|function_declaration
-|taskgroup_statement
-|declaration_statement
-|parallel_statement;
+|	selection_statement
+|	expression_statement
+|	compound_statement
+|	function_declaration
+|	taskgroup_statement
+|	declaration_statement
+|	parallel_statement;
 
 inner_statement:
 iterative_statement
-|selection_statement
-|expression_statement
-|compound_statement
-|declaration_statement
-|parallel_statement;
+|	selection_statement
+|	expression_statement
+|	compound_statement
+|	declaration_statement
+|	parallel_statement;
 
 compound_statement:
 LBRACE inner_statement RBRACE
@@ -154,7 +155,32 @@ array_dimension_increase: LBRACKET number array_dimension_tail;
 
 //array initialisation is left
 
-expression
+parallel_statement: PARALLEL LPAREN parallel_stmt_argument_list RPAREN compound_statement
+|	PARALLEL LPAREN parallel_stmt_argument_list RPAREN iterative_statement;
+
+parallel_stmt_argument_list: parallel_stmt_argument_list COMMA parallel_stmt_argument
+|	parallel_stmt_argument;
+
+parallel_stmt_argument: SHARED ASSIGN LBRACKET parallel_identifier_list RBRACKET 
+|	PRIVATE ASSIGN LBRACKET parallel_identifier_list RBRACKET 
+|	REDUCTION ASSIGN LBRACKET reduction_list RBRACKET;
+| 	SCHEDULE ASSIGN schedule_list
+| 	NUM_THREADS ASSIGN INT_LITERAL;
+
+schedule_list: STATIC_SCHEDULE|	DYNAMIC_SCHEDULE;
+
+parallel_identifier_list: parallel_identifier_list COMMA IDENTIFIER
+|	IDENTIFIER;
+
+reduction_list: reduction_list COMMA reduction_operator_list COLON parallel_identifier_list
+|	reduction_operator_list COLON parallel_identifier_list;
+
+reduction_operator_list: PLUS
+|	MINUS
+|	MUL
+|	DIV
+|	MOD;
+
 %%
 int main(void) {
 	yyparse();
