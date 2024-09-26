@@ -282,6 +282,7 @@ array_arg_dimension_increase: array_arg_dimension_increase LBRACKET number
 
 //parallel statements
 parallel_statement: PARALLEL LPAREN parallel_stmt_argument_list RPAREN compound_statement // parallel block statement
+    | PARALLEL compound_statement
     | PARALLEL LPAREN parallel_stmt_argument_list RPAREN iterative_statement; // parallel for statement
 
 parallel_stmt_argument_list: parallel_stmt_argument_list COMMA parallel_stmt_argument
@@ -318,16 +319,23 @@ channel_statement: signal_statement SEMICOLON
 // signal statement which can be either .ct or .ct <- <any-value>;
 signal_statement: TASK_CHANNEL
     | TASK_CHANNEL CHN_SEND expression
+    | TASK_CHANNEL LPAREN ALL RPAREN;
     ;
 
 // wait statement which can be either .wt{<task-name>, number} or .wt{<task-name>, number} -> <identifier> ;
 wait_statement: CHANNEL_WAIT LBRACE IDENTIFIER COMMA expression RBRACE 
 | CHANNEL_WAIT LBRACE IDENTIFIER COMMA expression RBRACE ARROW IDENTIFIER;
 
-taskgroup_statement: TASKGROUP IDENTIFIER LPAREN LOG EQ STRING_LITERAL RPAREN LBRACE taskgroup_definition RBRACE SEMICOLON
+taskgroup_statement: TASKGROUP IDENTIFIER LPAREN taskgroup_argument_list RPAREN LBRACE taskgroup_definition RBRACE SEMICOLON
 	| TASKGROUP IDENTIFIER  LBRACE  taskgroup_definition RBRACE SEMICOLON
 	;  // this non-terminal is for @TaskGroup t1{ taskgroup_definition}
 
+taskgroup_argument_list: taskgroup_argument COMMA taskgroup_argument
+|   taskgroup_argument;
+
+taskgroup_argument: LOG ASSIGN STRING_LITERAL
+    | NUM_THREADS ASSIGN number
+    ;
 taskgroup_definition:  task_declaration_list properties_declaration 
     |
     ; // this non-terminal is for writing list of tasks followed by properties
@@ -338,6 +346,7 @@ task_declaration_list: task_declaration_list task_declaration
     ; // this non-terminal is for writing list of tasks
 
 task_declaration: TASK IDENTIFIER LBRACE task_statements RBRACE 
+    | TASK IDENTIFIER LPAREN NUM_THREADS ASSIGN number RPAREN LBRACE task_statements RBRACE 
     | SUPERVISOR IDENTIFIER LBRACE task_statements RBRACE
     ; /* this non-terminal is for writing task or supervisor 
         @Task t1{ task_statements} or @Supervisor t1{ task_statements} */

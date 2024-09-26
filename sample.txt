@@ -34,7 +34,12 @@ x+= 5 < u - adi ;
     @Task t2{
         int x,y,z;
         // int x;
-    } ;
+        .ct(all);
+    }
+    @Task test(num_threads = aar,log = "yo")
+    {
+
+    }
 };
 
 */
@@ -54,3 +59,28 @@ function_call(a,b,c,dix,123,123*dix);
     continue;
     break;
 }
+
+@parallel(shared=[data], private=[temp], reduction=[+: total_sum], num_threads=8, schedule=dynamic) 
+for (i=0;i<5;i+=1)
+{
+    temp = compute(data[i]);
+    total_sum += temp;
+}
+
+@parallel
+{
+    @parallel
+    {
+        @parallel
+        {
+            
+        }   
+    } 
+}
+
+@TaskGroup t1(num_threads=number,log = "text.txt"){
+    @Task t(num_threads=8)
+    {
+
+    }
+};
