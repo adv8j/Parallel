@@ -6,7 +6,7 @@ all: lex
 run: build 
 	./parser.out
 
-run_sample: build
+run_sample: build 
 	./parser.out < sample.txt
 
 build: 

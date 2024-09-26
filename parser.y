@@ -21,7 +21,6 @@ extern void yyerror(char *s);
 
 %token TRUE FALSE IDENTIFIER SHARED_IDENTIFIER INT_LITERAL FLOAT_LITERAL STRING_LITERAL CHARACTER_LITERAL
 
-%token YYerror
 
 %start program
 
@@ -301,11 +300,14 @@ reduction_operator_list: PLUS COLON identifier_list
     | MOD COLON identifier_list
     ; 
 // conditional signals and return statements
-channel_statement: signal_statement SEMICOLON| wait_statement SEMICOLON;
+channel_statement: signal_statement SEMICOLON
+    | wait_statement SEMICOLON
+    ;
 
 // signal statement which can be either .ct or .ct <- <any-value>;
 signal_statement: TASK_CHANNEL
-|	TASK_CHANNEL CHN_SEND value;
+    | TASK_CHANNEL CHN_SEND value
+    ;
 
 // wait statement which can be either .wt{<task-name>, number} or .wt{<task-name>, number} -> <identifier> ;
 wait_statement: CHANNEL_WAIT LBRACE IDENTIFIER COMMA number RBRACE
@@ -341,6 +343,7 @@ task_statements: iterative_statement
     // this non-terminal is for writing list of statements in a task (basically allowed statements in a task)
 
 properties_declaration: PROPERTIES LBRACE taskgroup_properties RBRACE
+    |
     ;
     // this non-terminal is for writing properties of a taskgroup
     // PROPERTIES { taskgroup_properties }
