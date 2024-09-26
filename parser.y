@@ -4,97 +4,23 @@ int yylex(void);
 extern void yyerror(char *s);
 %}
 
-//jjump statements left
 
+%token ASSIGN PLUS MINUS MUL DIV MOD EQ NEQ GT LT GTE LTE AND OR NOT ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN
 
-%token ASSIGN
-%token PLUS
-%token MINUS
-%token MUL
-%token DIV
-%token MOD
-%token EQ
-%token NEQ
-%token GT
-%token LT
-%token GTE
-%token LTE
-%token AND
-%token OR
-%token NOT
-%token ADD_ASSIGN
-%token SUB_ASSIGN
-%token MUL_ASSIGN
-%token DIV_ASSIGN
-%token MOD_ASSIGN
+%token  SEMICOLON COLON LPAREN RPAREN LBRACKET RBRACKET LBRACE RBRACE COMMA DOT RANGE RANGE_INCL REFERENCE
 
-%token SEMICOLON
-%token COLON
-%token LPAREN
-%token RPAREN
-%token LBRACKET
-%token RBRACKET
-%token LBRACE
-%token RBRACE
-%token COMMA
-%token DOT
-%token RANGE
-%token RANGE_INCL
-%token REFERENCE
+%token  TASKGROUP TASK PROPERTIES ORDER MEM SHARED_DIRECTIVE SUPERVISOR ALL UNSAFE JOIN CALL
 
-%token TASKGROUP
-%token TASK
-%token PROPERTIES
-%token ORDER
-%token MEM
-%token SHARED_DIRECTIVE
-%token SUPERVISOR
-%token ALL
-%token UNSAFE
-%token JOIN
-%token CALL
+%token CHN_SEND CHANNEL_WAIT TASK_CHANNEL LOG ARROW
 
-%token CHN_SEND
-%token CHANNEL_WAIT
-%token TASK_CHANNEL
-%token LOG
-%token ARROW
+%token PARALLEL PRIVATE SHARED SCHEDULE NUM_THREADS REDUCTION DYNAMIC_SCHEDULE STATIC_SCHEDULE MUT
 
-%token PARALLEL
-%token PRIVATE
-%token SHARED
-%token SCHEDULE
-%token NUM_THREADS
-%token REDUCTION
-%token DYNAMIC_SCHEDULE
-%token STATIC_SCHEDULE
-%token MUT
+%token INT CHAR LONG BOOL FLOAT STRING
 
-%token INT
-%token CHAR
-%token LONG
-%token BOOL
-%token FLOAT
-%token STRING
+%token FUNC RETURN STRUCT IF ELSE FOR IN
 
-%token FUNC
-%token RETURN
-%token STRUCT
-%token IF
-%token ELSE
-%token FOR
-%token IN
+%token TRUE FALSE IDENTIFIER SHARED_IDENTIFIER INT_LITERAL FLOAT_LITERAL STRING_LITERAL CHARACTER_LITERAL
 
-%token TRUE
-%token FALSE
-
-%token IDENTIFIER
-%token SHARED_IDENTIFIER
-
-%token INT_LITERAL
-%token FLOAT_LITERAL
-%token STRING_LITERAL
-%token CHARACTER_LITERAL
 %start program
 
 // Precedence
@@ -112,148 +38,194 @@ extern void yyerror(char *s);
 
 
 %%
-program:statement_list;
-statement_list:statement_list statement
-|	statement;
+program: statement_list;
 
-assignment_operators:
-ASSIGN
-|ADD_ASSIGN
-|SUB_ASSIGN
-|MUL_ASSIGN
-|DIV_ASSIGN
-|MOD_ASSIGN;
+statement_list: statement_list statement
+    | statement
+    ;
+    // this non-terminal is for writing list of statements
 
-
-
-statement:
-iterative_statement
-|	selection_statement
-|	expression_statement
-|	compound_statement
-|	function_declaration
-|	taskgroup_statement
-|	declaration_statement
-|	parallel_statement;
-
-inner_statement:
-iterative_statement
-|	selection_statement
-|	expression_statement
-|	compound_statement
-|	declaration_statement
-|	parallel_statement;
-
-compound_statement:
-LBRACE inner_statement RBRACE
+assignment_operators: ASSIGN
+    | ADD_ASSIGN
+    | SUB_ASSIGN
+    | MUL_ASSIGN
+    | DIV_ASSIGN
+    | MOD_ASSIGN 
+    ;
+    // this non-terminal is for writing assignment operators, like =, +=, -=, *=, /=, %=
 
 
 
-expression_statement:
-expression SEMICOLON
-| SEMICOLON;
+statement: iterative_statement
+    | selection_statement
+    | expression_statement
+    | compound_statement
+    | function_declaration
+    | taskgroup_statement
+    | declaration_statement
+    | parallel_statement
+    ;
+    // specifies various types of statements(these are the ones which won't need context of being in a function/Task)
 
-literals: INT_LITERAL
-| FLOAT_LITERAL
-| STRING_LITERAL
-| CHARACTER_LITERAL
-expression:
-  IDENTIFIER
-| literals
-| LPAREN expression RPAREN
-| expression PLUS expression
-| expression MINUS expression
-| expression MUL expression
-| expression DIV expression
-| expression MOD expression
-| expression EQ expression
-| expression NEQ expression
-| expression GT expression
-| expression LT expression
-| expression GTE expression
-| expression LTE expression
-| expression AND expression
-| expression OR expression
-| expression assignment_operators expression
-| NOT expression
-| MINUS expression;
+inner_statement: iterative_statement
+    | selection_statement
+    | expression_statement
+    | compound_statement
+    | declaration_statement
+    | parallel_statement
+    | return_statement
+    ;
+    // specifies various types of statements(these will be used in a function)
 
+return_statement: RETURN expression
+	;
+
+compound_statement: LBRACE inner_statement RBRACE
+    ;
+    // this non-terminal is for writing compound statement
+    // { inner_statement }
+
+
+
+expression_statement: expression SEMICOLON
+    | SEMICOLON
+    ;
+    // this non-terminal is for writing expression statement
+
+literals: value;
+    // constant literals
+
+
+expression: IDENTIFIER
+    | literals
+    | LPAREN expression RPAREN
+    | expression PLUS expression
+    | expression MINUS expression
+    | expression MUL expression
+    | expression DIV expression
+    | expression MOD expression
+    | expression EQ expression
+    | expression NEQ expression
+    | expression GT expression
+    | expression LT expression
+    | expression GTE expression
+    | expression LTE expression
+    | expression AND expression
+    | expression OR expression
+    | expression assignment_operators expression
+    | NOT expression
+    | MINUS expression
+    ;
+    // This is for writing various expressions
 
 declaration_statement: data_type declaration_list SEMICOLON;
+    // variable declaration
 
 declaration_list : declaration_list COMMA declaration
-                 | declaration;
+    | declaration
+    ;
+
 
 declaration: REFERENCE IDENTIFIER ASSIGN IDENTIFIER
-           | IDENTIFIER declaration_extension;
+    | IDENTIFIER declaration_extension
+    ;
 
-declaration_extension: array_dimension_list array_initialisation_optional
-                     | ASSIGN value_or_identifier
-                     | ;
+declaration_extension: array_dimension_list 
+    | ASSIGN value_or_identifier
+    | 
+    ;
+    // for writing dimensions of array(with init) and assignment in declaration.
 
 value_or_identifier: literals
-                   | IDENTIFIER;
-
-array_initialisation_optional: ASSIGN array_initialisation
-                             | ;
+    | IDENTIFIER
+    ;
 
 
-iterative_statement: 
-FOR LPAREN expression_statement expression_statement expression RPAREN inner_statement
-|FOR LPAREN IDENTIFIER IN number range number RPAREN inner_statement
-|FOR LPAREN iterator IN IDENTIFIER RPAREN inner_statement;
 
-iterator: IDENTIFIER|REFERENCE IDENTIFIER;
-range: RANGE|RANGE_INCL;
-number: INT_LITERAL|IDENTIFIER;
+iterative_statement:  FOR LPAREN expression_statement expression_statement expression RPAREN inner_statement
+    |FOR LPAREN IDENTIFIER IN number range number RPAREN inner_statement
+    |FOR LPAREN iterator IN IDENTIFIER RPAREN inner_statement
+    ;
+    // 1. for(.. ;.. ; ..)
+    // 2. for(id in 1..2)
+
+
+iterator: IDENTIFIER
+    |REFERENCE IDENTIFIER
+    ;
+    // possibility for iterator variable
+
+range: RANGE
+    |RANGE_INCL
+    ;
+    // types of range operators
+
+number: INT_LITERAL
+    |IDENTIFIER
+    ;
+    // number used for iteration in range
 
 selection_statement: 
-IF LPAREN expression RPAREN inner_statement
-|IF LPAREN expression RPAREN inner_statement ELSE inner_statement;
+    IF LPAREN expression RPAREN inner_statement
+    | IF LPAREN expression RPAREN inner_statement ELSE inner_statement
+    ;
+    // if-then-else
 
 
-// Function declaration
-function_declaration: FUNC IDENTIFIER datatype_and_ref LPAREN argument_list RPAREN compound_statement
-//basic datatypes and struct datatype
+
+function_declaration: FUNC IDENTIFIER data_type LPAREN argument_list RPAREN LBRACE inner_statement RBRACE
+    ;
+    // Function declaration, (return can never be ref)
+
 data_type: INT| CHAR| LONG| BOOL| FLOAT| STRING| IDENTIFIER		//here identifier is for struct datatypes
-// includes the data types and references (like: int&)
+//basic datatypes and struct datatype
+
+
 datatype_and_ref: data_type| data_type REFERENCE;
+// includes the data types and references (like: int&)
+
 
 argument_list: argument_declaration
-			| argument_list COMMA argument_declaration;
+	| argument_list COMMA argument_declaration
+	;
 
 argument_declaration: datatype_and_ref IDENTIFIER
 					  |datatype_and_ref IDENTIFIER array_arg_dimension;
-// dimensions for arrays when writing as parameters for functions
-array_arg_dimension: LBRACKET array_arg_dimension_start;
-array_arg_dimension_start : RBRACKET array_arg_dimension_tail
-| number RBRACKET array_arg_dimension_tail;
 
-array_arg_dimension_tail: array_arg_dimension_tail LBRACKET number RBRACKET
-| ;
+// dimensions for arrays when writing as parameters for functions
+array_arg_dimension: array_arg_dimension_increase RBRACKET
+	;
+
+array_arg_dimension_increase: array_arg_dimension_increase LBRACKET number
+	;
+
 
 // array dimension list, it is used while declaring an array
-array_dimension_list : LBRACKET number array_dimension_tail;
-array_dimension_tail:RBRACKET array_dimension_increase
-	 				|  COMMA number RBRACKET;
-array_dimension_increase: LBRACKET number array_dimension_tail;
+array_dimension_list : LBRACKET number array_dimension_tail
+	;
 
+array_dimension_tail: RBRACKET array_dimension_increase
+	|  COMMA number RBRACKET
+	;
+
+array_dimension_increase: LBRACKET number array_dimension_tail;
 //array initialisation is left
 
 
 //parallel statements
 parallel_statement: PARALLEL LPAREN parallel_stmt_argument_list RPAREN compound_statement // parallel block statement
-|	PARALLEL LPAREN parallel_stmt_argument_list RPAREN iterative_statement; // parallel for statement
+    | PARALLEL LPAREN parallel_stmt_argument_list RPAREN iterative_statement; // parallel for statement
 
 parallel_stmt_argument_list: parallel_stmt_argument_list COMMA parallel_stmt_argument
-|	parallel_stmt_argument;
+    | parallel_stmt_argument;
 
 // this consists of all the arguments which are inside the parallel construct like shared, private, reduction, etc. 
 parallel_stmt_argument: SHARED ASSIGN LBRACKET parallel_identifier_list RBRACKET 
-|	PRIVATE ASSIGN LBRACKET parallel_identifier_list RBRACKET 
-|	REDUCTION ASSIGN LBRACKET reduction_list RBRACKET;
-| 	SCHEDULE ASSIGN schedule_list
-| 	NUM_THREADS ASSIGN INT_LITERAL;
+    | PRIVATE ASSIGN LBRACKET parallel_identifier_list RBRACKET 
+    | REDUCTION ASSIGN LBRACKET reduction_list RBRACKET;
+    | SCHEDULE ASSIGN schedule_list
+    | NUM_THREADS ASSIGN INT_LITERAL
+    ;
 
 schedule_list: STATIC_SCHEDULE|	DYNAMIC_SCHEDULE;
 
@@ -301,7 +273,13 @@ task_declaration: TASK IDENTIFIER LBRACE task_statements RBRACE
         @Task t1{ task_statements} or @Supervisor t1{ task_statements} */
 
 // #TODO: task_statements STILL HAVE TO FIX STUFF HERE.
-task_statements: statement
+task_statements: iterative_statement
+    | selection_statement
+    | expression_statement
+    | compound_statement
+    | declaration_statement
+    | parallel_statement
+	| channel_statement
     ;
     // this non-terminal is for writing list of statements in a task (basically allowed statements in a task)
 
@@ -366,12 +344,12 @@ shared_rule_list: shared_rule_list shared_rule
     ;
     // this non-terminal is for writing list of shared rules
 
-shared_rule: IDENTIFIER COLON dtype ARROW identifier_list SEMICOLON
+shared_rule: IDENTIFIER COLON data_type ARROW identifier_list SEMICOLON
     ;
     // this non-terminal is for writing shared rule
     // IDENTIFIER : dtype -> IDENTIFIER
 
-
+/* 
 generic_dtypes: INT 
     | FLOAT
     | STRING
@@ -388,7 +366,7 @@ dtype: generic_dtypes
 
 array: generic_dtypes array_dimension_list 
     ;
-    // this non-terminal is for writing array data type
+    // this non-terminal is for writing array data type */
 
 
 /* // Needs work for array initialization and all : TODO
@@ -429,6 +407,8 @@ mem_taskgroup_name: IDENTIFIER
     // IDENTIFIER mut
 
 value: INT_LITERAL| FLOAT_LITERAL| STRING_LITERAL| CHARACTER_LITERAL| TRUE| FALSE| IDENTIFIER;
+
+
 %%
 int main(void) {
 	yyparse();
