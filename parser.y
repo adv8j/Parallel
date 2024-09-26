@@ -48,6 +48,41 @@ statement_list: statement_list statement
     // this non-terminal is for writing list of statements
 
 
+generic_dtypes: INT 
+    | LONG
+    | FLOAT
+    | STRING
+    | BOOL
+    | CHAR
+    | STRUCT IDENTIFIER 
+    ;
+    // for struct still have to find better solution
+
+dtype: generic_dtypes
+    | array
+    ;
+    // this non-terminal is for writing data type
+
+array: generic_dtypes dims initializer_dims
+    ;
+    // this non-terminal is for writing array data type
+
+array_element: IDENTIFIER dims ;
+    // this non-terminal is for writing array element
+    // x[2][3]
+
+// Needs work for array initialization and all : TODO
+dims: dims LBRACKET number RBRACKET
+    | LBRACKET number RBRACKET
+    ; 
+    // this non-terminal is for writing array dimensions
+
+initializer_dims: LBRACKET number COMMA number RBRACKET
+    | 
+    ;
+    // this non-terminal is for writing array dimensions in initialization
+
+
 
 statement: iterative_statement
     | selection_statement
@@ -87,11 +122,10 @@ expression_statement: expression SEMICOLON
     ;
     // this non-terminal is for writing expression statement
 
-literals: value;
-    // constant literals
 
 
-expression: literals
+
+expression: value
     | LPAREN expression RPAREN
     | assignment_expression
     | arithmetic_expression
@@ -101,12 +135,6 @@ expression: literals
     ;
     // This is for writing various expressions
 
-
-
-    // this non-terminal is for writing comparison operators
-
-
-    // this non-terminal is for writing logical operators
 
 unary_operator: MINUS
     | NOT
@@ -128,9 +156,9 @@ assignment_expression: expression ASSIGN expression
     | expression MUL_ASSIGN expression
     | expression DIV_ASSIGN expression
     | expression MOD_ASSIGN expression
-
     ;
     // this non-terminal is for writing assignment expression
+
 
 
 unary_expression: unary_operator number
@@ -153,7 +181,7 @@ logical_expression: expression AND expression
     // this non-terminal is for writing logical expression
 
 
-declaration_statement: data_type declaration_list SEMICOLON;
+declaration_statement: dtype declaration_list SEMICOLON;
     // variable declaration
 
 declaration_list : declaration_list COMMA declaration
@@ -162,33 +190,29 @@ declaration_list : declaration_list COMMA declaration
 
 
 declaration: REFERENCE IDENTIFIER ASSIGN IDENTIFIER
-    | IDENTIFIER declaration_extension
+    | IDENTIFIER value_assign
     ;
 
-declaration_extension: array_dimension_list 
-    | ASSIGN value_or_identifier
+value_assign: ASSIGN value
     | 
-    ;
-    // for writing dimensions of array(with init) and assignment in declaration.
-
-value_or_identifier: literals
     ;
 
 
 
 iterative_statement:  FOR LPAREN expression_statement expression_statement expression RPAREN compound_statement
-    |FOR IDENTIFIER IN number range number compound_statement
-    |FOR IDENTIFIER IN IDENTIFIER compound_statement // TODO
-    |FOR REFERENCE IDENTIFIER IN IDENTIFIER compound_statement
+    |FOR iterator IN container  compound_statement
     ;
     // 1. for(.. ;.. ; ..)
     // 2. for(id in 1..2)
     // 3. for x in arr
 
-
-/* iterator: IDENTIFIER
+container: IDENTIFIER
+    | array_literal 
+    ;
+    // basically arrays
+iterator: IDENTIFIER
     |REFERENCE IDENTIFIER
-    ; */
+    ; 
     // possibility for iterator variable
 
 range: RANGE
@@ -227,19 +251,16 @@ selection_expression: selection_expression OR selection_expression
     | selection_expression EQ selection_expression
     | selection_expression NEQ selection_expression
     | NOT selection_expression
-    | literals
+    | value
     ;
     // assignment types are not needed in selection expression, so separated them
 
-function_declaration: FUNC IDENTIFIER data_type LPAREN argument_list RPAREN compound_statement
+function_declaration: FUNC IDENTIFIER dtype LPAREN argument_list RPAREN compound_statement
     ;
     // Function declaration, (return can never be ref)
 
-data_type: INT| CHAR| LONG| BOOL| FLOAT| STRING| IDENTIFIER		//here identifier is for struct datatypes
-//basic datatypes and struct datatype
 
-
-datatype_and_ref: data_type| data_type REFERENCE;
+datatype_and_ref: dtype| dtype REFERENCE;
 // includes the data types and references (like: int&)
 
 
@@ -259,16 +280,6 @@ array_arg_dimension_increase: array_arg_dimension_increase LBRACKET number
     | LBRACKET number
 	;
 
-
-// array dimension list, it is used while declaring an array
-array_dimension_list : LBRACKET number array_dimension_tail
-	;
-
-array_dimension_tail: RBRACKET array_dimension_increase
-	|  COMMA number RBRACKET
-	;
-
-array_dimension_increase: LBRACKET number array_dimension_tail;
 
 
 //parallel statements
@@ -409,36 +420,10 @@ shared_rule_list: shared_rule_list shared_rule
     ;
     // this non-terminal is for writing list of shared rules
 
-shared_rule: IDENTIFIER COLON data_type ARROW identifier_list SEMICOLON
+shared_rule: IDENTIFIER COLON dtype ARROW identifier_list SEMICOLON
     ;
     // this non-terminal is for writing shared rule
     // IDENTIFIER : dtype -> IDENTIFIER
-
-/* 
-generic_dtypes: INT 
-    | FLOAT
-    | STRING
-    | BOOL
-    | CHAR
-    | IDENTIFIER 
-    ;
-    // for struct still have to find better solution
-
-dtype: generic_dtypes
-    | array
-    ;
-    // this non-terminal is for writing data type
-
-array: generic_dtypes array_dimension_list 
-    ;
-    // this non-terminal is for writing array data type */
-
-
-/* // Needs work for array initialization and all : TODO
-dims: dims LBRACKET INT_LITERAL RBRACKET
-    | LBRACKET INT_LITERAL RBRACKET
-    ; */
-    // this non-terminal is for writing array dimensions
 
 
 mem_block: MEM LBRACE mem_statement_list RBRACE
@@ -471,7 +456,18 @@ mem_taskgroup_name: IDENTIFIER
     // this non-terminal is for writing mem taskgroup name
     // IDENTIFIER mut
 
-value: INT_LITERAL| FLOAT_LITERAL| STRING_LITERAL| CHARACTER_LITERAL| TRUE| FALSE| IDENTIFIER;
+array_literal: number range number 
+    ;
+    // this non-terminal is for writing array literal
+
+literals: INT_LITERAL| FLOAT_LITERAL| STRING_LITERAL| CHARACTER_LITERAL| TRUE| FALSE | array_literal ;
+    // constant literals
+
+value: literals 
+    | IDENTIFIER
+    | array_element
+    ;
+    // this non-terminal is for writing value
 
 // no new rules required, if nothing is matched then.
 
