@@ -4,6 +4,8 @@ int yylex(void);
 extern void yyerror(char *s);
 %}
 
+//jjump statements left
+
 
 %token ASSIGN
 %token PLUS
@@ -122,6 +124,8 @@ ASSIGN
 |DIV_ASSIGN
 |MOD_ASSIGN;
 
+declaration_statement: 
+data_type
 
 
 statement:
@@ -151,8 +155,13 @@ expression_statement:
 expression SEMICOLON
 | SEMICOLON;
 
+literals: INT_LITERAL
+| FLOAT_LITERAL
+| STRING_LITERAL
+| CHARACTER_LITERAL
 expression:
-  number
+  IDENTIFIER
+| literals
 | LPAREN expression RPAREN
 | expression PLUS expression
 | expression MINUS expression
@@ -171,8 +180,7 @@ expression:
 | NOT expression
 | MINUS expression;
 
-
-
+declaration_statement: 
 
 
 iterative_statement: 
@@ -189,15 +197,25 @@ IF LPAREN expression RPAREN inner_statement
 |IF LPAREN expression RPAREN inner_statement ELSE inner_statement;
 
 
-// not complete
-function_declaration: FUNC IDENTIFIER return_datatype LPAREN 
+// Function declaration
+function_declaration: FUNC IDENTIFIER datatype_and_ref LPAREN argument_list RPAREN compound_statement
+//basic datatypes and struct datatype
 data_type: INT| CHAR| LONG| BOOL| FLOAT| STRING| IDENTIFIER		//here identifier is for struct datatypes
-return_datatype: data_type| data_type REFERENCE;
+// includes the data types and references (like: int&)
+datatype_and_ref: data_type| data_type REFERENCE;
 
-//not complete
 argument_list: argument_declaration
-			| argument_list COMMA argument_declaraction;
+			| argument_list COMMA argument_declaration;
 
+argument_declaration: datatype_and_ref IDENTIFIER
+					  |datatype_and_ref IDENTIFIER array_arg_dimension;
+// dimensions for arrays when writing as parameters for functions
+array_arg_dimension: LBRACKET array_arg_dimension_start;
+array_arg_dimension_start : RBRACKET array_arg_dimension_tail
+| number RBRACKET array_arg_dimension_tail;
+
+array_arg_dimension_tail: array_arg_dimension_tail LBRACKET number RBRACKET
+| ;
 
 // array declaraction 
 array_declaration: data_type number array_dimension_list;
@@ -354,15 +372,15 @@ dtype: generic_dtypes
     ;
     // this non-terminal is for writing data type
 
-array: generic_dtypes dims 
+array: generic_dtypes array_dimension_list 
     ;
     // this non-terminal is for writing array data type
 
 
-// Needs work for array initialization and all : TODO
+/* // Needs work for array initialization and all : TODO
 dims: dims LBRACKET INT_LITERAL RBRACKET
     | LBRACKET INT_LITERAL RBRACKET
-    ;
+    ; */
     // this non-terminal is for writing array dimensions
 
 
