@@ -124,8 +124,6 @@ ASSIGN
 |DIV_ASSIGN
 |MOD_ASSIGN;
 
-declaration_statement: 
-data_type
 
 
 statement:
@@ -180,7 +178,24 @@ expression:
 | NOT expression
 | MINUS expression;
 
-declaration_statement: 
+
+declaration_statement: data_type declaration_list SEMICOLON;
+
+declaration_list : declaration_list COMMA declaration
+                 | declaration;
+
+declaration: REFERENCE IDENTIFIER ASSIGN IDENTIFIER
+           | IDENTIFIER declaration_extension;
+
+declaration_extension: array_dimension_list array_initialisation_optional
+                     | ASSIGN value_or_identifier
+                     | ;
+
+value_or_identifier: literals
+                   | IDENTIFIER;
+
+array_initialisation_optional: ASSIGN array_initialisation
+                             | ;
 
 
 iterative_statement: 
@@ -217,8 +232,7 @@ array_arg_dimension_start : RBRACKET array_arg_dimension_tail
 array_arg_dimension_tail: array_arg_dimension_tail LBRACKET number RBRACKET
 | ;
 
-// array declaraction 
-array_declaration: data_type number array_dimension_list;
+// array dimension list, it is used while declaring an array
 array_dimension_list : LBRACKET number array_dimension_tail;
 array_dimension_tail:RBRACKET array_dimension_increase
 	 				|  COMMA number RBRACKET;
