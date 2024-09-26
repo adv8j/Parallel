@@ -59,8 +59,9 @@ statement: iterative_statement
     | parallel_statement
     ;
     // specifies various types of statements(these are the ones which won't need context of being in a function/Task)
-
-inner_statement: iterative_statement
+inner_statement: inner_statement inner_statement_list
+|   inner_statement_list;
+inner_statement_list: iterative_statement
     | selection_statement
     | expression_statement
     | compound_statement
@@ -176,17 +177,18 @@ value_or_identifier: literals
 
 
 iterative_statement:  FOR LPAREN expression_statement expression_statement expression RPAREN compound_statement
-    |FOR LPAREN IDENTIFIER IN number range number RPAREN compound_statement
-    |FOR iterator IN IDENTIFIER compound_statement // TODO
+    |FOR IDENTIFIER IN number range number compound_statement
+    |FOR IDENTIFIER IN IDENTIFIER compound_statement // TODO
+    |FOR REFERENCE IDENTIFIER IN IDENTIFIER compound_statement
     ;
     // 1. for(.. ;.. ; ..)
     // 2. for(id in 1..2)
     // 3. for x in arr
 
 
-iterator: IDENTIFIER
+/* iterator: IDENTIFIER
     |REFERENCE IDENTIFIER
-    ;
+    ; */
     // possibility for iterator variable
 
 range: RANGE
@@ -310,7 +312,7 @@ signal_statement: TASK_CHANNEL
     ;
 
 // wait statement which can be either .wt{<task-name>, number} or .wt{<task-name>, number} -> <identifier> ;
-wait_statement: CHANNEL_WAIT LBRACE IDENTIFIER COMMA number RBRACE
+wait_statement: CHANNEL_WAIT LBRACE IDENTIFIER COMMA number RBRACE 
 | CHANNEL_WAIT LBRACE IDENTIFIER COMMA number RBRACE ARROW IDENTIFIER;
 
 taskgroup_statement: TASKGROUP IDENTIFIER LPAREN LOG EQ STRING_LITERAL RPAREN LBRACE taskgroup_definition RBRACE SEMICOLON
@@ -331,8 +333,11 @@ task_declaration: TASK IDENTIFIER LBRACE task_statements RBRACE
     ; /* this non-terminal is for writing task or supervisor 
         @Task t1{ task_statements} or @Supervisor t1{ task_statements} */
 
+task_statements: task_statements task_statement_list
+    |   task_statement_list;
+
 // #TODO: task_statements STILL HAVE TO FIX STUFF HERE.
-task_statements: iterative_statement
+task_statement_list: iterative_statement
     | selection_statement
     | expression_statement
     | compound_statement
