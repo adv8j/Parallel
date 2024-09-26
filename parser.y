@@ -95,10 +95,34 @@ extern void yyerror(char *s);
 %token CHARACTER_LITERAL
 %start program
 
+// Precedence
+
+%right ASSIGN ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN
+%left OR 
+%left AND
+%left EQ NEQ
+%left GT LT GTE LTE
+%left PLUS MINUS
+%left MUL DIV MOD
+%right NOT // Unary operator problem
+
+
+
+
 %%
 program:statement_list;
 statement_list:statement_list statement
 |	statement;
+
+assignment_operators:
+ASSIGN
+|ADD_ASSIGN
+|SUB_ASSIGN
+|MUL_ASSIGN
+|DIV_ASSIGN
+|MOD_ASSIGN;
+
+
 
 statement:
 iterative_statement
@@ -120,7 +144,36 @@ iterative_statement
 
 compound_statement:
 LBRACE inner_statement RBRACE
-;
+
+
+
+expression_statement:
+expression SEMICOLON
+| SEMICOLON;
+
+expression:
+  number
+| LPAREN expression RPAREN
+| expression PLUS expression
+| expression MINUS expression
+| expression MUL expression
+| expression DIV expression
+| expression MOD expression
+| expression EQ expression
+| expression NEQ expression
+| expression GT expression
+| expression LT expression
+| expression GTE expression
+| expression LTE expression
+| expression AND expression
+| expression OR expression
+| expression assignment_operators expression
+| NOT expression
+| MINUS expression;
+
+
+
+
 
 iterative_statement: 
 FOR LPAREN expression_statement expression_statement expression RPAREN inner_statement
@@ -348,3 +401,4 @@ value: INT_LITERAL| FLOAT_LITERAL| STRING_LITERAL| CHARACTER_LITERAL| TRUE| FALS
 int main(void) {
 	yyparse();
 }
+
