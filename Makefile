@@ -1,7 +1,7 @@
 YACCFLAGS ?= 
 
 all: lex
-	./a.out
+	./parser.out
 
 run: build 
 	./parser.out
@@ -10,8 +10,8 @@ run_sample: build
 	./parser.out < sample.txt
 
 build: 
-	yacc  $(YACCFLAGS) parser.y
-	lex $(YACCFLAGS) parallel_lex.l
+	yacc -d parser.y
+	lex $(LEXFLAGS) parallel_lex.l
 	gcc lex.yy.c y.tab.c -o parser.out
 
 lex_tests:

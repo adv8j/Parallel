@@ -21,6 +21,7 @@ extern void yyerror(char *s);
 
 %token TRUE FALSE IDENTIFIER SHARED_IDENTIFIER INT_LITERAL FLOAT_LITERAL STRING_LITERAL CHARACTER_LITERAL
 
+%define parse.error verbose
 
 %start program
 
@@ -316,15 +317,19 @@ channel_statement: signal_statement SEMICOLON
     | wait_statement SEMICOLON
     ;
 
-// signal statement which can be either .ct or .ct <- <any-value>;
-signal_statement: TASK_CHANNEL
-    | TASK_CHANNEL CHN_SEND expression
-    | TASK_CHANNEL LPAREN ALL RPAREN;
+// signal statement which can be either .ct or .ct <- <any-value>, or .ct(all) or .ct(all) <- x;
+signal_statement: TASK_CHANNEL task_all CHN_SEND expression
+    | TASK_CHANNEL task_all
+    ;
+
+task_all: LPAREN ALL RPAREN 
+    |
     ;
 
 // wait statement which can be either .wt{<task-name>, number} or .wt{<task-name>, number} -> <identifier> ;
 wait_statement: CHANNEL_WAIT LBRACE IDENTIFIER COMMA expression RBRACE 
-| CHANNEL_WAIT LBRACE IDENTIFIER COMMA expression RBRACE ARROW IDENTIFIER;
+    | CHANNEL_WAIT LBRACE IDENTIFIER COMMA expression RBRACE ARROW IDENTIFIER
+    ;
 
 taskgroup_statement: TASKGROUP IDENTIFIER LPAREN taskgroup_argument_list RPAREN LBRACE taskgroup_definition RBRACE SEMICOLON
 	| TASKGROUP IDENTIFIER  LBRACE  taskgroup_definition RBRACE SEMICOLON
@@ -355,7 +360,9 @@ task_statements: one_or_more_task_statements
     |   ;
 
 one_or_more_task_statements:one_or_more_task_statements task_statement_list
-    |   task_statement_list;
+    |   task_statement_list
+    ;
+
 // #TODO: task_statements STILL HAVE TO FIX STUFF HERE.
 task_statement_list: iterative_statement
     | selection_statement
@@ -374,7 +381,7 @@ properties_declaration: PROPERTIES LBRACE taskgroup_properties RBRACE
     // PROPERTIES { taskgroup_properties }
 
 taskgroup_properties: taskgroup_properties taskgroup_property
-    | taskgroup_property
+    | 
     ;
     // this non-terminal is for writing list of properties
 
@@ -390,7 +397,7 @@ order_block: ORDER LBRACE order_rule_list RBRACE
     // ORDER { order_rule_list }
 
 order_rule_list: order_rule_list order_rule 
-    | order_rule 
+    | 
     ;
     // this non-terminal is for writing list of order rules
 
@@ -425,11 +432,11 @@ shared_block: SHARED_DIRECTIVE LBRACE shared_rule_list RBRACE
     // SHARED { shared_rule_list }
 
 shared_rule_list: shared_rule_list shared_rule 
-    | shared_rule
+    | 
     ;
     // this non-terminal is for writing list of shared rules
 
-shared_rule: IDENTIFIER COLON dtype ARROW identifier_list SEMICOLON
+shared_rule: identifier_list COLON dtype ARROW identifier_list SEMICOLON
     ;
     // this non-terminal is for writing shared rule
     // IDENTIFIER : dtype -> IDENTIFIER
@@ -443,7 +450,7 @@ mem_block: MEM LBRACE mem_statement_list RBRACE
 
 
 mem_statement_list: mem_statement_list mem_statement 
-    |   mem_statement 
+    |   
     ;
     // this non-terminal is for writing list of mem statements
 

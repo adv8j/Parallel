@@ -29,19 +29,76 @@ int z = TRUE,  x = 5, k;
 
 x+= 5 < u - adi ;
 
-/*
+
 @TaskGroup t1{
+    
+};
+
+@TaskGroup t2{
     @Task t2{
         int x,y,z;
+
+        .ct <- a[5];
+        .ct(all) ;
+        .ct(all) <- a[5][6];
+        .ct ;
         // int x;
         .ct(all);
     }
-    @Task test(num_threads = aar,log = "yo")
+    @Task test(num_threads = aar)
     {
 
     }
+    
+
+    @Task t3{
+        // Task can be empty
+
+        .wt{t2, 5} -> u;
+    }
+
+
+
+    
+
+// multiple order blocks can't be there, will be checked in semantics :)
+    @Properties{
+        @Order{
+            t2 ,t4-> t3;
+            all -> x -> y;
+            y -> x -> all;
+            all -> t8 -> all;
+            // will give erro as all must be at last t3 -> all -> 4;
+        }
+
+        
+
+        @Mem unsafe{
+            t2 -> t3, t4 mut, t5;
+            t2,t3 -> x, y mut;
+        }
+
+        @Order{ // it can come second time and that too empty no problem
+
+        }
+
+        @Mem{
+            t2 -> t5; // note that this is reduntant
+        }
+
+        @Shared{
+            x : int -> t1;
+            x,y : char -> t2, t3;
+        }
+    }
 };
 
+/* wrong as properties cannot come first
+    @TaskGroup t3{
+        @Properties{
+
+        }
+    }
 */
 
 int[2][2] arr = 1..=n ;
