@@ -42,7 +42,9 @@ extern void yyerror(char *s);
 program: statement_list {printf("Program is correct\n");}
     ;
 
-statement_list: statement_list statement
+statement_list: one_or_more_statements
+|   ;
+one_or_more_statements: one_or_more_statements statement
     | statement
     ;
     // this non-terminal is for writing list of statements
@@ -94,8 +96,12 @@ statement: iterative_statement
     | parallel_statement
     ;
     // specifies various types of statements(these are the ones which won't need context of being in a function/Task)
-inner_statement: inner_statement inner_statement_list
+inner_statement: one_or_more_inner_statements
+| ;
+
+one_or_more_inner_statements: one_or_more_inner_statements inner_statement_list
 |   inner_statement_list;
+
 inner_statement_list: iterative_statement
     | selection_statement
     | expression_statement
@@ -103,7 +109,6 @@ inner_statement_list: iterative_statement
     | declaration_statement
     | parallel_statement
     | return_statement
-    |
     ;
     // specifies various types of statements(these will be used in a function)
 
@@ -193,7 +198,7 @@ declaration: REFERENCE IDENTIFIER ASSIGN IDENTIFIER
     | IDENTIFIER value_assign
     ;
 
-value_assign: ASSIGN value
+value_assign: ASSIGN expression
     | 
     ;
 
@@ -226,8 +231,8 @@ number: INT_LITERAL
     // number used for iteration in range
 
 selection_statement: 
-    IF LPAREN selection_expression RPAREN compound_statement if_chain_statement
-    | IF LPAREN selection_expression RPAREN compound_statement ELSE compound_statement
+    IF LPAREN expression RPAREN compound_statement if_chain_statement
+    | IF LPAREN expression RPAREN compound_statement ELSE compound_statement
     ;
     // if-then-else
 
@@ -236,24 +241,6 @@ if_chain_statement: ELSE selection_statement
     ;
     // if else-if else-if else
 
-selection_expression: selection_expression OR selection_expression
-    | selection_expression AND selection_expression
-    | LPAREN selection_expression RPAREN
-    | selection_expression PLUS selection_expression
-    | selection_expression MINUS selection_expression
-    | selection_expression MUL selection_expression
-    | selection_expression DIV selection_expression
-    | selection_expression MOD selection_expression
-    | selection_expression LT selection_expression
-    | selection_expression GT selection_expression
-    | selection_expression GTE selection_expression
-    | selection_expression LTE selection_expression
-    | selection_expression EQ selection_expression
-    | selection_expression NEQ selection_expression
-    | NOT selection_expression
-    | value
-    ;
-    // assignment types are not needed in selection expression, so separated them
 
 function_declaration: FUNC IDENTIFIER dtype LPAREN argument_list RPAREN compound_statement
     ;
@@ -319,12 +306,12 @@ channel_statement: signal_statement SEMICOLON
 
 // signal statement which can be either .ct or .ct <- <any-value>;
 signal_statement: TASK_CHANNEL
-    | TASK_CHANNEL CHN_SEND value
+    | TASK_CHANNEL CHN_SEND expression
     ;
 
 // wait statement which can be either .wt{<task-name>, number} or .wt{<task-name>, number} -> <identifier> ;
-wait_statement: CHANNEL_WAIT LBRACE IDENTIFIER COMMA number RBRACE 
-| CHANNEL_WAIT LBRACE IDENTIFIER COMMA number RBRACE ARROW IDENTIFIER;
+wait_statement: CHANNEL_WAIT LBRACE IDENTIFIER COMMA expression RBRACE 
+| CHANNEL_WAIT LBRACE IDENTIFIER COMMA expression RBRACE ARROW IDENTIFIER;
 
 taskgroup_statement: TASKGROUP IDENTIFIER LPAREN LOG EQ STRING_LITERAL RPAREN LBRACE taskgroup_definition RBRACE SEMICOLON
 	| TASKGROUP IDENTIFIER  LBRACE  taskgroup_definition RBRACE SEMICOLON
@@ -344,9 +331,11 @@ task_declaration: TASK IDENTIFIER LBRACE task_statements RBRACE
     ; /* this non-terminal is for writing task or supervisor 
         @Task t1{ task_statements} or @Supervisor t1{ task_statements} */
 
-task_statements: task_statements task_statement_list
-    |   task_statement_list;
+task_statements: one_or_more_task_statements
+    |   ;
 
+one_or_more_task_statements:one_or_more_task_statements task_statement_list
+    |   task_statement_list;
 // #TODO: task_statements STILL HAVE TO FIX STUFF HERE.
 task_statement_list: iterative_statement
     | selection_statement
