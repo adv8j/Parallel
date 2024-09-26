@@ -1,0 +1,20 @@
+string abc = "ANSHIKA"; 
+bool flag = true;
+y = 10 + (100)/(z = 2);
+
+
+int my_first_array[5]={1,2,3,4,5};
+
+int arr[2][2] = {{1,2},{3,4}};
+
+string my_strings[2][2,"HELLO"];
+int my_second_array[5];
+int my_third_array[5][5,10] ;
+
+x = arr[0];
+
+xyz = 1..11;
+
+if("ANSHIKA" > "DIKSHANT"){
+    printf("YAYYYYY!!\n");
+}
