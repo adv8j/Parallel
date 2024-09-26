@@ -32,7 +32,7 @@ extern void yyerror(char *s);
 %left GT LT GTE LTE
 %left PLUS MINUS
 %left MUL DIV MOD
-%right NOT // Unary operator problem
+%right NOT  // Unary operator problem
 
 
 
@@ -44,15 +44,6 @@ statement_list: statement_list statement
     | statement
     ;
     // this non-terminal is for writing list of statements
-
-assignment_operators: ASSIGN
-    | ADD_ASSIGN
-    | SUB_ASSIGN
-    | MUL_ASSIGN
-    | DIV_ASSIGN
-    | MOD_ASSIGN 
-    ;
-    // this non-terminal is for writing assignment operators, like =, +=, -=, *=, /=, %=
 
 
 
@@ -77,7 +68,7 @@ inner_statement: iterative_statement
     ;
     // specifies various types of statements(these will be used in a function)
 
-return_statement: RETURN expression
+return_statement: RETURN expression SEMICOLON
 	;
 
 compound_statement: LBRACE inner_statement RBRACE
@@ -96,27 +87,67 @@ literals: value;
     // constant literals
 
 
-expression: IDENTIFIER
-    | literals
+expression: literals
     | LPAREN expression RPAREN
-    | expression PLUS expression
+    | assignment_expression
+    | arithmetic_expression
+    | logical_expression
+    | comparison_expression
+    | unary_expression
+    ;
+    // This is for writing various expressions
+
+
+
+    // this non-terminal is for writing comparison operators
+
+
+    // this non-terminal is for writing logical operators
+
+unary_operator: MINUS
+    | NOT
+    ;
+    // this non-terminal is for writing unary operators
+
+
+arithmetic_expression: expression PLUS expression
     | expression MINUS expression
     | expression MUL expression
     | expression DIV expression
     | expression MOD expression
-    | expression EQ expression
-    | expression NEQ expression
+    ;
+    // this non-terminal is for writing arithmetic expression
+
+assignment_expression: expression ASSIGN expression
+    | expression ADD_ASSIGN expression
+    | expression SUB_ASSIGN expression
+    | expression MUL_ASSIGN expression
+    | expression DIV_ASSIGN expression
+    | expression MOD_ASSIGN expression
+
+    ;
+    // this non-terminal is for writing assignment expression
+
+
+unary_expression: unary_operator number
+    ;
+    // this non-terminal is for writing unary expression
+
+
+comparison_expression: expression LT expression
     | expression GT expression
-    | expression LT expression
     | expression GTE expression
     | expression LTE expression
-    | expression AND expression
-    | expression OR expression
-    | expression assignment_operators expression
-    | NOT expression
-    | MINUS expression
+    | expression EQ expression
+    | expression NEQ expression
     ;
-    // This is for writing various expressions
+    // this non-terminal is for writing comparison expression   
+
+logical_expression: expression AND expression
+    | expression OR expression
+    ;
+    // this non-terminal is for writing logical expression
+
 
 declaration_statement: data_type declaration_list SEMICOLON;
     // variable declaration
@@ -137,17 +168,17 @@ declaration_extension: array_dimension_list
     // for writing dimensions of array(with init) and assignment in declaration.
 
 value_or_identifier: literals
-    | IDENTIFIER
     ;
 
 
 
 iterative_statement:  FOR LPAREN expression_statement expression_statement expression RPAREN inner_statement
     |FOR LPAREN IDENTIFIER IN number range number RPAREN inner_statement
-    |FOR LPAREN iterator IN IDENTIFIER RPAREN inner_statement
+    |FOR iterator IN IDENTIFIER inner_statement // TODO
     ;
     // 1. for(.. ;.. ; ..)
     // 2. for(id in 1..2)
+    // 3. for x in arr
 
 
 iterator: IDENTIFIER
@@ -166,12 +197,15 @@ number: INT_LITERAL
     // number used for iteration in range
 
 selection_statement: 
-    IF LPAREN expression RPAREN inner_statement
-    | IF LPAREN expression RPAREN inner_statement ELSE inner_statement
+    IF LPAREN expression RPAREN LBRACE inner_statement RBRACE if_chain_statement
+    | IF LPAREN expression RPAREN LBRACE inner_statement RBRACE ELSE LBRACE inner_statement RBRACE
     ;
     // if-then-else
 
-
+if_chain_statement: ELSE selection_statement
+    |
+    ;
+    // if else-if else-if else
 
 function_declaration: FUNC IDENTIFIER data_type LPAREN argument_list RPAREN LBRACE inner_statement RBRACE
     ;
@@ -194,9 +228,11 @@ argument_declaration: datatype_and_ref IDENTIFIER
 
 // dimensions for arrays when writing as parameters for functions
 array_arg_dimension: array_arg_dimension_increase RBRACKET
+    | RBRACKET
 	;
 
 array_arg_dimension_increase: array_arg_dimension_increase LBRACKET number
+    | LBRACKET number
 	;
 
 
@@ -209,7 +245,6 @@ array_dimension_tail: RBRACKET array_dimension_increase
 	;
 
 array_dimension_increase: LBRACKET number array_dimension_tail;
-//array initialisation is left
 
 
 //parallel statements
@@ -220,8 +255,8 @@ parallel_stmt_argument_list: parallel_stmt_argument_list COMMA parallel_stmt_arg
     | parallel_stmt_argument;
 
 // this consists of all the arguments which are inside the parallel construct like shared, private, reduction, etc. 
-parallel_stmt_argument: SHARED ASSIGN LBRACKET parallel_identifier_list RBRACKET 
-    | PRIVATE ASSIGN LBRACKET parallel_identifier_list RBRACKET 
+parallel_stmt_argument: SHARED ASSIGN LBRACKET identifier_list RBRACKET 
+    | PRIVATE ASSIGN LBRACKET identifier_list RBRACKET 
     | REDUCTION ASSIGN LBRACKET reduction_list RBRACKET;
     | SCHEDULE ASSIGN schedule_list
     | NUM_THREADS ASSIGN INT_LITERAL
@@ -229,20 +264,19 @@ parallel_stmt_argument: SHARED ASSIGN LBRACKET parallel_identifier_list RBRACKET
 
 schedule_list: STATIC_SCHEDULE|	DYNAMIC_SCHEDULE;
 
-parallel_identifier_list: parallel_identifier_list COMMA IDENTIFIER
-|	IDENTIFIER;
 
 // reduction list contains operator: identifier list. for eg. +: a,b,c
-reduction_list: reduction_list COMMA reduction_operator_list COLON parallel_identifier_list
-|	reduction_operator_list COLON parallel_identifier_list;
+reduction_list: reduction_list SEMICOLON reduction_operator_list 
+    | reduction_operator_list 
+    ;
 
 // reduction operator list contains all the reduction operators like +, -, *, /, % and the reduction is applied on operator assign versions (like +=, -=, *=, /=, %=).
-reduction_operator_list: PLUS
-|	MINUS
-|	MUL
-|	DIV
-|	MOD;
-
+reduction_operator_list: PLUS COLON identifier_list
+    | MINUS COLON identifier_list
+    | MUL COLON identifier_list
+    | DIV COLON identifier_list
+    | MOD COLON identifier_list
+    ; 
 // conditional signals and return statements
 channel_statement: signal_statement SEMICOLON| wait_statement SEMICOLON;
 
