@@ -21,6 +21,8 @@ extern void yyerror(char *s);
 
 %token TRUE FALSE IDENTIFIER SHARED_IDENTIFIER INT_LITERAL FLOAT_LITERAL STRING_LITERAL CHARACTER_LITERAL
 
+%token YYerror
+
 %start program
 
 // Precedence
@@ -38,7 +40,8 @@ extern void yyerror(char *s);
 
 
 %%
-program: statement_list;
+program: statement_list {printf("Program is correct\n");}
+    ;
 
 statement_list: statement_list statement
     | statement
@@ -65,6 +68,7 @@ inner_statement: iterative_statement
     | declaration_statement
     | parallel_statement
     | return_statement
+    |
     ;
     // specifies various types of statements(these will be used in a function)
 
@@ -172,9 +176,9 @@ value_or_identifier: literals
 
 
 
-iterative_statement:  FOR LPAREN expression_statement expression_statement expression RPAREN inner_statement
-    |FOR LPAREN IDENTIFIER IN number range number RPAREN inner_statement
-    |FOR iterator IN IDENTIFIER inner_statement // TODO
+iterative_statement:  FOR LPAREN expression_statement expression_statement expression RPAREN compound_statement
+    |FOR LPAREN IDENTIFIER IN number range number RPAREN compound_statement
+    |FOR iterator IN IDENTIFIER compound_statement // TODO
     ;
     // 1. for(.. ;.. ; ..)
     // 2. for(id in 1..2)
@@ -197,8 +201,8 @@ number: INT_LITERAL
     // number used for iteration in range
 
 selection_statement: 
-    IF LPAREN expression RPAREN LBRACE inner_statement RBRACE if_chain_statement
-    | IF LPAREN expression RPAREN LBRACE inner_statement RBRACE ELSE LBRACE inner_statement RBRACE
+    IF LPAREN selection_expression RPAREN compound_statement if_chain_statement
+    | IF LPAREN selection_expression RPAREN compound_statement ELSE compound_statement
     ;
     // if-then-else
 
@@ -207,7 +211,26 @@ if_chain_statement: ELSE selection_statement
     ;
     // if else-if else-if else
 
-function_declaration: FUNC IDENTIFIER data_type LPAREN argument_list RPAREN LBRACE inner_statement RBRACE
+selection_expression: selection_expression OR selection_expression
+    | selection_expression AND selection_expression
+    | LPAREN selection_expression RPAREN
+    | selection_expression PLUS selection_expression
+    | selection_expression MINUS selection_expression
+    | selection_expression MUL selection_expression
+    | selection_expression DIV selection_expression
+    | selection_expression MOD selection_expression
+    | selection_expression LT selection_expression
+    | selection_expression GT selection_expression
+    | selection_expression GTE selection_expression
+    | selection_expression LTE selection_expression
+    | selection_expression EQ selection_expression
+    | selection_expression NEQ selection_expression
+    | NOT selection_expression
+    | literals
+    ;
+    // assignment types are not needed in selection expression, so separated them
+
+function_declaration: FUNC IDENTIFIER data_type LPAREN argument_list RPAREN compound_statement
     ;
     // Function declaration, (return can never be ref)
 
@@ -442,6 +465,7 @@ mem_taskgroup_name: IDENTIFIER
 
 value: INT_LITERAL| FLOAT_LITERAL| STRING_LITERAL| CHARACTER_LITERAL| TRUE| FALSE| IDENTIFIER;
 
+// no new rules required, if nothing is matched then.
 
 %%
 int main(void) {

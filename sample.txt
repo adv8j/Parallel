@@ -1,0 +1,29 @@
+if ( x < y) {
+    x += 5;
+}
+else if(x > y){
+    x += 5;
+}
+else if(x > y){
+    x += 5;
+}
+else{
+    x+=5;
+}
+
+for &i in arr{
+    x+=i;
+}
+
+
+for ( i in 0..5){
+    x+= i;
+}
+
+for (x in 9..=100){
+
+}
+
+int x,y,z;
+int z = TRUE,  x = 5, k;
+

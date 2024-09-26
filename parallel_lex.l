@@ -611,20 +611,18 @@ false {
 }
 
 . {
-	
-    printf("\n\033[1;31mSyntax Error:\033[0m\n");
-	printf("Line \033[1;36m%3d\033[0m: %s",yylineno ,cur_line);
-	printf("\033[1;31m%s\033[0m\n", yytext);
-    printf("Unrecognized character \033[1;33m%s\033[0m ", yytext); 
-    printf("at line \033[1;36m%d\033[0m, character \033[1;36m%d\033[0m\n", yylineno, cur_char);
-	memset(cur_line, 0, 10000);
+	char err_message[15500];
+	memset(err_message, 0, 15500);
+	sprintf(err_message, "\n\033[1;31mSyntax Error:\033[0m\nLine \033[1;36m%3d\033[0m: %s\033[1;31m%s\033[0m\nUnrecognized character \033[1;33m%s\033[0m at line \033[1;36m%d\033[0m, character \033[1;36m%d\033[0m\n",yylineno ,cur_line, yytext, yytext, yylineno, cur_char);
+	yyerror(err_message);
 	return YYerror;
 }
 %%
 
 void yyerror(char* s){
-	printf("\n");
+	printf("%s", s);
 }
+
 int yywrap(void) {
 	strcat(cur_line, yytext);
 	return 1;
