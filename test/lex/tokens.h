@@ -65,6 +65,8 @@ const char *yytname[] = {
     "STRING",
     "FUNC",
     "RETURN",
+    "CONTINUE",
+    "BREAK",
     "STRUCT",
     "IF",
     "ELSE",
@@ -80,4 +82,4 @@ const char *yytname[] = {
     "CHARACTER_LITERAL",
 };
 
-const int yyntokens = 79;
+const int yyntokens = 81;

@@ -120,19 +120,21 @@ extern int yydebug;
     STRING = 321,                  /* STRING  */
     FUNC = 322,                    /* FUNC  */
     RETURN = 323,                  /* RETURN  */
-    STRUCT = 324,                  /* STRUCT  */
-    IF = 325,                      /* IF  */
-    ELSE = 326,                    /* ELSE  */
-    FOR = 327,                     /* FOR  */
-    IN = 328,                      /* IN  */
-    TRUE = 329,                    /* TRUE  */
-    FALSE = 330,                   /* FALSE  */
-    IDENTIFIER = 331,              /* IDENTIFIER  */
-    SHARED_IDENTIFIER = 332,       /* SHARED_IDENTIFIER  */
-    INT_LITERAL = 333,             /* INT_LITERAL  */
-    FLOAT_LITERAL = 334,           /* FLOAT_LITERAL  */
-    STRING_LITERAL = 335,          /* STRING_LITERAL  */
-    CHARACTER_LITERAL = 336        /* CHARACTER_LITERAL  */
+    CONTINUE = 324,                /* CONTINUE  */
+    BREAK = 325,                   /* BREAK  */
+    STRUCT = 326,                  /* STRUCT  */
+    IF = 327,                      /* IF  */
+    ELSE = 328,                    /* ELSE  */
+    FOR = 329,                     /* FOR  */
+    IN = 330,                      /* IN  */
+    TRUE = 331,                    /* TRUE  */
+    FALSE = 332,                   /* FALSE  */
+    IDENTIFIER = 333,              /* IDENTIFIER  */
+    SHARED_IDENTIFIER = 334,       /* SHARED_IDENTIFIER  */
+    INT_LITERAL = 335,             /* INT_LITERAL  */
+    FLOAT_LITERAL = 336,           /* FLOAT_LITERAL  */
+    STRING_LITERAL = 337,          /* STRING_LITERAL  */
+    CHARACTER_LITERAL = 338        /* CHARACTER_LITERAL  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -207,19 +209,21 @@ extern int yydebug;
 #define STRING 321
 #define FUNC 322
 #define RETURN 323
-#define STRUCT 324
-#define IF 325
-#define ELSE 326
-#define FOR 327
-#define IN 328
-#define TRUE 329
-#define FALSE 330
-#define IDENTIFIER 331
-#define SHARED_IDENTIFIER 332
-#define INT_LITERAL 333
-#define FLOAT_LITERAL 334
-#define STRING_LITERAL 335
-#define CHARACTER_LITERAL 336
+#define CONTINUE 324
+#define BREAK 325
+#define STRUCT 326
+#define IF 327
+#define ELSE 328
+#define FOR 329
+#define IN 330
+#define TRUE 331
+#define FALSE 332
+#define IDENTIFIER 333
+#define SHARED_IDENTIFIER 334
+#define INT_LITERAL 335
+#define FLOAT_LITERAL 336
+#define STRING_LITERAL 337
+#define CHARACTER_LITERAL 338
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED

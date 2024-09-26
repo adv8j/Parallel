@@ -17,7 +17,7 @@ extern void yyerror(char *s);
 
 %token INT CHAR LONG BOOL FLOAT STRING
 
-%token FUNC RETURN STRUCT IF ELSE FOR IN
+%token FUNC RETURN CONTINUE BREAK STRUCT IF ELSE FOR IN
 
 %token TRUE FALSE IDENTIFIER SHARED_IDENTIFIER INT_LITERAL FLOAT_LITERAL STRING_LITERAL CHARACTER_LITERAL
 
@@ -113,6 +113,8 @@ inner_statement_list: iterative_statement
     // specifies various types of statements(these will be used in a function)
 
 return_statement: RETURN expression SEMICOLON
+|   BREAK SEMICOLON
+|   CONTINUE SEMICOLON
 	;
 
 compound_statement: LBRACE inner_statement RBRACE
@@ -137,8 +139,17 @@ expression: value
     | logical_expression
     | comparison_expression
     | unary_expression
+    | function_call
     ;
     // This is for writing various expressions
+
+function_call: IDENTIFIER LPAREN RPAREN
+|   IDENTIFIER LPAREN fn_call_argument_list RPAREN;
+
+fn_call_argument_list: fn_call_argument_list COMMA expression
+    | expression;
+    // this is for writing function call
+
 
 
 unary_operator: MINUS

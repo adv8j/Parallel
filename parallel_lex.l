@@ -487,6 +487,20 @@ return {
 	return RETURN;
 }
 
+continue {
+	strcat(cur_line, yytext);
+	int len = strlen(yytext);
+	cur_char += len;
+	return CONTINUE;
+}
+
+break {
+	strcat(cur_line, yytext);
+	int len = strlen(yytext);
+	cur_char += len;
+	return BREAK;
+}
+
 struct {
 	strcat(cur_line, yytext);
 	int len = strlen(yytext);
