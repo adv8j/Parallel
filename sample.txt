@@ -106,7 +106,7 @@ x+= 5 < u - adi ;
         }
     }
 };
-@
+
 /* wrong as properties cannot come first
     @TaskGroup t3{
         @Properties{
@@ -166,3 +166,6 @@ y.y1 = 2;
 
 x = hello();
 y = hello({hefb, {ebfhe}}, hurray, "ehjkf", 1233);
+int x = y < 3;
+
+int[x < 3][4, x+5] z;

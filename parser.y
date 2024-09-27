@@ -58,6 +58,10 @@ generic_dtypes: INT
     | BOOL
     | CHAR
     | STRUCT IDENTIFIER 
+    | error { 
+        char error_message[10000];
+
+    }
     ;
     // for struct still have to find better solution
 
@@ -75,12 +79,12 @@ array_element: IDENTIFIER dims ;
     // x[2][3]
 
 // Needs work for array initialization and all : TODO
-dims: dims LBRACKET number RBRACKET
-    | LBRACKET number RBRACKET
+dims: dims LBRACKET expression RBRACKET
+    | LBRACKET expression RBRACKET
     ; 
     // this non-terminal is for writing array dimensions
 
-initializer_dims: LBRACKET number COMMA literals RBRACKET
+initializer_dims: LBRACKET expression COMMA expression RBRACKET
     | 
     ;
     // this non-terminal is for writing array dimensions in initialization
