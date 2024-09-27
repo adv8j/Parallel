@@ -169,3 +169,15 @@ y = hello({hefb, {ebfhe}}, hurray, "ehjkf", 1233);
 int x = y < 3;
 
 int[x < 3][4, x+5] z;
+
+for i in (r = exp()) {
+
+}
+
+for i in exp()..(len(5..10)){
+    x-=-x + 5;
+    -(x + 5);
+    -3.14 ;
+    -fgs.sdf;
+    
+}

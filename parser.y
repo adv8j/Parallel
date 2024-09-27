@@ -2,6 +2,7 @@
 #include <stdio.h>
 int yylex(void);
 extern int yyerror(char *s);
+#define YYDEBUG 1
 %}
 
 
@@ -34,6 +35,7 @@ extern int yyerror(char *s);
 %left GT LT GTE LTE
 %left PLUS MINUS
 %left MUL DIV MOD
+%left RANGE RANGE_INCL
 %right NOT  // Unary operator problem
 
 
@@ -132,7 +134,7 @@ struct_declaration: STRUCT IDENTIFIER LBRACE member_data_list RBRACE SEMICOLON;
 member_data_list: member_data_list member_data      // list for member data of struct  // this is used while declaring a struct
                 | ;
 
-member_data: dtype IDENTIFIER value_assign SEMICOLON        //one member data of a struct   // used while initialising a struct
+member_data: dtype IDENTIFIER value_assign SEMICOLON   ;     //one member data of a struct   // used while initialising a struct
 
 expression_statement: expression SEMICOLON
     | SEMICOLON
@@ -187,7 +189,9 @@ assignment_expression: expression ASSIGN expression
 
 
 
-unary_expression: unary_operator number
+unary_expression: unary_operator number 
+    | unary_operator FLOAT_LITERAL
+    | unary_operator LPAREN expression RPAREN
     ;
     // this non-terminal is for writing unary expression
 
@@ -235,28 +239,20 @@ list_member : list_initialiser  // a single member in a list
 
 
 iterative_statement:  FOR LPAREN expression_statement expression_statement expression RPAREN compound_statement
-    |FOR iterator IN container  compound_statement
+    |FOR iterator IN expression  compound_statement
     ;
     // 1. for(.. ;.. ; ..)
     // 2. for(id in 1..2)
     // 3. for x in arr
 
-container: IDENTIFIER
-    | array_literal 
-    ;
-    // basically arrays
 iterator: IDENTIFIER
     |REFERENCE IDENTIFIER
     ; 
     // possibility for iterator variable
 
-range: RANGE
-    |RANGE_INCL
-    ;
-    // types of range operators
 
 number: INT_LITERAL
-    |IDENTIFIER
+    | identifier_chain
     ;
     // number used for iteration in range
 
@@ -352,7 +348,7 @@ taskgroup_argument_list: taskgroup_argument COMMA taskgroup_argument
 |   taskgroup_argument;
 
 taskgroup_argument: LOG ASSIGN STRING_LITERAL
-    | NUM_THREADS ASSIGN number
+    | NUM_THREADS ASSIGN expression
     ;
 taskgroup_definition:  task_declaration_list properties_declaration 
     |
@@ -364,10 +360,10 @@ task_declaration_list: task_declaration_list task_declaration
     ; // this non-terminal is for writing list of tasks
 
 task_declaration: TASK IDENTIFIER LBRACE task_statement_list RBRACE 
-    | TASK IDENTIFIER LPAREN NUM_THREADS ASSIGN number RPAREN LBRACE task_statement_list RBRACE 
+    | TASK IDENTIFIER LPAREN NUM_THREADS ASSIGN expression RPAREN LBRACE task_statement_list RBRACE 
     | SUPERVISOR IDENTIFIER LBRACE supervisor_statement_list RBRACE
     ; /* this non-terminal is for writing task or supervisor 
-        @Task t1{ task_statements} or @Supervisor t1{ task_statements} */
+        @Task t1(num_threads = exp){ task_statements} or @Supervisor t1{ task_statements} */
 
 
 supervisor_statement_list: supervisor_statement_list supervisor_statements
@@ -512,7 +508,10 @@ call_statement: CALL IDENTIFIER  SEMICOLON
     // this non-terminal is for writing call statement, calling a task from supervisor
     // CALL t1 ;
 
-array_literal: number range number 
+
+    // this non-terminal is for writing range
+array_literal: expression RANGE expression 
+    | expression RANGE_INCL expression
     ;
     // this non-terminal is for writing array literal
 
