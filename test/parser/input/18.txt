@@ -1,11 +1,14 @@
-@TaskGroup g1
-{
-    @Task t1
-    {}
-    @Properties
-    {
-        @Mem{
-            a->t1,t2 mut t3;
-        }
-    }
-}
+
+struct Person {
+    // Data members
+        int age;
+        float height;
+};
+
+struct Person person = {45, 5.3};
+
+person.age = 30;
+person.height = 1.75;
+X = func();
+X = person.age;
+

@@ -1,10 +1,4 @@
-@TaskGroup g1
-{
-    @TaskGroup g2
-    {
-        @ Task t1
-        {
-            _task;
-        }
+func myfunc int (){
+        return e+3;
+        
     }
-}

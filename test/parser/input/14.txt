@@ -1,13 +1,6 @@
-@TaskGroup g1
-{
-    int x = 5, y=2;y=3;
-    y = 4;
-    _task;
-    @Task t1
-    {
-        for (int i = 0; i < 10; i++)
-        {
-            for (int j = 0; j < 10; j++);
-        }
+func myfunc int (int a , char c){
+        a=b;
+        int e=10;
+        return e;
+        
     }
-}

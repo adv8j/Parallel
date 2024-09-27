@@ -1,0 +1,13 @@
+@TaskGroup g1
+{
+    @Task t1
+    {}
+    @Task t2
+    {}
+    @Task t3
+    {}
+    @Properties
+    {
+    
+    }
+}

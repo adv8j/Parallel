@@ -1,14 +1,10 @@
-if(a>b){
-        if(2<4){
-            d=d+2;
-        }
-        else if(value==true){
-            d=d-2;
-        }
-        else{
-            
-        }
-    }
-    else{
-        sum=sum+9;
-    }
+
+string s="How are you?";
+string ab="";
+z="checking";
+
+lenOfz=z.length();
+fourthchar=s[4];
+
+areEqual=("check"=="CHECK");
+isgreater=("check">"CHECK");

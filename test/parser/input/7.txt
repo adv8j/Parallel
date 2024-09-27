@@ -1,6 +1,3 @@
-func myfunc int (int a , char c){
-        a=b;
-        int e=10;
-        return e;
-        
+for (int i = 0; i < 10; i++){
+        sum=sum+i;
     }

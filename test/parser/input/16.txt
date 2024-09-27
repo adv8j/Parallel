@@ -1,13 +1,8 @@
-@TaskGroup g1
-{
-    @Task t1
-    {}
-    @Task t2
-    {}
-    @Task t3
-    {}
-    @Properties
-    {
-    
-    }
+
+func example_function int (int a,int b){
+    return a+b;
 }
+a = 1;
+b = 2;
+X = example_function(a,b);
+
