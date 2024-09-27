@@ -31,22 +31,31 @@ for file in $(ls "$input_folder" | grep -E '^[0-9]+(_wrong)?\.txt$' | sort -n); 
         number=${BASH_REMATCH[1]}
         is_wrong=${BASH_REMATCH[2]}
 
+        # Reset the syntax_error flag for each file
+        syntax_error=false
+
         # Run parser.out, pipe its output to grep, and capture result
         if $out; then
             # Print and check for "syntax error"
-            ./parser.out < "$input_folder/$filename" 2>&1 | tee >(grep -q "syntax error"  && syntax_error=true)
+            output=$(./parser.out < "$input_folder/$filename" 2>&1)
+            echo -n "$output"
         else
             # Suppress stdout but still check for "syntax error"
-            ./parser.out < "$input_folder/$filename" 2>&1 | grep -q "syntax error" && syntax_error=true
+            output=$(./parser.out < "$input_folder/$filename" 2>&1)
         fi
 
-        # Check if the 'syntax_error' flag is set
+        # Check for the 'syntax error' in output
+        if echo "$output" | grep -q "syntax error"; then
+            syntax_error=true
+        fi
+
+        # Evaluate based on the syntax_error flag and the presence of _wrong in the filename
         if [ "$syntax_error" == true ]; then
             if [ -z "$is_wrong" ]; then
-                echo -e "$number.txt: Test Failed" >> "$log_file"
+                echo -e "$number.txt: Test Failed (Syntax Error)" >> "$log_file"
                 printf "${yellow}%2d.txt:${reset} ${red}Test Failed${reset}\n" "$number"
             else
-                echo -e "$number.txt: Test Passed" >> "$log_file"
+                echo -e "$number.txt: Test Passed (Syntax Error Handled)" >> "$log_file"
                 printf "${yellow}%2d.txt:${reset} ${green}Test Passed${reset}\n" "$number"
             fi
         else
@@ -58,8 +67,5 @@ for file in $(ls "$input_folder" | grep -E '^[0-9]+(_wrong)?\.txt$' | sort -n); 
                 printf "${yellow}%2d.txt:${reset} ${red}Test Failed${reset}\n" "$number"
             fi
         fi
-
-        # Reset the syntax_error flag for the next iteration
-        syntax_error=false
     fi
 done
