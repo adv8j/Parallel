@@ -17,4 +17,13 @@ xyz = 1..11;
 
 if("ANSHIKA" > "DIKSHANT"){
     printf("YAYYYYY!!\n");
-}
+}int a; 
+    char c='a';
+    char c=23;
+    int v=56;
+    long num=10000000;
+    bool flag=true;
+    bool flag2=1;
+    float pi=3.14;
+    x=10;
+

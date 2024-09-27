@@ -1,5 +1,54 @@
 contents = [
-    '''for (int i = 0; i < 10; i++){
+    '''int a=10; //single line comment
+''',
+'''/*this is 
+multi line cooment*/
+a=20;
+''',
+'''int a; 
+char c='a';
+char c=23;
+int v=56;
+long num=10000000;
+bool flag=true;
+bool flag2=1;
+float pi=3.14;
+x=10;
+
+''',
+'''a+3;
+b=2+3*5;
+c=(3<4)&&(6>4);
+w+=40;
+mo%=10;
+-check;
+check=(4!=5);
+''',
+'''
+int[5] arr={1,2,3,4,5};
+x= arr[0];
+arr[4]=6;
+y=arr[-1]; 
+z=arr[5];
+arr = 1..n;
+''',
+'''
+string s="How are you?";
+string ab="";
+z="checking";
+
+lenOfz=z.length();
+fourthchar=s[4];
+
+areEqual=("check"=="CHECK");
+isgreater=("check">"CHECK");
+''',
+
+'''for (int i = 0; i < 10; i++){
+        sum=sum+i;
+    }
+''',
+'''for (int i = 0; i < 10; ){
         sum=sum+i;
     }
 ''',
@@ -49,31 +98,40 @@ contents = [
         
     }
 ''',
-'''int a=10; //single line comment
-''',
-'''/*this is 
-multi line cooment*/
-a=20;
-''',
-'''int a; 
-    char c='a';
-    char c=23;
-    int v=56;
-    long num=10000000;
-    bool flag=true;
-    bool flag2=1;
-    float pi=3.14;
-    x=10;
+
+'''
+func example_function int (int a,int b){
+    return a+b;
+}
+a = 1;
+b = 2;
+X = example_function(a,b);
 
 ''',
-'''a+3;
-    b=2+3*5;
-    c=(3<4)&&(6>4);
-    w+=40;
-    mo%=10;
-    -check;
+
+'''
+int a = 10;
+int& ref = a;
+ref = 20; 
+
 
 ''',
+'''
+struct Person {
+    // Data members
+        int age;
+        float height;
+};
+
+struct Person person = {45, 5.3};
+
+person.age = 30;
+person.height = 1.75;
+X = func();
+X = person.age;
+
+''',
+
 '''@TaskGroup g1
 {
     @Task t1
