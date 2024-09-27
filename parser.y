@@ -148,7 +148,9 @@ function_call: IDENTIFIER LPAREN RPAREN
 |   IDENTIFIER LPAREN fn_call_argument_list RPAREN;
 
 fn_call_argument_list: fn_call_argument_list COMMA expression
-    | expression;
+    | expression
+    |
+    ;
     // this is for writing function call
 
 
@@ -259,26 +261,21 @@ function_declaration: FUNC IDENTIFIER dtype LPAREN argument_list RPAREN compound
     // Function declaration, (return can never be ref)
 
 
-datatype_and_ref: dtype| dtype REFERENCE;
+datatype_and_ref: argument_dtype| dtype REFERENCE;
 // includes the data types and references (like: int&)
 
+argument_dtype : generic_dtypes
+    | generic_dtypes dims 
+    ;
 
-argument_list: argument_declaration
-	| argument_list COMMA argument_declaration
+argument_list: argument_list COMMA argument_declaration
+	| argument_declaration
+    | 
 	;
 
-argument_declaration: datatype_and_ref IDENTIFIER
-					  |datatype_and_ref IDENTIFIER array_arg_dimension;
-
-// dimensions for arrays when writing as parameters for functions
-array_arg_dimension: array_arg_dimension_increase RBRACKET
-    | RBRACKET
-	;
-
-array_arg_dimension_increase: array_arg_dimension_increase LBRACKET number
-    | LBRACKET number
-	;
-
+argument_declaration: datatype_and_ref IDENTIFIER 
+    | datatype_and_ref IDENTIFIER ASSIGN expression // for default arguments
+    ; 
 
 
 //parallel statements
@@ -350,21 +347,34 @@ task_declaration_list: task_declaration_list task_declaration
     | task_declaration
     ; // this non-terminal is for writing list of tasks
 
-task_declaration: TASK IDENTIFIER LBRACE task_statements RBRACE 
-    | TASK IDENTIFIER LPAREN NUM_THREADS ASSIGN number RPAREN LBRACE task_statements RBRACE 
-    | SUPERVISOR IDENTIFIER LBRACE task_statements RBRACE
+task_declaration: TASK IDENTIFIER LBRACE task_statement_list RBRACE 
+    | TASK IDENTIFIER LPAREN NUM_THREADS ASSIGN number RPAREN LBRACE task_statement_list RBRACE 
+    | SUPERVISOR IDENTIFIER LBRACE supervisor_statement_list RBRACE
     ; /* this non-terminal is for writing task or supervisor 
         @Task t1{ task_statements} or @Supervisor t1{ task_statements} */
 
-task_statements: one_or_more_task_statements
-    |   ;
 
-one_or_more_task_statements:one_or_more_task_statements task_statement_list
-    |   task_statement_list
+supervisor_statement_list: supervisor_statement_list supervisor_statements
+    | 
+    ;
+
+supervisor_statements:  iterative_statement
+    | selection_statement
+    | expression_statement
+    | compound_statement
+    | declaration_statement
+    | parallel_statement
+	| channel_statement
+    | other_statements
+    ;
+
+
+task_statement_list: task_statement_list task_statements
+    |   
     ;
 
 // #TODO: task_statements STILL HAVE TO FIX STUFF HERE.
-task_statement_list: iterative_statement
+task_statements: iterative_statement
     | selection_statement
     | expression_statement
     | compound_statement
@@ -472,6 +482,20 @@ mem_taskgroup_name: IDENTIFIER
     // this non-terminal is for writing mem taskgroup name
     // IDENTIFIER mut
 
+other_statements: join_statement
+    | call_statement
+    ;
+
+join_statement: JOIN IDENTIFIER  SEMICOLON
+    ;
+    // this non-terminal is for writing join statement
+    // JOIN t1 ;
+
+call_statement: CALL IDENTIFIER  SEMICOLON
+    ;
+    // this non-terminal is for writing call statement, calling a task from supervisor
+    // CALL t1 ;
+
 array_literal: number range number 
     ;
     // this non-terminal is for writing array literal
@@ -480,11 +504,14 @@ literals: INT_LITERAL| FLOAT_LITERAL| STRING_LITERAL| CHARACTER_LITERAL| TRUE| F
     // constant literals
 
 value: literals 
-    | IDENTIFIER
+    | identifier_chain
     | array_element
     ;
     // this non-terminal is for writing value
 
+identifier_chain : identifier_chain DOT IDENTIFIER
+    | IDENTIFIER
+    ;
 // no new rules required, if nothing is matched then.
 
 %%
