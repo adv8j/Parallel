@@ -149,16 +149,14 @@ expression: value
     ;
     // This is for writing various expressions
 
-function_call: IDENTIFIER LPAREN RPAREN
-|   IDENTIFIER LPAREN fn_call_argument_list RPAREN;
+function_call: IDENTIFIER LPAREN function_call_tail;
 
-fn_call_argument_list: fn_call_argument_list COMMA expression
-    | expression
-    |
-    ;
     // this is for writing function call
 
+function_call_tail : RPAREN 
+                    | function_arguments RPAREN;
 
+function_arguments: list_member initialiser_member_list_tail;
 
 unary_operator: MINUS
     | NOT
@@ -223,12 +221,13 @@ value_assign: ASSIGN initializer    //optional value assign
 initializer : expression    // assign an expression
     | list_initialiser ; //this is used to initialise arrays and struct like {{1,2,3},{4,5,6},{7,8,9}}
 
-list_initialiser: LBRACE list_member initialiser_member_list_tail RBRACE;
+list_initialiser: LBRACE list_member initialiser_member_list_tail RBRACE;   //in this, there should atleast be one list member
 
 initialiser_member_list_tail: COMMA list_member initialiser_member_list_tail       // (,list_member)*
                             | ;
 list_member : list_initialiser  // a single member in a list
         | expression;
+
 
 
 iterative_statement:  FOR LPAREN expression_statement expression_statement expression RPAREN compound_statement

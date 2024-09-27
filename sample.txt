@@ -163,3 +163,6 @@ int x = y.y1;
 y.y1 = 2;
 
 // int y.y1 = 2; wrong
+
+x = hello();
+y = hello({hefb, {ebfhe}}, hurray, "ehjkf", 1233);
