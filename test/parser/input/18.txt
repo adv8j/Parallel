@@ -9,6 +9,5 @@ struct Person person = {45, 5.3};
 
 person.age = 30;
 person.height = 1.75;
-X = func();
 X = person.age;
 

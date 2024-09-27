@@ -5,7 +5,7 @@
     @Properties
     {
         @Mem{
-            a->t1,t2 mut t3;
+            a->t1,t2 mut, t3;
         }
     }
-}
+};

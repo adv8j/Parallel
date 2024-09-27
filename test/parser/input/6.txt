@@ -3,7 +3,7 @@ string s="How are you?";
 string ab="";
 z="checking";
 
-lenOfz=z.length();
+lenOfz=len(z);
 fourthchar=s[4];
 
 areEqual=("check"=="CHECK");

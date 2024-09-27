@@ -1,10 +1,15 @@
-@TaskGroup g1
+
+ @TaskGroup g1
 {
-    @TaskGroup g2
+    @Task t1
     {
-        @ Task t1
-        {
-            _task;
-        }
+        .ct <- 5;  
+        
+        .ct;       
     }
-}
+    @Task t2
+    {
+        .wt{t1, 1} -> x; 
+    }
+};
+
