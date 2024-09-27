@@ -1,7 +1,7 @@
 %{
 #include <stdio.h>
 int yylex(void);
-extern void yyerror(char *s);
+extern int yyerror(char *s);
 %}
 
 
@@ -40,7 +40,7 @@ extern void yyerror(char *s);
 
 
 %%
-program: statement_list {printf("Program is correct\n");}
+program: statement_list 
     ;
 
 statement_list: one_or_more_statements
@@ -80,7 +80,7 @@ dims: dims LBRACKET number RBRACKET
     ; 
     // this non-terminal is for writing array dimensions
 
-initializer_dims: LBRACKET number COMMA number RBRACKET
+initializer_dims: LBRACKET number COMMA literals RBRACKET
     | 
     ;
     // this non-terminal is for writing array dimensions in initialization

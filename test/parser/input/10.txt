@@ -3,7 +3,7 @@ a += 1;
 
 func my_function int(int a, int b){
     n = 10;
-    for (i in 1..=n){
+    for i in 1..=n{
         a += b;
     }
     return a;

@@ -106,7 +106,7 @@ x+= 5 < u - adi ;
         }
     }
 };
-
+@
 /* wrong as properties cannot come first
     @TaskGroup t3{
         @Properties{

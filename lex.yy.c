@@ -614,7 +614,7 @@ char *yytext;
 
 #define CUR_MAX_LEN 10000
 
-void yyerror(char *s);
+int yyerror(char *s);
 int cur_char = 1;
 int syntax_error_flag = 0;
 char cur_line[CUR_MAX_LEN];
@@ -2779,8 +2779,9 @@ void yyfree (void * ptr )
 #line 634 "parallel_lex.l"
 
 
-void yyerror(char* s){
+int yyerror(char* s){
 	printf("%s", s);
+	return 1;
 }
 
 int yywrap(void) {

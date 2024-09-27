@@ -1,4 +1,4 @@
-YACCFLAGS ?= 
+
 
 all: lex
 	./parser.out
@@ -19,3 +19,6 @@ lex_tests:
 	cd test/lex/ && ./token_header.out
 	gcc $(YACCFLAGS) test/lex/lex_tester.c -o test/lex/lex_tester.out
 	cd test/lex/ && ./lex_tester.out
+
+yacc_tests: build 
+	bash test/parser/yacc_tester.sh $(PRINT_OUT)
