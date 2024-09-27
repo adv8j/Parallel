@@ -1,7 +1,7 @@
 %{
 #include <stdio.h>
 int yylex(void);
-extern int yyerror(char *s);
+extern int yyerror(const char *s);
 #define YYDEBUG 1
 %}
 

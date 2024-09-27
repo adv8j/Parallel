@@ -5,7 +5,7 @@
 
 #define CUR_MAX_LEN 10000
 
-int yyerror(char *s);
+int yyerror(const char *s);
 int cur_char = 1;
 int syntax_error_flag = 0;
 char cur_line[CUR_MAX_LEN];
@@ -633,7 +633,7 @@ false {
 }
 %%
 
-int yyerror(char* s){
+int yyerror(const char* s){
 	printf("%s", s);
 	return 1;
 }
