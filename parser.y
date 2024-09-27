@@ -95,6 +95,7 @@ statement: iterative_statement
     | taskgroup_statement
     | declaration_statement
     | parallel_statement
+    | struct_declaration
     ;
     // specifies various types of statements(these are the ones which won't need context of being in a function/Task)
 inner_statement: one_or_more_inner_statements
@@ -123,7 +124,11 @@ compound_statement: LBRACE inner_statement RBRACE
     // this non-terminal is for writing compound statement
     // { inner_statement }
 
+struct_declaration: STRUCT IDENTIFIER LBRACE member_data_list RBRACE SEMICOLON;
+member_data_list: member_data_list member_data      // list for member data of struct  // this is used while declaring a struct
+                | ;
 
+member_data: dtype IDENTIFIER value_assign SEMICOLON        //one member data of a struct   // used while initialising a struct
 
 expression_statement: expression SEMICOLON
     | SEMICOLON
@@ -212,10 +217,18 @@ declaration: REFERENCE IDENTIFIER ASSIGN IDENTIFIER
     | IDENTIFIER value_assign
     ;
 
-value_assign: ASSIGN expression
+value_assign: ASSIGN initializer    //optional value assign
     | 
     ;
+initializer : expression    // assign an expression
+    | list_initialiser ; //this is used to initialise arrays and struct like {{1,2,3},{4,5,6},{7,8,9}}
 
+list_initialiser: LBRACE list_member initialiser_member_list_tail RBRACE;
+
+initialiser_member_list_tail: COMMA list_member initialiser_member_list_tail       // (,list_member)*
+                            | ;
+list_member : list_initialiser  // a single member in a list
+        | expression;
 
 
 iterative_statement:  FOR LPAREN expression_statement expression_statement expression RPAREN compound_statement
@@ -256,24 +269,24 @@ if_chain_statement: ELSE selection_statement
     // if else-if else-if else
 
 
-function_declaration: FUNC IDENTIFIER dtype LPAREN argument_list RPAREN compound_statement
+function_declaration: FUNC IDENTIFIER dtype LPAREN parameter_list RPAREN compound_statement
     ;
     // Function declaration, (return can never be ref)
 
 
-datatype_and_ref: argument_dtype| dtype REFERENCE;
+datatype_and_ref: parameter_dtype| dtype REFERENCE;
 // includes the data types and references (like: int&)
 
-argument_dtype : generic_dtypes
+parameter_dtype : generic_dtypes
     | generic_dtypes dims 
     ;
 
-argument_list: argument_list COMMA argument_declaration
-	| argument_declaration
+parameter_list: parameter_list COMMA parameter_declaration
+	| parameter_declaration
     | 
 	;
 
-argument_declaration: datatype_and_ref IDENTIFIER 
+parameter_declaration: datatype_and_ref IDENTIFIER 
     | datatype_and_ref IDENTIFIER ASSIGN expression // for default arguments
     ; 
 
