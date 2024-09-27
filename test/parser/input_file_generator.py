@@ -48,6 +48,104 @@ contents = [
         return e+3;
         
     }
+''',
+'''int a=10; //single line comment
+''',
+'''/*this is 
+multi line cooment*/
+a=20;
+''',
+'''int a; 
+    char c='a';
+    char c=23;
+    int v=56;
+    long num=10000000;
+    bool flag=true;
+    bool flag2=1;
+    float pi=3.14;
+    x=10;
+
+''',
+'''a+3;
+    b=2+3*5;
+    c=(3<4)&&(6>4);
+    w+=40;
+    mo%=10;
+    -check;
+
+''',
+'''@TaskGroup g1
+{
+    @Task t1
+    {
+        for (int i = 0; i < 10; i++);
+    }
+}
+''',
+    '''@TaskGroup g1
+{
+    int x = 5, y=2;y=3;
+    y = 4;
+    _task;
+    @Task t1
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            for (int j = 0; j < 10; j++);
+        }
+    }
+}
+''',
+    '''@TaskGroup g1
+{
+    @TaskGroup g2
+    {
+        @ Task t1
+        {
+            _task;
+        }
+    }
+}
+''',
+'''@TaskGroup g1
+{
+    @Task t1
+    {}
+    @Task t2
+    {}
+    @Task t3
+    {}
+    @Properties
+    {
+    
+    }
+}
+''',
+'''@TaskGroup g1
+{
+    @Task t1
+    {}
+    @Properties
+    {
+        @Order{
+            all->t1;
+            t1->t2,t3;
+            t3->all;
+        }
+    }
+}
+''',
+'''@TaskGroup g1
+{
+    @Task t1
+    {}
+    @Properties
+    {
+        @Mem{
+            a->t1,t2 mut t3;
+        }
+    }
+}
 '''
 
  
