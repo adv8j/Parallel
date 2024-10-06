@@ -121,6 +121,7 @@ inner_statement_list: iterative_statement
     // specifies various types of statements(these will be used in a function)
 
 return_statement: RETURN expression SEMICOLON
+|   RETURN SEMICOLON
 |   BREAK SEMICOLON
 |   CONTINUE SEMICOLON
 	;
@@ -164,11 +165,6 @@ function_call_tail : RPAREN
 
 function_arguments: list_member initialiser_member_list_tail;
 
-unary_operator: MINUS
-    | NOT
-    ;
-    // this non-terminal is for writing unary operators
-
 
 arithmetic_expression: expression PLUS expression
     | expression MINUS expression
@@ -189,12 +185,13 @@ assignment_expression: expression ASSIGN expression
 
 
 
-unary_expression: unary_operator number 
-    | unary_operator FLOAT_LITERAL
-    | unary_operator LPAREN expression RPAREN
+unary_expression: MINUS %prec NOT number_literals
+    | NOT expression
     ;
     // this non-terminal is for writing unary expression
 
+number_literals: FLOAT_LITERAL
+    | INT_LITERAL;
 
 comparison_expression: expression LT expression
     | expression GT expression
@@ -251,7 +248,7 @@ empty_expression: expression
     // 3. for x in arr
 
 container: identifier_list
-    | array_literal 
+    | array_literal
     ;
     // basically arrays
 iterator: IDENTIFIER
