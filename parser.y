@@ -20,7 +20,7 @@ extern int yyerror(const char *s);
 
 %token FUNC RETURN CONTINUE BREAK STRUCT IF ELSE FOR IN
 
-%token TRUE FALSE IDENTIFIER SHARED_IDENTIFIER INT_LITERAL FLOAT_LITERAL STRING_LITERAL CHARACTER_LITERAL
+%token TRUE FALSE IDENTIFIER INT_LITERAL FLOAT_LITERAL STRING_LITERAL CHARACTER_LITERAL
 
 %define parse.error verbose
 
@@ -31,7 +31,7 @@ extern int yyerror(const char *s);
 %right ASSIGN ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN
 %left OR 
 %left AND
-%left EQ NEQ
+%left EQ NEQ    
 %left GT LT GTE LTE
 %left PLUS MINUS
 %left MUL DIV MOD
@@ -238,13 +238,22 @@ list_member : list_initialiser  // a single member in a list
 
 
 
-iterative_statement:  FOR LPAREN expression_statement expression_statement expression RPAREN compound_statement
-    |FOR iterator IN expression  compound_statement
+iterative_statement:  FOR LPAREN expression_statement expression_statement empty_expression RPAREN compound_statement
+    |FOR iterator IN container  compound_statement
     ;
+
+empty_expression: expression
+    | 
+    ;
+
     // 1. for(.. ;.. ; ..)
     // 2. for(id in 1..2)
     // 3. for x in arr
 
+container: identifier_list
+    | array_literal 
+    ;
+    // basically arrays
 iterator: IDENTIFIER
     |REFERENCE IDENTIFIER
     ; 
@@ -303,7 +312,7 @@ parallel_stmt_argument: SHARED ASSIGN LBRACKET identifier_list RBRACKET
     | PRIVATE ASSIGN LBRACKET identifier_list RBRACKET 
     | REDUCTION ASSIGN LBRACKET reduction_list RBRACKET;
     | SCHEDULE ASSIGN schedule_list
-    | NUM_THREADS ASSIGN INT_LITERAL
+    | NUM_THREADS ASSIGN number
     ;
 
 schedule_list: STATIC_SCHEDULE|	DYNAMIC_SCHEDULE;

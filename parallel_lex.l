@@ -558,12 +558,6 @@ false {
 	return IDENTIFIER;
 }
 
-[a-zA-Z_][a-zA-Z0-9_]* {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return SHARED_IDENTIFIER;
-}
 
 
 ([1-9][0-9]*)|0   {

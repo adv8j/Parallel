@@ -1,0 +1,14 @@
+@parallel(num_threads=4)
+{
+    // Parallel code block execution
+}
+@parallel(num_threads=num_thread)
+{
+    // Code block to run in parallel
+}
+for i in 0..data.my_arrayyyy
+
+{
+    //temp = compute(data[i]);
+    //total_sum += temp;
+}
