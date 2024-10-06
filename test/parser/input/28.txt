@@ -1,0 +1,21 @@
+struct Person {
+    // Data members
+        int age;
+        float height;
+};
+
+//Create an instance of person
+struct Person person = {45, 5.3};
+
+//Accessing and modifying struct members
+person.age = 30;
+person.height = 1.75;
+X = func();
+X = person.age
+
+int a = 10;
+int& ref = a;
+ref = 20;  
+
+
+"hello/*blah blah blah*/";

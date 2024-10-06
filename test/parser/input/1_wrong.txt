@@ -1,0 +1,6 @@
+for i in arr[1][1,2]{
+
+}
+for &i in start..end{
+    
+}

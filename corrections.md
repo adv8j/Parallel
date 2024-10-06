@@ -17,3 +17,5 @@ int arr[number][number]
 
 int arr[num][number, number]	//not allowed
 int arr [][num,num]	// not allowed
+
+9. Changing the str.length() function in strings to length(str)

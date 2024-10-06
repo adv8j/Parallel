@@ -1,0 +1,46 @@
+{
+    int a = 2;
+}
+
+char c= 'a';
+char c = 65;
+char d = 3, e = 4;
+bool flag = true;
+float pi=3.14;
+Y=1;
+x+y-2*-4/(4==5)
+!!5==5
+true!=true
+for(;;){
+
+}
+for i in arr[1][2]{
+    for i in str{
+        for &i in arr[i+2]{
+            for &i in str2{
+                for i in (i+2)..(i+4){
+                    for i in !arr[i]*2..=arr[4]{
+
+                    }
+                }
+            }
+        }    
+    }
+}
+
+
+if( points >= 80 ){
+    print("wow","genius",{"wow","genius"},blah, blah, blah, {{nice},{nice}});
+    if(points == 100){
+        print("perfection" , "#perfection was never achieved before");
+    }
+    else if (points < 90){
+        print("still good");
+    }
+    else{
+        print("not bad");
+    }
+}
+else{
+    print("ignore");
+}
