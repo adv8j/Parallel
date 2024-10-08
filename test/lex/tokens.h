@@ -75,11 +75,10 @@ const char *yytname[] = {
     "TRUE",
     "FALSE",
     "IDENTIFIER",
-    "SHARED_IDENTIFIER",
     "INT_LITERAL",
     "FLOAT_LITERAL",
     "STRING_LITERAL",
     "CHARACTER_LITERAL",
 };
 
-const int yyntokens = 81;
+const int yyntokens = 80;

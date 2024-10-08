@@ -8,9 +8,9 @@ char d = 3, e = 4;
 bool flag = true;
 float pi=3.14;
 Y=1;
-x+y-2*-4/(4==5)
-!!5==5
-true!=true
+x+y-2*-4/(4==5);
+!!5==5;
+true!=true;
 for(;;){
 
 }
