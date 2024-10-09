@@ -5,7 +5,9 @@
 
 #define CUR_MAX_LEN 10000
 
-int yyerror(const char *s);
+void yyerror(const char *s);
+void process_text(char* yytext);
+void raise_error(char* s);
 int cur_char = 1;
 int syntax_error_flag = 0;
 char cur_line[CUR_MAX_LEN];
@@ -13,604 +15,202 @@ char cur_line[CUR_MAX_LEN];
 
 
 %%
-"//".*           {
-	strcat(cur_line, yytext);
-    int len = strlen(yytext);
-    cur_char += len;
-} 
+"//".*           ; 
 \/\*([^*]|\*+[^*/])*\**\*\/ {
-	strcat(cur_line, yytext);
-    int len = strlen(yytext);
-    cur_char += len;
-}
-
-\+=                {
-	strcat(cur_line, yytext);
-    int len = strlen(yytext);
-    cur_char += len;
-	return ADD_ASSIGN; 
-}
-
-\-=                {
-	strcat(cur_line, yytext);
-    int len = strlen(yytext);
-    cur_char += len;
-	return SUB_ASSIGN;
-}
-
-\*=                {
-	strcat(cur_line, yytext);
-    int len = strlen(yytext);
-    cur_char += len;
-	return MUL_ASSIGN; 
-}
-
-\/=                {
-	strcat(cur_line, yytext);
-    int len = strlen(yytext);
-    cur_char += len;
-	return DIV_ASSIGN; 
-}
-
-\%=                {
-	strcat(cur_line, yytext);
-    int len = strlen(yytext);
-    cur_char += len;
-	return MOD_ASSIGN;
-}
-
-=                 {
-	strcat(cur_line, yytext);
-    int len = strlen(yytext);
-    cur_char += len;
-	return ASSIGN; 
-}
+	char temp[10000];
+	memset(temp, 0, 10000);
 
 
-\+                 {
-	strcat(cur_line, yytext);
 	int len = strlen(yytext);
-	cur_char += len;
-	return PLUS;
-}
-
-\-               {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return MINUS;
-}
-
-\*                 {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return MUL;
-}
-
-\/                 {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return DIV;
-}
-
-\%                 {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return MOD;
-}
-
-==                {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return EQ;
-}
-
-!=                {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return NEQ;
-}
-
->                 {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return GT;
-}
-
-\<                 {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return LT;
-}
-
->=                {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return GTE;
-}
-
-\<=                {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return LTE;
-}
-
-&&               {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return AND;
-}
-
-\|\|               {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return OR;
-}
-
-!                {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return NOT;
-}
-
-
-
-;                 {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return SEMICOLON;
-}
-
-:                 {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return COLON;
-}
- 
-\(                 {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return LPAREN;
-}
-
-\)                 {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return RPAREN;
-}
-
-\[                 {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return LBRACKET;
-}
-
-\]                 {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return RBRACKET;
-}
-
-\{				{
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return LBRACE;
-}
-
-\}                 {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return RBRACE;
-}
-
-,                 {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return COMMA;
-}
-
-\.\.                {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return RANGE;
-}
-
-\.\.=               {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return RANGE_INCL;
-}
-
-&                {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return REFERENCE;
-}
+	for(int i = 0 ; i< len; i++){
+		if(yytext[i] == '\n'){
+			memset(temp, 0, 10000);
+			yylineno++;
+			cur_char = 1;
+		}
+		else{
+			temp[strlen(temp)] = yytext[i];
+			cur_char++;
+		}
+	}
+	memset(cur_line, 0, 10000);
+	strcpy(cur_line, temp);
 	
-@TaskGroup  {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return TASKGROUP;
 }
 
-@Task      {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return TASK;
-}
+\+=                { process_text(yytext); return ADD_ASSIGN; }
 
-@Properties {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return PROPERTIES;
-}
+\-=                { process_text(yytext); return SUB_ASSIGN;}
 
-@Order   {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return ORDER;
-}
+\*=                { process_text(yytext); return MUL_ASSIGN; }
 
-@Mem    {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return MEM;
-}
+\/=                { process_text(yytext); return DIV_ASSIGN; }
 
-@Shared {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return SHARED_DIRECTIVE;
-}
+\%=                { process_text(yytext); return MOD_ASSIGN;}
 
-@Supervisor {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return SUPERVISOR;
-}
+=                 { process_text(yytext); return ASSIGN; }
 
-all {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return ALL;
-}
+\+                 { process_text(yytext); return PLUS;}
 
-unsafe {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return UNSAFE;
-}
+\-               { process_text(yytext); return MINUS;}
 
-join {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return JOIN;
-}
+\*                 { process_text(yytext); return MUL;}
+
+\/                 { process_text(yytext); return DIV;}
+
+\%                 { process_text(yytext); return MOD;}
+
+==                { process_text(yytext); return EQ;}
+
+!=                { process_text(yytext); return NEQ;}
+
+>                 { process_text(yytext); return GT;}
+
+\<                 { process_text(yytext); return LT;}
+
+>=                { process_text(yytext); return GTE;}
+
+\<=                { process_text(yytext); return LTE;}
+
+&&               { process_text(yytext); return AND;}
+
+\|\|               { process_text(yytext); return OR;}
+
+!                { process_text(yytext); return NOT;}
+
+;                 { process_text(yytext); return SEMICOLON;}
+
+:                 { process_text(yytext); return COLON;}
+ 
+\(                 { process_text(yytext); return LPAREN;}
+
+\)                 { process_text(yytext); return RPAREN;}
+
+\[                 { process_text(yytext); return LBRACKET;}
+
+\]                 { process_text(yytext); return RBRACKET;}
+
+\{				{ process_text(yytext); return LBRACE;}
+
+\}                 { process_text(yytext); return RBRACE;}
+
+,                 { process_text(yytext); return COMMA;}
+
+\.\.                { process_text(yytext); return RANGE;}
+
+\.\.=               { process_text(yytext); return RANGE_INCL;}
+
+&                { process_text(yytext); return REFERENCE;}
+	
+@TaskGroup  { process_text(yytext); return TASKGROUP;}
+
+@Task      { process_text(yytext); return TASK;}
+
+@Properties { process_text(yytext); return PROPERTIES;}
+
+@Order   { process_text(yytext); return ORDER;}
+
+@Mem    { process_text(yytext); return MEM;}
+
+@Shared { process_text(yytext); return SHARED_DIRECTIVE;}
+
+@Supervisor { process_text(yytext); return SUPERVISOR;}
+
+all { process_text(yytext); return ALL;}
+
+unsafe { process_text(yytext); return UNSAFE;}
+
+join { process_text(yytext); return JOIN;}
   
-call      {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return CALL;
-}
+call      { process_text(yytext); return CALL;}
 
 
-\<-                {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return CHN_SEND;
-}
+\<-                { process_text(yytext); return CHN_SEND;}
 
-\.wt             {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return CHANNEL_WAIT;
-}
+\.wt             { process_text(yytext); return CHANNEL_WAIT;}
 
-\.ct             {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return TASK_CHANNEL;
-}
+\.ct             { process_text(yytext); return TASK_CHANNEL;}
 
-log               {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return LOG;
-}
+log               { process_text(yytext); return LOG;}
 
-\->                {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return ARROW;
-}
+\->                { process_text(yytext); return ARROW;}
 
 
-@parallel {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return PARALLEL;
-}
+@parallel { process_text(yytext); return PARALLEL;}
 
-shared {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return SHARED;
-}
+shared { process_text(yytext); return SHARED;}
 
-private {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return PRIVATE;
-}
+private { process_text(yytext); return PRIVATE;}
 
-reduction {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return REDUCTION;
-}
+reduction { process_text(yytext); return REDUCTION;}
 
-schedule {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return SCHEDULE;
-}
+schedule { process_text(yytext); return SCHEDULE;}
 
-num_threads {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return NUM_THREADS;
-}
+num_threads { process_text(yytext); return NUM_THREADS;}
 
-dynamic {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return DYNAMIC_SCHEDULE;
-}
+dynamic { process_text(yytext); return DYNAMIC_SCHEDULE;}
 
-static {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return STATIC_SCHEDULE;
-}
+static { process_text(yytext); return STATIC_SCHEDULE;}
 
-mut {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return MUT;
-}
+mut { process_text(yytext); return MUT;}
 
 
-int {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return INT;
-}
+int { process_text(yytext); return INT;}
 
-char {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return CHAR;
-}
+char { process_text(yytext); return CHAR;}
 
-long {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return LONG;
-}
+long { process_text(yytext); return LONG;}
 
-bool {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return BOOL;
-}
+bool { process_text(yytext); return BOOL;}
 
-float {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return FLOAT;
-}
+float { process_text(yytext); return FLOAT;}
 
-string {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return STRING;
-}
+string { process_text(yytext); return STRING;}
 
 
-func {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return FUNC;
-}
+func { process_text(yytext); return FUNC;}
 
 	
-return {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return RETURN;
-}
+return { process_text(yytext); return RETURN;}
 
-continue {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return CONTINUE;
-}
+continue { process_text(yytext); return CONTINUE;}
 
-break {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return BREAK;
-}
+break { process_text(yytext); return BREAK;}
 
-struct {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return STRUCT;
-}
+struct { process_text(yytext); return STRUCT;}
 
-if {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return IF;
-}
+if { process_text(yytext); return IF;}
 
-else {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return ELSE;
-}
+else { process_text(yytext); return ELSE;}
 
-for {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return FOR;
-}
+for { process_text(yytext); return FOR;}
 
-in {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return IN;
-}
+in { process_text(yytext); return IN;}
 
 
-true {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return TRUE;
-}
+true { process_text(yytext); return TRUE;}
 
-false {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return FALSE;
-}
+false { process_text(yytext); return FALSE;}
 
-[a-zA-Z][a-zA-Z0-9_]*  {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return IDENTIFIER;
-}
+[a-zA-Z][a-zA-Z0-9_]*  { process_text(yytext); return IDENTIFIER;}
 
 
 
-([1-9][0-9]*)|0   {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return INT_LITERAL;
-}
+([1-9][0-9]*)|0   { process_text(yytext); return INT_LITERAL;}
  
-[0-9]+\.[^\.][0-9]*   {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return FLOAT_LITERAL;
-}
+[0-9]+\.[^\.][0-9]*   { process_text(yytext); return FLOAT_LITERAL;}
 
-(([1-9][0-9]*)|0)e(([1-9][0-9]*)|0) {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return FLOAT_LITERAL;
-}
+(([1-9][0-9]*)|0)e(([1-9][0-9]*)|0) { process_text(yytext); return FLOAT_LITERAL;}
 
 
-\"([^\"\n]|(\\\"))*\"        {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return STRING_LITERAL;
-}
+\"([^\"\n]|(\\\"))*\"        { process_text(yytext); return STRING_LITERAL;}
  
-\'([^\\\']|(\\[nr\'\"]))\'        {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return CHARACTER_LITERAL;
-}
+\'([^\\\']|(\\[nr\'\"]))\'        { process_text(yytext); return CHARACTER_LITERAL;}
  
 
-\.                 {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-	return DOT;
-}
+\.                 { process_text(yytext); return DOT;}
 
-
-
-[ \t]+            {
-	strcat(cur_line, yytext);
-	int len = strlen(yytext);
-	cur_char += len;
-}
+[ \t]+            { process_text(yytext);}
 
 \n    {
 	memset(cur_line, 0, 10000);
@@ -622,20 +222,28 @@ false {
 	char err_message[15500];
 	memset(err_message, 0, 15500);
 	sprintf(err_message, "\n\033[1;31mSyntax Error:\033[0m\nLine \033[1;36m%3d\033[0m: %s\033[1;31m%s\033[0m\nUnrecognized character \033[1;33m%s\033[0m at line \033[1;36m%d\033[0m, character \033[1;36m%d\033[0m\n",yylineno ,cur_line, yytext, yytext, yylineno, cur_char);
-	yyerror(err_message);
-	return YYerror;
-}
+	raise_error(err_message);}
 %%
 
-int yyerror(const char* s){
-	printf("%s", s);
-	return 1;
+void yyerror(const char* s){
 }
+
+void raise_error( char* s){
+	fprintf(stderr, "%s\n", s);
+}
+
+void process_text(char* yytext){
+	strcat(cur_line, yytext);
+	int len = strlen(yytext);
+	cur_char += len;
+}
+
 
 int yywrap(void) {
 	strcat(cur_line, yytext);
 	return 1;
 }
+
 
     
 

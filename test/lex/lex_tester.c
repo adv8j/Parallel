@@ -107,7 +107,6 @@ int main() {
 
         int token;
         while ((token = yylex()) != 0) {
-            
             // printf("Token: %d, Name=%s\n", token, yytname[token-258]); // Print tokens for debugging
             if (token == YYEOF) {
                 break;
@@ -127,6 +126,7 @@ int main() {
             if(out2[len - 1] == '\n') {
                 out2[len - 1] = '\0';
             }
+            printf("Line %d, Token: %s, Expected: %s\n", yylineno, yytname[tok], line2);
 
             if(strcmp(yytname[tok], line2) != 0) {
                 printf("%s : \033[1;31mTest Failed\033[0m at line : %d\n", filenames[i], line_num);

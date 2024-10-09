@@ -3,7 +3,10 @@ struct Person {
         int[2][3] age = {2};
         float height = 2;
 };
-
+/*sfsdf
+sdfsdf
+*/ _sdfs; 
+_sdfs;
 struct Person person = {arr[0], "hello"};
 
 int[3] arr = {nfkj,{1,2,3},{4,5,6}};
