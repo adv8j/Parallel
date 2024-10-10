@@ -45,14 +45,11 @@ extern void yyerror(const char *s);
 program: statement_list 
     ;
 
-statement_list: one_or_more_statements
-|   ;
-one_or_more_statements: one_or_more_statements statement
+
+statement_list: statement_list statement
     | statement
     ;
-    // this non-terminal is for writing list of statements
-
-
+// ------------------------------------- Data Types ----------------------------------------
 generic_dtypes: INT 
     | LONG
     | FLOAT
@@ -60,36 +57,24 @@ generic_dtypes: INT
     | BOOL
     | CHAR
     | STRUCT IDENTIFIER 
-    | error { 
-        char error_message[10000];
-
-    }
     ;
-    // for struct still have to find better solution
 
 dtype: generic_dtypes
     | array
     ;
-    // this non-terminal is for writing data type
 
 array: generic_dtypes dims initializer_dims
     ;
-    // this non-terminal is for writing array data type
 
 array_element: IDENTIFIER dims ;
-    // this non-terminal is for writing array element
-    // x[2][3]
 
-// Needs work for array initialization and all : TODO
 dims: dims LBRACKET expression RBRACKET
     | LBRACKET expression RBRACKET
     ; 
-    // this non-terminal is for writing array dimensions
 
 initializer_dims: LBRACKET expression COMMA expression RBRACKET
     | 
     ;
-    // this non-terminal is for writing array dimensions in initialization
 
 
 
@@ -104,13 +89,7 @@ statement: iterative_statement
     | struct_declaration
     ;
     // specifies various types of statements(these are the ones which won't need context of being in a function/Task)
-inner_statement: one_or_more_inner_statements
-| ;
-
-one_or_more_inner_statements: one_or_more_inner_statements inner_statement_list
-|   inner_statement_list;
-
-inner_statement_list: iterative_statement
+inner_statement: iterative_statement
     | selection_statement
     | expression_statement
     | compound_statement
@@ -118,20 +97,25 @@ inner_statement_list: iterative_statement
     | parallel_statement
     | return_statement
     ;
+
+
+inner_statement_list: inner_statement_list inner_statement
+    |   inner_statement
+    ;
     // specifies various types of statements(these will be used in a function)
 
 return_statement: RETURN expression SEMICOLON
-|   RETURN SEMICOLON
-|   BREAK SEMICOLON
-|   CONTINUE SEMICOLON
-	;
+    |   RETURN SEMICOLON
+    |   BREAK SEMICOLON
+    |   CONTINUE SEMICOLON
+    ;
 
 compound_statement: LBRACE inner_statement RBRACE
     ;
     // this non-terminal is for writing compound statement
     // { inner_statement }
 
-struct_declaration: STRUCT IDENTIFIER LBRACE member_data_list RBRACE SEMICOLON;
+struct_declaration: STRUCT IDENTIFIER LBRACE member_data_list RBRACE SEMICOLON ;
 member_data_list: member_data_list member_data      // list for member data of struct  // this is used while declaring a struct
                 | ;
 
@@ -243,9 +227,6 @@ empty_expression: expression
     | 
     ;
 
-    // 1. for(.. ;.. ; ..)
-    // 2. for(id in 1..2)
-    // 3. for x in arr
 
 container: identifier_list
     | array_literal
