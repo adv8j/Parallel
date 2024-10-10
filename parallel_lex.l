@@ -11,6 +11,7 @@ void raise_error(char* s);
 int cur_char = 1;
 int syntax_error_flag = 0;
 char cur_line[CUR_MAX_LEN];
+void trim(char* s);
 %}
 
 
@@ -219,18 +220,65 @@ false { process_text(yytext); return FALSE;}
 }
 
 . {
-	char err_message[15500];
-	memset(err_message, 0, 15500);
-	sprintf(err_message, "\n\033[1;31mSyntax Error:\033[0m\nLine \033[1;36m%3d\033[0m: %s\033[1;31m%s\033[0m\nUnrecognized character \033[1;33m%s\033[0m at line \033[1;36m%d\033[0m, character \033[1;36m%d\033[0m\n",yylineno ,cur_line, yytext, yytext, yylineno, cur_char);
-	raise_error(err_message);}
+	fprintf(stderr, 
+    "\n\033[1;36mLine %d:%d:\033[0m \033[1;31merror:\033[0m stray \033[1m\'%s\'\033[0m in program\n"
+	"\t%d | %s\033[0;31m%s\033[0m\n",
+	yylineno, cur_char,  yytext, yylineno, cur_line, yytext
+);
+	cur_char++;
+	cur_line[strlen(cur_line)] = yytext[0];
+}
 %%
 
-void yyerror(const char* s){
-    printf("%s\n", s);
+void yyerror(const char* s) {
+    const int len = 1000;
+    char expected[len], unexpected[len], copy[CUR_MAX_LEN], received[CUR_MAX_LEN] = {0};
+    // storing necessary info
+    strncpy(copy, cur_line, CUR_MAX_LEN - 1);
+    int cur_len = strlen(cur_line), yyleng = strlen(yytext);
+    strncpy(received, &cur_line[cur_len - yyleng], yyleng);
+    copy[cur_len - yyleng] = '\0';
+
+    sscanf(s, "syntax error, unexpected %s expecting %[^\n]", unexpected, expected);
+    unexpected[strlen(unexpected) - 1] = '\0'; 
+
+	// printing error message
+    fprintf(stderr, "\n\033[1;36mLine %d:%d:\033[0m \033[1;31merror:\033[0m Unexpected Token \033[1;31m%s\033[0m, Expected ",
+            yylineno, cur_char, yytext);
+
+    char temp[100];
+    strncpy(temp, expected, sizeof(temp) - 1);
+    temp[sizeof(temp) - 1] = '\0';
+
+	// getting all possible expected tokens separated by or
+    char* token = strtok(temp, "or");
+    while (token) {
+        trim(token);
+        fprintf(stderr, "\033[1;33m%s\033[0m", token);
+        token = strtok(NULL, "or");
+        if (token) fprintf(stderr, " or ");
+    }
+	// printing the current line
+    fprintf(stderr, "\n\t%d | %s\033[1;31m%s\033[0m\n", yylineno, copy, received);
 }
 
+
+void trim(char* s){
+	// remove leading spaces
+	int i = 0;
+	while(s[i] == ' ' || s[i] == '\t'){
+		i++;
+	}
+	int j = 0;
+	while(s[i] != '\0' && s[i] != ' '){
+		s[j] = s[i];
+		i++;
+		j++;
+	}
+	s[j] = '\0';
+}
 void raise_error( char* s){
-	fprintf(stderr, "%s\n", s);
+	fprintf(stderr, "%s", s);
 }
 
 void process_text(char* yytext){

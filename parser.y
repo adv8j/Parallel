@@ -42,7 +42,7 @@ extern void yyerror(const char *s);
 
 
 %%
-program: statement_list {printf("Done successfuly");}
+program: statement_list {}
     ;
 
 
@@ -87,7 +87,7 @@ statement: iterative_statement
     | declaration_statement
     | parallel_statement
     | struct_declaration
-    | error SEMICOLON { printf("Statement error\n"); yyerrok; }
+    | error SEMICOLON {  yyerrok; }
     ;
     // specifies various types of statements(these are the ones which won't need context of being in a function/Task)
 inner_statement: iterative_statement
@@ -97,7 +97,7 @@ inner_statement: iterative_statement
     | declaration_statement
     | parallel_statement
     | return_statement
-    | error SEMICOLON { printf("Inner statement error\n"); yyerrok; }
+    | error SEMICOLON {  yyerrok; }
     ;
 
 
@@ -333,7 +333,7 @@ taskgroup_statement: TASKGROUP IDENTIFIER taskgroup_declaration_list LBRACE task
 	;  // this non-terminal is for @TaskGroup t1{ taskgroup_definition}
 
 taskgroup_declaration_list: LPAREN taskgroup_argument_list RPAREN
-    | error RPAREN { printf("Taskgroup argument-declaration error\n"); yyerrok; }
+    | error RPAREN {  yyerrok; }
     ;
 
 taskgroup_argument_list: taskgroup_argument COMMA taskgroup_argument
@@ -356,13 +356,13 @@ task_declaration_list: task_declaration_list task_declaration
 
 task_declaration: TASK IDENTIFIER task_argument LBRACE task_statement_list RBRACE 
     | SUPERVISOR IDENTIFIER LBRACE supervisor_statement_list RBRACE
-    | error RPAREN {printf("Task declaration error\n"); yyerrok;}
+    | error RPAREN { yyerrok;}
     ; /* this non-terminal is for writing task or supervisor 
         @Task t1(num_threads = exp){ task_statements} or @Supervisor t1{ task_statements} */
 
 task_argument:  LPAREN NUM_THREADS ASSIGN expression RPAREN
     | 
-    |   error RPAREN { printf("Task argument error\n"); yyerrok; }
+    |   error RPAREN {  yyerrok; }
     ;
 
 supervisor_statement_list: supervisor_statement_list supervisor_statement
@@ -378,7 +378,7 @@ supervisor_statement:  iterative_statement
 	| channel_statement
     | other_statements
     | return_statement 
-    | error SEMICOLON { printf("Supervisor statement error\n"); yyerrok;}
+    | error SEMICOLON {  yyerrok;}
     ;
 
 
@@ -395,11 +395,11 @@ task_statement: iterative_statement
     | parallel_statement
     | return_statement
     | channel_statement
-    | error SEMICOLON { printf("Task statement error\n"); yyerrok; }
+    | error SEMICOLON {  yyerrok; }
     ;
 
 properties_declaration: PROPERTIES LBRACE taskgroup_properties RBRACE
-    | error RBRACE { printf("Properties declaration error\n"); yyerrok; }
+    | error RBRACE {  yyerrok; }
     ;
 
 taskgroup_properties: taskgroup_properties taskgroup_property
@@ -409,11 +409,11 @@ taskgroup_properties: taskgroup_properties taskgroup_property
 taskgroup_property: order_block
                 | shared_block
                 | mem_block
-                | error RBRACE { printf("Taskgroup property error\n"); yyerrok; }
+                | error RBRACE {  yyerrok; }
                 ;
 
 order_block: ORDER LBRACE order_rule_list RBRACE
-    | error SEMICOLON { printf("Order rule error\n"); yyerrok; }
+    | error SEMICOLON {  yyerrok; }
     ;
 
 order_rule_list: order_rule_list order_rule 
@@ -448,7 +448,7 @@ shared_rule_list: shared_rule_list shared_rule
     // this non-terminal is for writing list of shared rules
 
 shared_rule: identifier_list COLON dtype ARROW identifier_list SEMICOLON    
-    | error SEMICOLON { printf("Shared rule error\n"); yyerrok; } 
+    | error SEMICOLON {  yyerrok; } 
     ;
     // this non-terminal is for writing shared rule
     // IDENTIFIER : dtype -> IDENTIFIER
@@ -468,7 +468,7 @@ mem_statement_list: mem_statement_list mem_statement
 
 
 mem_statement: identifier_list ARROW mem_task_list SEMICOLON
-    | error SEMICOLON { printf("Mem statement error\n"); yyerrok; }
+    | error SEMICOLON {  yyerrok; }
     ;
 
 mem_task_list: mem_task_list COMMA mem_task_name

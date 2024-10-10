@@ -3,7 +3,7 @@ DBG ?= 0
 DEBUG_FLAGS = $(if $(filter 1,$(DBG)),-g,)
 
 build: 
-	yacc -d parser.y
+	yacc -d parser.y 2> /dev/null
 	lex $(LEXFLAGS) parallel_lex.l
 	gcc lex.yy.c y.tab.c -o parser.out
 	
