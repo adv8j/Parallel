@@ -226,6 +226,7 @@ false { process_text(yytext); return FALSE;}
 %%
 
 void yyerror(const char* s){
+    printf("%s\n", s);
 }
 
 void raise_error( char* s){

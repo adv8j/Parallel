@@ -42,7 +42,7 @@ extern void yyerror(const char *s);
 
 
 %%
-program: statement_list 
+program: statement_list {printf("Done successfuly");}
     ;
 
 
@@ -87,6 +87,7 @@ statement: iterative_statement
     | declaration_statement
     | parallel_statement
     | struct_declaration
+    | error SEMICOLON { printf("Statement error\n"); yyerrok; }
     ;
     // specifies various types of statements(these are the ones which won't need context of being in a function/Task)
 inner_statement: iterative_statement
@@ -96,6 +97,7 @@ inner_statement: iterative_statement
     | declaration_statement
     | parallel_statement
     | return_statement
+    | error SEMICOLON { printf("Inner statement error\n"); yyerrok; }
     ;
 
 
@@ -327,40 +329,47 @@ wait_statement: CHANNEL_WAIT LBRACE IDENTIFIER COMMA expression RBRACE
     | CHANNEL_WAIT LBRACE IDENTIFIER COMMA expression RBRACE ARROW IDENTIFIER
     ;
 
-taskgroup_statement: TASKGROUP IDENTIFIER LPAREN taskgroup_argument_list RPAREN LBRACE taskgroup_definition RBRACE SEMICOLON
-	| TASKGROUP IDENTIFIER  LBRACE  taskgroup_definition RBRACE SEMICOLON
-    | error SEMICOLON{ printf("Taskgroup statement error\n"); }
+taskgroup_statement: TASKGROUP IDENTIFIER taskgroup_declaration_list LBRACE taskgroup_definition RBRACE SEMICOLON
 	;  // this non-terminal is for @TaskGroup t1{ taskgroup_definition}
+
+taskgroup_declaration_list: LPAREN taskgroup_argument_list RPAREN
+    | error RPAREN { printf("Taskgroup argument-declaration error\n"); yyerrok; }
+    ;
 
 taskgroup_argument_list: taskgroup_argument COMMA taskgroup_argument
     |   taskgroup_argument
-    |  error COMMA { printf("Taskgroup argument error\n"); }
+    |
     ;
 
 taskgroup_argument: LOG ASSIGN STRING_LITERAL
     | NUM_THREADS ASSIGN expression
     ;
+
 taskgroup_definition:  task_declaration_list properties_declaration 
     |
-    ; // this non-terminal is for writing list of tasks followed by properties
+    ; 
 
 
 task_declaration_list: task_declaration_list task_declaration
     | task_declaration
     ; // this non-terminal is for writing list of tasks
 
-task_declaration: TASK IDENTIFIER LBRACE task_statement_list RBRACE 
-    | TASK IDENTIFIER LPAREN NUM_THREADS ASSIGN expression RPAREN LBRACE task_statement_list RBRACE 
+task_declaration: TASK IDENTIFIER task_argument LBRACE task_statement_list RBRACE 
     | SUPERVISOR IDENTIFIER LBRACE supervisor_statement_list RBRACE
+    | error RPAREN {printf("Task declaration error\n"); yyerrok;}
     ; /* this non-terminal is for writing task or supervisor 
         @Task t1(num_threads = exp){ task_statements} or @Supervisor t1{ task_statements} */
 
+task_argument:  LPAREN NUM_THREADS ASSIGN expression RPAREN
+    | 
+    |   error RPAREN { printf("Task argument error\n"); yyerrok; }
+    ;
 
-supervisor_statement_list: supervisor_statement_list supervisor_statements
+supervisor_statement_list: supervisor_statement_list supervisor_statement
     | 
     ;
 
-supervisor_statements:  iterative_statement
+supervisor_statement:  iterative_statement
     | selection_statement
     | expression_statement
     | compound_statement
@@ -368,75 +377,65 @@ supervisor_statements:  iterative_statement
     | parallel_statement
 	| channel_statement
     | other_statements
+    | return_statement 
+    | error SEMICOLON { printf("Supervisor statement error\n"); yyerrok;}
     ;
 
 
-task_statement_list: task_statement_list task_statements
+task_statement_list: task_statement_list task_statement
     |   
     ;
 
-// #TODO: task_statements STILL HAVE TO FIX STUFF HERE.
-task_statements: iterative_statement
+//TODO: task_statements STILL HAVE TO FIX STUFF HERE.
+task_statement: iterative_statement
     | selection_statement
     | expression_statement
     | compound_statement
     | declaration_statement
     | parallel_statement
-	| channel_statement
+    | return_statement
+    | channel_statement
+    | error SEMICOLON { printf("Task statement error\n"); yyerrok; }
     ;
-    // this non-terminal is for writing list of statements in a task (basically allowed statements in a task)
 
 properties_declaration: PROPERTIES LBRACE taskgroup_properties RBRACE
-    |
+    | error RBRACE { printf("Properties declaration error\n"); yyerrok; }
     ;
-    // this non-terminal is for writing properties of a taskgroup
-    // PROPERTIES { taskgroup_properties }
 
 taskgroup_properties: taskgroup_properties taskgroup_property
     | 
     ;
-    // this non-terminal is for writing list of properties
 
 taskgroup_property: order_block
                 | shared_block
                 | mem_block
+                | error RBRACE { printf("Taskgroup property error\n"); yyerrok; }
                 ;
-    // this non-terminal is for deciding between properties @Order, @Shared, @Mem
 
 order_block: ORDER LBRACE order_rule_list RBRACE
+    | error SEMICOLON { printf("Order rule error\n"); yyerrok; }
     ;
-    // this non-terminal is for writing order rules
-    // ORDER { order_rule_list }
 
 order_rule_list: order_rule_list order_rule 
     | 
     ;
-    // this non-terminal is for writing list of order rules
-
+    
 order_rule: order_rule_start order_rule_mid order_rule_end 
     ;
-    // this non-terminal is for writing order rule
-    // order_rule_start order_rule_mid order_rule_end, handles the case that all must be at start and end only
 
-order_rule_start: ALL ARROW     // this non-terminal is for writing order rule start
+order_rule_start: ALL ARROW   
     |
     ;
-    // ALL ->
+    // ALL ->m
 
-order_rule_mid: order_rule_mid ARROW identifier_list   // this non-terminal is for writing order rule mid
+order_rule_mid: order_rule_mid ARROW identifier_list 
     | identifier_list
     ;
-    // IDENTIFIER, IDENTIFIER -> IDENTIFIER
 
-order_rule_end: ARROW ALL SEMICOLON   // this non-terminal is for writing order rule end
+order_rule_end: ARROW ALL SEMICOLON  
     | SEMICOLON
     ;
-    // -> ALL
 
-identifier_list: identifier_list COMMA IDENTIFIER
-    | IDENTIFIER
-    ;
-    // this non-terminal is for writing list of identifiers
 
 shared_block: SHARED_DIRECTIVE LBRACE shared_rule_list RBRACE
     ;
@@ -448,7 +447,8 @@ shared_rule_list: shared_rule_list shared_rule
     ;
     // this non-terminal is for writing list of shared rules
 
-shared_rule: identifier_list COLON dtype ARROW identifier_list SEMICOLON
+shared_rule: identifier_list COLON dtype ARROW identifier_list SEMICOLON    
+    | error SEMICOLON { printf("Shared rule error\n"); yyerrok; } 
     ;
     // this non-terminal is for writing shared rule
     // IDENTIFIER : dtype -> IDENTIFIER
@@ -467,22 +467,18 @@ mem_statement_list: mem_statement_list mem_statement
     // this non-terminal is for writing list of mem statements
 
 
-mem_statement: identifier_list ARROW mem_taskgroup_list SEMICOLON
+mem_statement: identifier_list ARROW mem_task_list SEMICOLON
+    | error SEMICOLON { printf("Mem statement error\n"); yyerrok; }
     ;
-    // this non-terminal is for writing mem statement
-    // IDENTIFIER -> t1, t2 mut, t3 ;
 
-mem_taskgroup_list: mem_taskgroup_list COMMA mem_taskgroup_name
-    |	mem_taskgroup_name
+mem_task_list: mem_task_list COMMA mem_task_name
+    |	mem_task_name
     ;
-    // this non-terminal is for writing list of mem taskgroups
 
 
-mem_taskgroup_name: IDENTIFIER
+mem_task_name: IDENTIFIER
     |   IDENTIFIER MUT
     ;
-    // this non-terminal is for writing mem taskgroup name
-    // IDENTIFIER mut
 
 other_statements: join_statement
     | call_statement
@@ -490,16 +486,11 @@ other_statements: join_statement
 
 join_statement: JOIN IDENTIFIER  SEMICOLON
     ;
-    // this non-terminal is for writing join statement
-    // JOIN t1 ;
 
 call_statement: CALL IDENTIFIER  SEMICOLON
     ;
-    // this non-terminal is for writing call statement, calling a task from supervisor
-    // CALL t1 ;
 
 
-    // this non-terminal is for writing range
 array_literal: expression RANGE expression 
     | expression RANGE_INCL expression
     ;
@@ -517,6 +508,11 @@ value: literals
 identifier_chain : identifier_chain DOT IDENTIFIER
     | IDENTIFIER
     ;
+
+identifier_list: identifier_list COMMA IDENTIFIER
+    | IDENTIFIER
+    ;
+    // this non-terminal is for writing list of identifiers
 // no new rules required, if nothing is matched then.
 
 %%

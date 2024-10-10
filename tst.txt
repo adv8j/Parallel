@@ -1,2 +1,3 @@
 
-@TaskGroup t1(log=ffffs) ;
+int x = 5 y = 5;
+@TaskGroup int ;
