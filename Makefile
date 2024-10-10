@@ -10,17 +10,16 @@ build:
 all: lex
 	./parser.out
 
-run: build 
-	./parser.out
+run: build
+	@./parser.out < $(input) \
+	exit 0;
+	
 
 run_sample: build 
 	@-./parser.out < sample.txt ;\
 	exit 0;
 
-run: build
-	./parser.out < $(input)
-	exit 0;
-	
+
 build_lex_tests:
 	gcc $(YACCFLAGS) $(DEBUG_FLAGS) test/lex/generate_token.c -o test/lex/token_header.out
 	cd test/lex/ && ./token_header.out

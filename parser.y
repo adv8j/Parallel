@@ -110,7 +110,7 @@ return_statement: RETURN expression SEMICOLON
     |   CONTINUE SEMICOLON
     ;
 
-compound_statement: LBRACE inner_statement RBRACE
+compound_statement: LBRACE inner_statement_list RBRACE
     ;
     // this non-terminal is for writing compound statement
     // { inner_statement }
@@ -329,10 +329,13 @@ wait_statement: CHANNEL_WAIT LBRACE IDENTIFIER COMMA expression RBRACE
 
 taskgroup_statement: TASKGROUP IDENTIFIER LPAREN taskgroup_argument_list RPAREN LBRACE taskgroup_definition RBRACE SEMICOLON
 	| TASKGROUP IDENTIFIER  LBRACE  taskgroup_definition RBRACE SEMICOLON
+    | error SEMICOLON{ printf("Taskgroup statement error\n"); }
 	;  // this non-terminal is for @TaskGroup t1{ taskgroup_definition}
 
 taskgroup_argument_list: taskgroup_argument COMMA taskgroup_argument
-|   taskgroup_argument;
+    |   taskgroup_argument
+    |  error COMMA { printf("Taskgroup argument error\n"); }
+    ;
 
 taskgroup_argument: LOG ASSIGN STRING_LITERAL
     | NUM_THREADS ASSIGN expression
