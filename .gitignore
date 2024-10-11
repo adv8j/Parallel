@@ -9,3 +9,4 @@ y.tab.h
 lex.yy.c
 parser.tab.c
 parser.output
+y.output

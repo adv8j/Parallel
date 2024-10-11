@@ -243,22 +243,27 @@ void yyerror(const char* s) {
     unexpected[strlen(unexpected) - 1] = '\0'; 
 
 	// printing error message
-    fprintf(stderr, "\n\033[1;36mLine %d:%d:\033[0m \033[1;31merror:\033[0m Unexpected Token \033[1;31m%s\033[0m, Expected ",
+    fprintf(stderr, "\n\033[1;36mLine %d:%d:\033[0m \033[1;31merror:\033[0m Unexpected Token \033[1;31m%s\033[0m",
             yylineno, cur_char, yytext);
+	if(strlen(expected) > 0){
+		fprintf(stderr, ", Expeceted ");
 
-    char temp[100];
-    strncpy(temp, expected, sizeof(temp) - 1);
-    temp[sizeof(temp) - 1] = '\0';
+    	char temp[100];
+    	strncpy(temp, expected, sizeof(temp) - 1);
+    	temp[sizeof(temp) - 1] = '\0';
 
-	// getting all possible expected tokens separated by or
-    char* token = strtok(temp, "or");
-    while (token) {
-        trim(token);
-        fprintf(stderr, "\033[1;33m%s\033[0m", token);
-        token = strtok(NULL, "or");
-        if (token) fprintf(stderr, " or ");
-    }
-	// printing the current line
+		// getting all possible expected tokens separated by or
+    	char* token = strtok(temp, "or");
+    	while (token) {
+    	    trim(token);
+    	    fprintf(stderr, "\033[1;33m%s\033[0m", token);
+    	    token = strtok(NULL, "or");
+    	    if (token) fprintf(stderr, " or ");
+    	}
+		// printing the current line
+	}
+		printf("\n");
+
     fprintf(stderr, "\n\t%d | %s\033[1;31m%s\033[0m\n", yylineno, copy, received);
 }
 

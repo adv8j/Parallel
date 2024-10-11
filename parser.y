@@ -2,7 +2,7 @@
 #include <stdio.h>
 int yylex(void);
 extern void yyerror(const char *s);
-#define YYDEBUG 1
+int yydebug;
 %}
 
 
@@ -76,8 +76,6 @@ initializer_dims: LBRACKET expression COMMA expression RBRACKET
     | 
     ;
 
-
-
 statement: iterative_statement
     | selection_statement
     | expression_statement
@@ -97,6 +95,7 @@ inner_statement: iterative_statement
     | declaration_statement
     | parallel_statement
     | return_statement
+    |
     | error SEMICOLON {  yyerrok; }
     ;
 
@@ -110,25 +109,33 @@ return_statement: RETURN expression SEMICOLON
     |   RETURN SEMICOLON
     |   BREAK SEMICOLON
     |   CONTINUE SEMICOLON
+    |   error SEMICOLON {  yyerrok; }
     ;
 
 compound_statement: LBRACE inner_statement_list RBRACE
+    | error RBRACE {  yyerrok; }
     ;
     // this non-terminal is for writing compound statement
     // { inner_statement }
 
-struct_declaration: STRUCT IDENTIFIER LBRACE member_data_list RBRACE SEMICOLON ;
-member_data_list: member_data_list member_data      // list for member data of struct  // this is used while declaring a struct
-                | ;
+struct_declaration: STRUCT IDENTIFIER struct_body SEMICOLON 
+    | STRUCT error SEMICOLON {  yyerrok; }
+    | STRUCT IDENTIFIER error SEMICOLON {  yyerrok; }
+    ;
 
-member_data: dtype IDENTIFIER value_assign SEMICOLON   ;     //one member data of a struct   // used while initialising a struct
+struct_body: LBRACE decl_stmt_list RBRACE
+    | LBRACE error RBRACE {  yyerrok; }
+
+//TODO: Can remove declaration_statement and write something which only allows constant literals to be assigned, currently it allows any expression to be assigned. need some semantic checks here.
+decl_stmt_list: decl_stmt_list declaration_statement
+    | declaration_statement
+    ;
+
 
 expression_statement: expression SEMICOLON
     | SEMICOLON
     ;
     // this non-terminal is for writing expression statement
-
-
 
 
 expression: value
@@ -139,6 +146,7 @@ expression: value
     | comparison_expression
     | unary_expression
     | function_call
+    | error {  yyerrok; yyclearin;}
     ;
     // This is for writing various expressions
 
@@ -177,7 +185,8 @@ unary_expression: MINUS %prec NOT number_literals
     // this non-terminal is for writing unary expression
 
 number_literals: FLOAT_LITERAL
-    | INT_LITERAL;
+    | INT_LITERAL
+    ;
 
 comparison_expression: expression LT expression
     | expression GT expression
@@ -193,7 +202,7 @@ logical_expression: expression AND expression
     ;
     // this non-terminal is for writing logical expression
 
-
+// declaration statements
 declaration_statement: dtype declaration_list SEMICOLON;
     // variable declaration
 
@@ -201,18 +210,22 @@ declaration_list : declaration_list COMMA declaration
     | declaration
     ;
 
-
-declaration: REFERENCE IDENTIFIER ASSIGN IDENTIFIER
-    | IDENTIFIER value_assign
+//TODO: references are dicey, should be assigned to variable only? or any expression
+declaration: REFERENCE IDENTIFIER optional_value_assignment
+    | IDENTIFIER optional_value_assignment
     ;
 
-value_assign: ASSIGN initializer    //optional value assign
+optional_value_assignment: ASSIGN initializer    //optional value assign
     | 
     ;
+
+// initialisers
 initializer : expression    // assign an expression
     | list_initialiser ; //this is used to initialise arrays and struct like {{1,2,3},{4,5,6},{7,8,9}}
 
-list_initialiser: LBRACE list_member initialiser_member_list_tail RBRACE;   //in this, there should atleast be one list member
+list_initialiser: LBRACE list_member initialiser_member_list_tail RBRACE
+    | LBRACE error RBRACE {  yyerrok; }
+    ; 
 
 initialiser_member_list_tail: COMMA list_member initialiser_member_list_tail       // (,list_member)*
                             | ;
@@ -221,10 +234,20 @@ list_member : list_initialiser  // a single member in a list
 
 
 
-iterative_statement:  FOR LPAREN expression_statement expression_statement empty_expression RPAREN compound_statement
-    |FOR iterator IN container  compound_statement
+iterative_statement:  FOR  iteration_condition compound_statement
+    | error  {  yyerrok; }
     ;
 
+iteration_condition: iteration_type1
+    | iteration_type2
+    ;
+
+iteration_type1: LPAREN expression_statement expression_statement empty_expression RPAREN 
+    | error RPAREN {  yyerrok; }
+
+iteration_type2: iterator IN container
+    | error SEMICOLON {  yyerrok; }
+    ;
 empty_expression: expression
     | 
     ;
@@ -516,7 +539,10 @@ identifier_list: identifier_list COMMA IDENTIFIER
 // no new rules required, if nothing is matched then.
 
 %%
-int main(void) {
+int main(int argc, char** argv) {
+    if(argc > 1) {
+        yydebug = 1;
+    }
 	yyparse();
 }
 
