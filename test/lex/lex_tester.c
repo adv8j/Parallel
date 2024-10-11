@@ -54,6 +54,7 @@ int main() {
     FILE* logfile = fopen("logs", "w");
     for (int i = 0; i < file_count; i++) {
         FILE *inp;
+        num_errs = 0;
         char inp_contents[MAX_FILE_LEN];
         char line[MAX_LINE_LEN];
         memset(inp_contents, 0, sizeof(inp_contents));
@@ -85,21 +86,19 @@ int main() {
             int token;
             while((token = yylex()) != 0) {
                 // printf("Token: %d", token);
+
                 if (token == YYEOF) {
                     break;
                 }
-
-                if(token == YYerror){
-                    printf("%s : \033[1;32mTest Passed\n\033[0m", filenames[i]);
-                    fprintf(logfile, "%s : Test Passed\n", filenames[i]);
-                    break;
-                }
             }
-            if(token != YYerror){
-                printf("%s : \033[1;31mTest Failed\n\033[0m", filenames[i]);
-                fprintf(logfile, "%s : Test Failed\n", filenames[i]);
-
+            if(num_errs == 0){
+                printf("%6s : \033[1;31mTest Failed\n\033[0m", filenames[i]);
+                fprintf(logfile, "%6s : Test Failed\n", filenames[i]);
             }    
+            else {
+                printf("%6s : \033[1;32mTest Passed\n\033[0m", filenames[i]);
+                fprintf(logfile, "%6s : Test Passed\n", filenames[i]);
+            }
             continue;
         }
 
@@ -108,6 +107,7 @@ int main() {
         int token;
         while ((token = yylex()) != 0) {
             // printf("Token: %d, Name=%s\n", token, yytname[token-258]); // Print tokens for debugging
+
             if (token == YYEOF) {
                 break;
             }
@@ -117,8 +117,8 @@ int main() {
             char *out2 = fgets(line2, sizeof(line2), expected_out);
 
             if(out2 == NULL) {
-                printf("%s : \033[1;31mTest Failed\033[0m at line : %d\n", filenames[i], line_num);
-                fprintf(logfile, "%s : Test Failed\n", filenames[i]);
+                printf("%6s : \033[1;31mTest Failed\033[0m \n", filenames[i]);
+                fprintf(logfile, "%6s : Test Failed\n", filenames[i]);
                 goto end;
             }
             int tok = token - 258;
@@ -126,12 +126,15 @@ int main() {
             if(out2[len - 1] == '\n') {
                 out2[len - 1] = '\0';
             }
-            printf("Line %d, Token: %s, Expected: %s\n", yylineno, yytname[tok], line2);
-
+            if(num_errs > 0){
+                printf("%6s : \033[1;31mTest Failed\033[0m \n", filenames[i] );
+                fprintf(logfile, "%6s : Test Failed\n", filenames[i]);
+                goto end;
+            }
             if(strcmp(yytname[tok], line2) != 0) {
-                printf("%s : \033[1;31mTest Failed\033[0m at line : %d\n", filenames[i], line_num);
-                printf("\033[1;34mGot\n\033[0m : %s\033[1;34mExpected\n\033[0m : %s\n", yytname[tok], line2);
-                fprintf(logfile, "%s : Test Failed\n", filenames[i]);
+                printf("Tester: Mismatch: %s %s\n", yytname[tok], line2);
+                printf("%6s : \033[1;31mTest Failed\033[0m \n", filenames[i]);
+                fprintf(logfile, "%6s : Test Failed\n", filenames[i]);
                 goto end;
             }
 

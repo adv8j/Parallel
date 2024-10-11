@@ -12,6 +12,7 @@ int cur_char = 1;
 int syntax_error_flag = 0;
 char cur_line[CUR_MAX_LEN];
 void trim(char* s);
+int num_errs = 0;
 %}
 
 
@@ -220,17 +221,19 @@ false { process_text(yytext); return FALSE;}
 }
 
 . {
+	num_errs++;
 	fprintf(stderr, 
     "\n\033[1;36mLine %d:%d:\033[0m \033[1;31merror:\033[0m stray \033[1m\'%s\'\033[0m in program\n"
 	"\t%d | %s\033[0;31m%s\033[0m\n",
 	yylineno, cur_char,  yytext, yylineno, cur_line, yytext
-);
+	);
 	cur_char++;
 	cur_line[strlen(cur_line)] = yytext[0];
 }
 %%
 
 void yyerror(const char* s) {
+	num_errs++;
     const int len = 1000;
     char expected[len], unexpected[len], copy[CUR_MAX_LEN], received[CUR_MAX_LEN] = {0};
     // storing necessary info

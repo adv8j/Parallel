@@ -21,7 +21,7 @@ build_lex_tests:
 	gcc $(YACCFLAGS) $(DEBUG_FLAGS) test/lex/lex_tester.c -o test/lex/lex_tester.out
 
 
-lex_tests: build_lex_tests	
+lex_tests: build build_lex_tests	
 	cd test/lex/ && ./lex_tester.out
 
 yacc_tests: build 

@@ -1,5 +1,5 @@
 int X_yacc=5;  // correct
-int ___y=7;
+int y=7;
 int y___=8;  // correct
                      int uttaM=21;   // error
 long try=9;  

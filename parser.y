@@ -2,6 +2,7 @@
 #include <stdio.h>
 int yylex(void);
 extern void yyerror(const char *s);
+extern int num_errs;
 int yydebug;
 %}
 
@@ -561,5 +562,6 @@ int main(int argc, char** argv) {
         yydebug = 1;
     }
 	yyparse();
+    return num_errs;
 }
 
