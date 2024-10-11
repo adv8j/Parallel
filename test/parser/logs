@@ -1,5 +1,4 @@
 1.txt: Test Passed
-1.txt: Test Passed (Syntax Error Handled)
 2.txt: Test Passed
 3.txt: Test Passed
 4.txt: Test Passed
@@ -25,6 +24,7 @@
 24.txt: Test Passed
 25.txt: Test Passed
 26.txt: Test Passed
-27.txt: Test Failed (Syntax Error)
+27.txt: Test Passed
 28.txt: Test Passed
-29.txt: Test Failed (Syntax Error)
+29.txt: Test Passed
+30.txt: Test Passed (Syntax Error Handled)

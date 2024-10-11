@@ -3,7 +3,7 @@
 int yylex(void);
 extern void yyerror(const char *s);
 extern int num_errs;
-int yydebug;
+int yydebug =0;
 %}
 
 
@@ -28,7 +28,7 @@ int yydebug;
 %start program
 
 // Precedence
-
+%left RANGE RANGE_INCL
 %right ASSIGN ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN
 %left OR 
 %left AND
@@ -36,7 +36,7 @@ int yydebug;
 %left GT LT GTE LTE
 %left PLUS MINUS
 %left MUL DIV MOD
-%left RANGE RANGE_INCL
+%left DOT
 %right NOT  // Unary operator problem
 
 
@@ -96,13 +96,16 @@ inner_statement: iterative_statement
     | declaration_statement
     | parallel_statement
     | return_statement
-    |
     | error SEMICOLON {  yyerrok; }
     ;
 
 
-inner_statement_list: inner_statement_list inner_statement
-    |   inner_statement
+inner_statement_list: non_empty_inner_statement_list
+    |
+    ;
+
+non_empty_inner_statement_list: non_empty_inner_statement_list inner_statement
+    | inner_statement
     ;
     // specifies various types of statements(these will be used in a function)
 
@@ -110,7 +113,6 @@ return_statement: RETURN expression SEMICOLON
     |   RETURN SEMICOLON
     |   BREAK SEMICOLON
     |   CONTINUE SEMICOLON
-    |   error SEMICOLON {  yyerrok; }
     ;
 
 compound_statement: LBRACE inner_statement_list RBRACE
@@ -147,7 +149,6 @@ expression: value
     | comparison_expression
     | unary_expression
     | function_call
-    | error {  yyerrok; yyclearin;}
     ;
     // This is for writing various expressions
 
@@ -238,7 +239,6 @@ list_member : list_initialiser  // a single member in a list
 
 
 iterative_statement:  FOR  iteration_condition compound_statement
-    | error  {  yyerrok; }
     ;
 
 iteration_condition: iteration_type1
@@ -256,7 +256,7 @@ empty_expression: expression
     ;
 
 
-container: identifier_list
+container: variable
     | array_literal
     ;
     // basically arrays
@@ -267,7 +267,7 @@ iterator: IDENTIFIER
 
 
 number: INT_LITERAL
-    | identifier_chain
+    | variable
     ;
     // number used for iteration in range
 
@@ -292,7 +292,6 @@ function_declaration: FUNC IDENTIFIER dtype params  compound_statement
     | FUNC error RBRACE {  yyerrok; }
     | FUNC IDENTIFIER error RBRACE {  yyerrok; }
     | FUNC IDENTIFIER dtype error RBRACE {  yyerrok; }
-    | FUNC IDENTIFIER dtype params error RBRACE {  yyerrok; }
     ;
 
 params: LPAREN parameter_list RPAREN
@@ -307,7 +306,6 @@ datatype_and_ref: parameter_dtype| dtype REFERENCE;
 
 parameter_dtype : generic_dtypes
     | generic_dtypes dims 
-    | STRUCT IDENTIFIER
     ;
 
 parameter_list: parameter_list COMMA parameter_declaration
@@ -374,6 +372,7 @@ taskgroup_statement: TASKGROUP IDENTIFIER taskgroup_declaration_list LBRACE task
 	;  // this non-terminal is for @TaskGroup t1{ taskgroup_definition}
 
 taskgroup_declaration_list: LPAREN taskgroup_argument_list RPAREN
+    |
     | error RPAREN {  yyerrok; }
     ;
 
@@ -387,12 +386,11 @@ taskgroup_argument: LOG ASSIGN STRING_LITERAL
     ;
 
 taskgroup_definition:  task_declaration_list properties_declaration 
-    |
     ; 
 
 
 task_declaration_list: task_declaration_list task_declaration
-    | task_declaration
+    | 
     ; // this non-terminal is for writing list of tasks
 
 task_declaration: TASK IDENTIFIER task_argument LBRACE task_statement_list RBRACE 
@@ -440,6 +438,7 @@ task_statement: iterative_statement
     ;
 
 properties_declaration: PROPERTIES LBRACE taskgroup_properties RBRACE
+    |
     | error RBRACE {  yyerrok; }
     ;
 
@@ -541,13 +540,13 @@ literals: INT_LITERAL| FLOAT_LITERAL| STRING_LITERAL| CHARACTER_LITERAL| TRUE| F
     // constant literals
 
 value: literals 
-    | identifier_chain
-    | array_element
+    | variable
     ;
     // this non-terminal is for writing value
 
-identifier_chain : identifier_chain DOT IDENTIFIER
-    | IDENTIFIER
+variable: array_element
+    | IDENTIFIER 
+    | variable DOT variable
     ;
 
 identifier_list: identifier_list COMMA IDENTIFIER

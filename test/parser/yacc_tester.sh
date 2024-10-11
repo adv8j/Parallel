@@ -31,40 +31,34 @@ for file in $(ls "$input_folder" | grep -E '^[0-9]+(_wrong)?\.txt$' | sort -n); 
         number=${BASH_REMATCH[1]}
         is_wrong=${BASH_REMATCH[2]}
 
-        # Reset the syntax_error flag for each file
-        syntax_error=false
-
         # Run parser.out, pipe its output to grep, and capture result
         if $out; then
             # Print and check for "syntax error"
-            output=$(./parser.out < "$input_folder/$filename" 2>&1)
-            echo -n "$output"
+            ./parser.out < "$input_folder/$filename";
         else
             # Suppress stdout but still check for "syntax error"
-            output=$(./parser.out < "$input_folder/$filename" 2>&1)
+            ./parser.out < "$input_folder/$filename" 2> /dev/null;
         fi
 
-        # Check for the 'syntax error' in output
-        if echo "$output" | grep -q "syntax error"; then
-            syntax_error=true
-        fi
+        exit_code=$?;
+
 
         # Evaluate based on the syntax_error flag and the presence of _wrong in the filename
-        if [ "$syntax_error" == true ]; then
+        if [ $exit_code -ne 0 ]; then
             if [ -z "$is_wrong" ]; then
-                echo -e "$number.txt: Test Failed (Syntax Error)" >> "$log_file"
-                printf "${yellow}%2d.txt:${reset} ${red}Test Failed${reset}\n" "$number"
+                echo -e "$number.txt: Test Failed (Syntax Error)" >> "$log_file" ;
+                printf "\n${yellow}%2d.txt:${reset} ${red}Test Failed${reset}\n" "$number";
             else
-                echo -e "$number.txt: Test Passed (Syntax Error Handled)" >> "$log_file"
-                printf "${yellow}%2d.txt:${reset} ${green}Test Passed${reset}\n" "$number"
+                echo -e "$number.txt: Test Passed (Syntax Error Handled)" >> "$log_file";
+                printf "\n${yellow}%2d.txt:${reset} ${green}Test Passed${reset}\n" "$number";
             fi
         else
             if [ -z "$is_wrong" ]; then
-                echo -e "$number.txt: Test Passed" >> "$log_file"
-                printf "${yellow}%2d.txt:${reset} ${green}Test Passed${reset}\n" "$number"
+                echo -e "$number.txt: Test Passed" >> "$log_file";
+                printf "\n${yellow}%2d.txt:${reset} ${green}Test Passed${reset}\n" "$number";
             else
-                echo -e "$number.txt: Test Failed" >> "$log_file"
-                printf "${yellow}%2d.txt:${reset} ${red}Test Failed${reset}\n" "$number"
+                echo -e "$number.txt: Test Failed" >> "$log_file";
+                printf "\n${yellow}%2d.txt:${reset} ${red}Test Failed${reset}\n" "$number";
             fi
         fi
     fi
