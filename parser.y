@@ -150,7 +150,9 @@ expression: value
     ;
     // This is for writing various expressions
 
-function_call: IDENTIFIER LPAREN function_call_tail;
+function_call: IDENTIFIER LPAREN function_call_tail
+            | IDENTIFIER LPAREN error RPAREN {  yyerrok; }
+            ;
 
     // this is for writing function call
 
@@ -268,11 +270,16 @@ number: INT_LITERAL
     ;
     // number used for iteration in range
 
-selection_statement: 
-    IF LPAREN expression RPAREN compound_statement if_chain_statement
-    | IF LPAREN expression RPAREN compound_statement ELSE compound_statement
+selection_statement: IF selection_condition compound_statement if_chain_statement
+    | IF selection_condition compound_statement ELSE compound_statement
     ;
     // if-then-else
+
+selection_condition: LPAREN expression RPAREN
+    | error RPAREN  {yyerrok;}
+    | LPAREN error RPAREN {yyerrok;}
+    | LPAREN expression error SEMICOLON {yyerrok;}
+    ;
 
 if_chain_statement: ELSE selection_statement
     |
@@ -280,9 +287,18 @@ if_chain_statement: ELSE selection_statement
     // if else-if else-if else
 
 
-function_declaration: FUNC IDENTIFIER dtype LPAREN parameter_list RPAREN compound_statement
+function_declaration: FUNC IDENTIFIER dtype params  compound_statement
+    | FUNC error RBRACE {  yyerrok; }
+    | FUNC IDENTIFIER error RBRACE {  yyerrok; }
+    | FUNC IDENTIFIER dtype error RBRACE {  yyerrok; }
+    | FUNC IDENTIFIER dtype params error RBRACE {  yyerrok; }
     ;
-    // Function declaration, (return can never be ref)
+
+params: LPAREN parameter_list RPAREN
+    | LPAREN error RPAREN {  yyerrok; }
+    | error RPAREN {  yyerrok; }
+    ;
+
 
 
 datatype_and_ref: parameter_dtype| dtype REFERENCE;
@@ -290,6 +306,7 @@ datatype_and_ref: parameter_dtype| dtype REFERENCE;
 
 parameter_dtype : generic_dtypes
     | generic_dtypes dims 
+    | STRUCT IDENTIFIER
     ;
 
 parameter_list: parameter_list COMMA parameter_declaration
