@@ -21,3 +21,5 @@ jobs:
       run: make lex_tests
     - name: Yacc Tests
       run: make yacc_tests
+    - name: Clean build
+      run: make clean
