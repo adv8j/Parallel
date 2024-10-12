@@ -29,6 +29,7 @@ int compare(const void *a, const void *b) {
 
 int main() {
     DIR *dir;
+    int failed = 0;
     struct dirent *ent;
     const char *inputDir = "input";
     char *filenames[MAX_FILES];
@@ -94,6 +95,7 @@ int main() {
             if(num_errs == 0){
                 printf("%6s : \033[1;31mTest Failed\n\033[0m", filenames[i]);
                 fprintf(logfile, "%6s : Test Failed\n", filenames[i]);
+                failed++;
             }    
             else {
                 printf("%6s : \033[1;32mTest Passed\n\033[0m", filenames[i]);
@@ -118,6 +120,7 @@ int main() {
 
             if(out2 == NULL) {
                 printf("%6s : \033[1;31mTest Failed\033[0m \n", filenames[i]);
+                failed++;
                 fprintf(logfile, "%6s : Test Failed\n", filenames[i]);
                 goto end;
             }
@@ -128,6 +131,7 @@ int main() {
             }
             if(num_errs > 0){
                 printf("%6s : \033[1;31mTest Failed\033[0m \n", filenames[i] );
+                failed++;
                 fprintf(logfile, "%6s : Test Failed\n", filenames[i]);
                 goto end;
             }
@@ -135,6 +139,7 @@ int main() {
                 printf("Tester: Mismatch: %s %s\n", yytname[tok], line2);
                 printf("%6s : \033[1;31mTest Failed\033[0m \n", filenames[i]);
                 fprintf(logfile, "%6s : Test Failed\n", filenames[i]);
+                failed++;
                 goto end;
             }
 
@@ -150,6 +155,5 @@ int main() {
             fclose(expected_out);
         free(filenames[i]);
     }
-
-    return 0;
+    return failed;
 }

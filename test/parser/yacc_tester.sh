@@ -11,16 +11,16 @@ for arg in "$@"; do
     fi
 done
 
-input_folder="test/parser/input"
-log_file="test/parser/logs"
-> "$log_file"
+input_folder="test/parser/input";
+log_file="test/parser/logs";
+> "$log_file";
 
 # ANSI color codes
-yellow="\033[1;33m"
-green="\033[1;32m"
-red="\033[1;31m"
-reset="\033[0m"
-
+yellow="\033[1;33m";
+green="\033[1;32m";
+red="\033[1;31m";
+reset="\033[0m";
+failed=0;
 # Process files in numerical order
 for file in $(ls "$input_folder" | grep -E '^[0-9]+(_wrong)?\.txt$' | sort -n); do
     filename=$(basename -- "$file")
@@ -48,6 +48,7 @@ for file in $(ls "$input_folder" | grep -E '^[0-9]+(_wrong)?\.txt$' | sort -n); 
             if [ -z "$is_wrong" ]; then
                 echo -e "$number.txt: Test Failed (Syntax Error)" >> "$log_file" ;
                 printf "\n${yellow}%2d.txt:${reset} ${red}Test Failed${reset}\n" "$number";
+                failed=$((failed+1));
             else
                 echo -e "$number.txt: Test Passed (Syntax Error Handled)" >> "$log_file";
                 printf "\n${yellow}%2d.txt:${reset} ${green}Test Passed${reset}\n" "$number";
@@ -59,7 +60,10 @@ for file in $(ls "$input_folder" | grep -E '^[0-9]+(_wrong)?\.txt$' | sort -n); 
             else
                 echo -e "$number.txt: Test Failed" >> "$log_file";
                 printf "\n${yellow}%2d.txt:${reset} ${red}Test Failed${reset}\n" "$number";
+                failed=$((failed+1));
             fi
         fi
     fi
 done
+
+exit $failed;
