@@ -1,0 +1,23 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: install dependencies
+      run: sudo apt install gcc flex yacc make
+    - name: make
+      run: make
+    - name: Lex Tests
+      run: make lex_tests
+    - name: Yacc Tests
+      run: make yacc_tests
