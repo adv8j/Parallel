@@ -1,3 +1,22 @@
-for (i = 0; i < 10; i+=2 ){
-        sum=sum+i;
+
+func example_function int (int a,int b){
+    return a+b;
+}
+a = 1;
+b = 2;
+X = example_function(a,b);
+
+a = 'x';
+a += 1;
+
+func my_function int(int a, int b){
+    n = 10;
+    for i in 1..=n{
+        a += b;
     }
+    return a;
+}
+
+a1 = 0;
+b1 = 1;
+x = my_function(a1, b1);

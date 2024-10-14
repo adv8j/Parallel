@@ -1,3 +1,16 @@
-for a in 3..8{
-    sum=sum+a;
+func example_function int (int a, int b){
+	c = a + b;
+	a = 5;
+	b = 10;
+	return c;
 }
+
+a = 1;
+b = 2;
+// calling the function
+X = example_function(a,b, a+b, arr[i], 45*5,"hello", member.mem);    /* this will return 3
+                            but values of a and b will remain 1 and 2 */
+
+string_concat = "str" + "ing";
+
+person.arr[i].xyz_member;

@@ -1,3 +1,28 @@
 for (i = 0; i < 10; i+=1){
         sum=sum+i;
     }
+
+for a in 3..8{
+    sum=sum+a;
+}
+
+for z in myarr{
+    sum=sum+z;
+}
+
+for (i = 0; i < 10; i+=1){
+        sum=sum+i;
+    }
+
+for (i = 0; i < 10; i+=2 ){
+        sum=sum+i;
+    }
+
+
+
+int a = 10;
+int& ref = a;
+ref = 20; 
+
+
+

@@ -1,14 +1,36 @@
-a = 'x';
-a += 1;
-
-func my_function int(int a, int b){
-    n = 10;
-    for i in 1..=n{
-        a += b;
+func myfunc int (){
+        return e+3;
+        
     }
-    return a;
-}
 
-a1 = 0;
-b1 = 1;
-x = my_function(a1, b1);
+
+func myfunc int (int a , char c){
+        a=b;
+        int e=10;
+        return e;
+        
+    }
+
+
+if(a>b){
+        if(2<4){
+            d=d+2;
+        }
+        else if(value==true){
+            d=d-2;
+        }
+        else{
+            
+        }
+    }
+    else{
+        sum=sum+9;
+    }
+
+
+if(a>b){
+        sum=sum-9;
+    }
+    else{
+        sum=sum+9;
+    }

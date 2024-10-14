@@ -8,3 +8,18 @@ fourthchar=s[4];
 
 areEqual=("check"=="CHECK");
 isgreater=("check">"CHECK");
+
+
+struct Person {
+    // Data members
+        int age;
+        float height;
+};
+
+struct Person person = {45, 5.3};
+
+person.age = 30;
+person.height = 1.75;
+X = person.age;
+
+

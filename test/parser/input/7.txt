@@ -1,3 +1,23 @@
-for (i = 0; i < 10; i+=1){
-        sum=sum+i;
+@parallel(num_threads=4)
+{
+    // Parallel code block execution
+}
+@parallel(num_threads=num_thread)
+{
+    // Code block to run in parallel
+}
+for i in 0..data.my_arrayyyy
+
+{
+    //temp = compute(data[i]);
+    //total_sum += temp;
+}
+
+
+int x = 0, y = 1;
+for(i = 0; i < 10; i+=1){
+    for (j = 0; j < 10; j+=1){
+        x+=1;
+        y += 10;
     }
+}

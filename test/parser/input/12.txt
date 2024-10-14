@@ -1,6 +1,79 @@
-if(a>b){
-        sum=sum-9;
+@TaskGroup g1
+{
+    @Task t1
+    {
+        for ( i = 0; i < 10; i+=1){
+            
+        }
     }
-    else{
-        sum=sum+9;
+};
+
+@TaskGroup g1
+{
+    
+    @Task t1
+    {
+        for ( i = 0; i < 10; i+=1)
+        {
+            for ( j = 0; j < 10; j+=1){
+
+            }
+        }
     }
+};
+
+
+ @TaskGroup g1
+{
+    @Task t1
+    {
+        .ct <- 5;  
+        
+        .ct;       
+    }
+    @Task t2
+    {
+        .wt{t1, 1} -> x; 
+    }
+};
+
+
+@TaskGroup g1
+{
+    @Task t1
+    {}
+    @Task t2
+    {}
+    @Task t3
+    {}
+    @Properties
+    {
+    
+    }
+};
+
+@TaskGroup g1
+{
+    @Task t1
+    {}
+    @Properties
+    {
+        @Mem{
+            a->t1,t2 mut, t3;
+        }
+    }
+};
+
+@TaskGroup g1
+{
+    @Task t1
+    {}
+    @Properties
+    {
+        @Order{
+            all->t1;
+            t1->t2,t3;
+            t3->all;
+        }
+    }
+};

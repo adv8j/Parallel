@@ -1,6 +1,0 @@
-func myfunc int (int a , char c){
-        a=b;
-        int e=10;
-        return e;
-        
-    }

@@ -1,7 +1,33 @@
-int x = 0, y = 1;
-for(i = 0; i < 10; i+=1){
-    for (j = 0; j < 10; j+=1){
-        x+=1;
-        y += 10;
+
+struct Person {
+    // Data members
+        int age;
+        float height;
+};
+
+struct Person person = {45, 5.3};
+
+person.age = 30;
+person.height = 1.75;
+X = person.age;
+
+
+for (; ; ){
+}
+
+if(true){
+
+}
+
+
+for (;;){
+    for(;;){
+        for(;;){
+            if(1){
+            }
+            else{
+
+            }
+        }
     }
 }

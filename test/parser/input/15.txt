@@ -1,4 +1,0 @@
-func myfunc int (){
-        return e+3;
-        
-    }

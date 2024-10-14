@@ -10,21 +10,4 @@
 10.txt: Test Passed
 11.txt: Test Passed
 12.txt: Test Passed
-13.txt: Test Passed
-14.txt: Test Passed
-15.txt: Test Passed
-16.txt: Test Passed
-17.txt: Test Passed
-18.txt: Test Passed
-19.txt: Test Passed
-20.txt: Test Passed
-21.txt: Test Passed
-22.txt: Test Passed
-23.txt: Test Passed
-24.txt: Test Passed
-25.txt: Test Passed
-26.txt: Test Passed
-27.txt: Test Passed
-28.txt: Test Passed
-29.txt: Test Passed
-30.txt: Test Passed (Syntax Error Handled)
+13.txt: Test Passed (Syntax Error Handled)
