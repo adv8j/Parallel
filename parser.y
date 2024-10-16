@@ -159,7 +159,8 @@ function_call: IDENTIFIER LPAREN function_call_tail
     // this is for writing function call
 
 function_call_tail : RPAREN 
-                    | function_arguments RPAREN;
+                    | function_arguments RPAREN
+                    ;
 
 function_arguments: list_member initialiser_member_list_tail;
 
@@ -225,16 +226,19 @@ optional_value_assignment: ASSIGN initializer    //optional value assign
 
 // initialisers
 initializer : expression    // assign an expression
-    | list_initialiser ; //this is used to initialise arrays and struct like {{1,2,3},{4,5,6},{7,8,9}}
+    | list_initialiser  //this is used to initialise arrays and struct like {{1,2,3},{4,5,6},{7,8,9}}
+    ; 
 
 list_initialiser: LBRACE list_member initialiser_member_list_tail RBRACE
     | LBRACE error RBRACE {  yyerrok; }
     ; 
 
 initialiser_member_list_tail: COMMA list_member initialiser_member_list_tail       // (,list_member)*
-                            | ;
+                            |
+                            ;
 list_member : list_initialiser  // a single member in a list
-        | expression;
+        | expression
+        ;
 
 
 
@@ -247,10 +251,12 @@ iteration_condition: iteration_type1
 
 iteration_type1: LPAREN expression_statement expression_statement empty_expression RPAREN 
     | error RPAREN {  yyerrok; }
+    ;
 
 iteration_type2: iterator IN container
     | error SEMICOLON {  yyerrok; }
     ;
+
 empty_expression: expression
     | 
     ;
@@ -321,10 +327,12 @@ parameter_declaration: datatype_and_ref IDENTIFIER
 //parallel statements
 parallel_statement: PARALLEL LPAREN parallel_stmt_argument_list RPAREN compound_statement // parallel block statement
     | PARALLEL compound_statement
-    | PARALLEL LPAREN parallel_stmt_argument_list RPAREN iterative_statement; // parallel for statement
+    | PARALLEL LPAREN parallel_stmt_argument_list RPAREN iterative_statement // parallel for statement
+    ;
 
 parallel_stmt_argument_list: parallel_stmt_argument_list COMMA parallel_stmt_argument
-    | parallel_stmt_argument;
+    | parallel_stmt_argument
+    ;
 
 // this consists of all the arguments which are inside the parallel construct like shared, private, reduction, etc. 
 parallel_stmt_argument: SHARED ASSIGN LBRACKET identifier_list RBRACKET 
