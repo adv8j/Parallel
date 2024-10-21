@@ -1,6 +1,6 @@
 %{
 #include <stdio.h>
-#include "symbol_table.h"
+#include "symbol_table/symbol_table.c"
 int yylex(void);
 extern void yyerror(const char *s);
 extern int num_errs;
@@ -296,6 +296,7 @@ if_chain_statement: ELSE selection_statement
 
 
 function_declaration: FUNC IDENTIFIER dtype params  compound_statement
+    | FUNC IDENTIFIER dtype params SEMICOLON //function prototype
     | FUNC error RBRACE {  yyerrok; }
     | FUNC IDENTIFIER error RBRACE {  yyerrok; }
     | FUNC IDENTIFIER dtype error RBRACE {  yyerrok; }

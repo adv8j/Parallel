@@ -7,7 +7,7 @@
 //stores info about an object or basic variable created
 typedef struct IdentifierDetails{
     char* name;
-    bool has_value;     //do we need this?
+    bool has_value;
     char* type;
     int ndim;        //dimension = 0, if id is just a normal variable //dimension = 1 for 1-D array
     int line_number;
@@ -75,6 +75,8 @@ IdentifierDetails* symbol_init(char *name, bool has_value, char *type, int ndim,
     s->line_number=line_number;
     return s;
 }
+
+//returns 1 if found, else returns 0
 bool search(symbol_table* st, char* name) {
     int key = get_key(name, st->size, st->p);
     symbol_node* node = st->table[key];
@@ -86,6 +88,20 @@ bool search(symbol_table* st, char* name) {
     }
     return false;
 }
+
+//function to return details for an id from symbol table
+IdentifierDetails* get_id_details(symbol_table* st, char* name){
+    int key = get_key(name, st->size, st->p);
+    symbol_node* node = st->table[key];
+    while (node != NULL) {
+        if (strcmp(node->info->name, name) == 0) {
+            return node -> info;
+        }
+        node = node -> next;
+    }
+    return NULL;
+}
+
 void symbol_insert(symbol_table* st, char *name, bool has_value, char *type,int ndim,bool reference, int line_number) {
     IdentifierDetails *s = symbol_init(name, has_value, type, ndim, reference, line_number);
     insert(st, s);

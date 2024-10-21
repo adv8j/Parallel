@@ -5,6 +5,8 @@ func example_function int (int a, int b){
 	return c;
 }
 
+func example_function int(int a, int b);
+
 a = 1;
 b = 2;
 // calling the function
