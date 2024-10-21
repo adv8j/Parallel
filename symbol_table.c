@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
+
 
 //stores info about an object or basic variable created
 typedef struct IdentifierDetails{
@@ -8,6 +10,7 @@ typedef struct IdentifierDetails{
     bool has_value;     //do we need this?
     char* type;
     int ndim;        //dimension = 0, if id is just a normal variable //dimension = 1 for 1-D array
+    int line_number;
     bool reference;
 } IdentifierDetails;
 
@@ -20,7 +23,7 @@ typedef struct symbol_node {
 typedef struct symbol_table{
     symbol_node** table;
     int size;
-    int p;
+    int p; // prime number used for hashing
 } symbol_table;
 
 //creating a symbol table
@@ -62,12 +65,28 @@ void insert(symbol_table* st, IdentifierDetails* s) {
 }
 
 //initialises an entry in symbol table and returns it
-IdentifierDetails* symbol_init(char *name, bool has_value, char *type, int ndim, bool reference){
+IdentifierDetails* symbol_init(char *name, bool has_value, char *type, int ndim, bool reference, int line_number) {
     IdentifierDetails *s = (IdentifierDetails*)malloc(sizeof(IdentifierDetails));
     s->name = name;
     s->has_value = has_value;
     s->type = type;
     s->ndim = ndim;
     s->reference = reference;
+    s->line_number=line_number;
     return s;
+}
+bool search(symbol_table* st, char* name) {
+    int key = get_key(name, st->size, st->p);
+    symbol_node* node = st->table[key];
+    while (node != NULL) {
+        if (strcmp(node->info->name, name) == 0) {
+            return true;
+        }
+        node = node->next;
+    }
+    return false;
+}
+void symbol_insert(symbol_table* st, char *name, bool has_value, char *type,int ndim,bool reference, int line_number) {
+    IdentifierDetails *s = symbol_init(name, has_value, type, ndim, reference, line_number);
+    insert(st, s);
 }
