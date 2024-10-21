@@ -2,15 +2,18 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-typedef struct symbol{
+//stores info about an object or basic variable created
+typedef struct IdentifierDetails{
     char* name;
-    bool has_value;
+    bool has_value;     //do we need this?
     char* type;
-    int line_number;
-} symbol;
+    int ndim;        //dimension = 0, if id is just a normal variable //dimension = 1 for 1-D array
+    bool reference;
+} IdentifierDetails;
 
+//entry in a symbol table
 typedef struct symbol_node {
-    symbol *sym;
+    IdentifierDetails *info;
     struct symbol_node *next;
 } symbol_node;
 
@@ -20,6 +23,7 @@ typedef struct symbol_table{
     int p;
 } symbol_table;
 
+//creating a symbol table
 symbol_table* symbol_table_init(int size) {
     symbol_table* st = (symbol_table*)malloc(sizeof(symbol_table));
     st->table = (symbol_node**)malloc(size * sizeof(symbol_node*));
@@ -28,6 +32,7 @@ symbol_table* symbol_table_init(int size) {
     return st;
 }
 
+//binary exponentiation hash function used for hashing the entries in symbol table
 int bin_exp(int base, int power, int mod) {
     // Recursive binary exponentiation
     if (power == 0) return 1;
@@ -38,6 +43,7 @@ int bin_exp(int base, int power, int mod) {
     return (base * bin_exp(base, power-1, mod)) % mod;
 }
 
+// used to get the key for an identifier for searching or inserting in hash table
 int get_key(char* name, int size, int p) {
     int key = 0;
     for (int i = 0; name[i] != '\0'; i++) {
@@ -46,19 +52,22 @@ int get_key(char* name, int size, int p) {
     return key % size;
 }
 
-void insert(symbol_table* st, symbol* s) {
+//insert an entry in symbol table when a new identifier is found
+void insert(symbol_table* st, IdentifierDetails* s) {
     int key = get_key(s->name, st->size, st->p);
     symbol_node* node = (symbol_node*)malloc(sizeof(symbol_node));
     node->next = st->table[key];
-    node->sym = s;
+    node->info = s;
     st->table[key] = node;
 }
 
-symbol* symbol_init(char *name, bool has_value, char *type, int line_number){
-    symbol *s = (symbol*)malloc(sizeof(symbol));
+//initialises an entry in symbol table and returns it
+IdentifierDetails* symbol_init(char *name, bool has_value, char *type, int ndim, bool reference){
+    IdentifierDetails *s = (IdentifierDetails*)malloc(sizeof(IdentifierDetails));
     s->name = name;
     s->has_value = has_value;
     s->type = type;
-    s->line_number = line_number;
+    s->ndim = ndim;
+    s->reference = reference;
     return s;
 }
