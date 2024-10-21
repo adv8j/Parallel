@@ -1,6 +1,10 @@
+#include"symbol_table.c"
+
+//this is using to store in symbol table in 
+//used to handle scoping
 typedef struct StackElement{
     struct StackElement* parent;
-    //pointer to map identifier to identifier details
+    symbol_table* symbol_table_ptr;
 }stack_element;
 
 enum enum_datatype{
@@ -14,12 +18,6 @@ enum enum_datatype{
     //structs
     VOID
 };
-
-typedef struct IdentifierDetails{
-    enum_datatype id_datatype;    //stores the data type of the id. // enum is used for ease
-    int ndim;        //dimension = 0, if id is just a normal variable //dimension = 1 for 1-D array
-    bool reference;
-}identifier_details;
 
 typedef struct ParameterList{
     struct ParameterList* next;
@@ -36,3 +34,11 @@ typedef struct FuncDetails{
     parameter_list* param_list_head;
 }func_details;
 
+stack_element* init_stack(){
+    stack_element* top = symbol_table_init(0);
+    return top;
+}
+
+stack_element* push_symbol_table(stack_element* top){
+    stack_elem
+}
