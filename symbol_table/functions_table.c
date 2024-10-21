@@ -14,6 +14,7 @@ typedef struct FuncDetails{
     char* return_type;
     bool is_return_type_reference;
     parameter_list* param_list_head;
+    int line_number;
 }func_details;
 
 //function to initialise function table
