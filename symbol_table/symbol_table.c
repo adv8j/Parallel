@@ -106,3 +106,18 @@ void symbol_insert(symbol_table* st, char *name, bool has_value, char *type,int 
     IdentifierDetails *s = symbol_init(name, has_value, type, ndim, reference, line_number);
     insert(st, s);
 }
+
+// free this symbol table
+void free_table(symbol_table* st) {
+    for (int i = 0; i < st->size; i++) {
+        symbol_node* node = st->table[i];
+        while (node != NULL) {
+            symbol_node* temp = node;
+            node = node->next;
+            free(temp->info);
+            free(temp);
+        }
+    }
+    free(st->table);
+    free(st);
+}
