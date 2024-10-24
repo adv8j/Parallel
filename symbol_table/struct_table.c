@@ -1,75 +1,89 @@
 #pragma once
-#include <stdlib.h>
-#include <string.h>
 #include <stdbool.h>
+#include <string.h>
+#include <stdlib.h>
 
-typedef struct MemberData {
+typedef struct MemberData{
     struct MemberData* next;
-    char* id;  // Identifier for the struct member
+    char* id;
+    char* datatype;
+    int ndim;
+    bool reference;
 } member_data;
 
-typedef struct StructDetails {
-    char* id;  // Identifier for the struct
-    member_data* member_data_list;  // Linked list of members
-    int line_number;  // Line number where the struct is defined
-    struct StructDetails* next;  // For chaining in the hash table
+typedef struct StructDetails{
+    char* id;
+    member_data* member_data_list;
+    int line_number;
 } struct_details;
 
-typedef struct StructTable {
-    struct_details** table;
-    int size;
-} StructTable;
+typedef struct struct_node
+{
+    struct_details* info;
+    struct struct_node* next;
+} struct_node;
 
-// Initialize the struct table
-StructTable* init_struct_table(int size) {
-    StructTable* st = (StructTable*)malloc(sizeof(StructTable));
-    st->size = size;
-    st->table = (struct_details**)malloc(size * sizeof(struct_details*));
-    for (int i = 0; i < size; ++i) {
-        st->table[i] = NULL;
+typedef struct struct_table{
+    int size;
+    struct_node** table;
+    int p; // prime number used for hashing
+} struct_table;
+int bin_exp(int base, int power, int mod) {
+    // Recursive binary exponentiation
+    if (power == 0) return 1;
+    if (power % 2 == 0) {
+        int x = bin_exp(base, power / 2, mod);
+        return (x * x) % mod;
     }
+    return (base * bin_exp(base, power - 1, mod)) % mod;
+}
+
+int get_key(char* name, int size, int p) {
+    int key = 0;
+    for (int i = 0; name[i] != '\0'; i++) {
+        key = (key % size + (name[i] * bin_exp(p, i, size)) % size) % size;
+    }
+    return key % size;
+}
+
+struct_table* struct_table_init(int size){
+    struct_table* st = (struct_table*)malloc(sizeof(struct_table));
+    st->size = size;
+    st->table = (struct_node**)calloc(size, sizeof(struct_node*));
+    st->p = 1e4+7;
     return st;
 }
 
-// Hash function for struct names
-int hash_struct_name(char* name, int size) {
-    unsigned long hash = 5381;
-    int c;
-    while ((c = *name++)) {
-        hash = ((hash << 5) + hash) + c; // hash * 33 + c
-    }
-    return hash % size;
+void insert_struct(struct_table* st, struct_details* s){
+    int key = get_key(s->id, st->size, st->p);
+    struct_node* node = (struct_node*)malloc(sizeof(struct_node));
+    node->info = s;
+    node->next = st->table[key];
+    st->table[key] = node;
 }
 
-// Insert a struct entry into the struct table
-void insert_struct(StructTable* st, struct_details* sd) {
-    int key = hash_struct_name(sd->id, st->size);
-    sd->next = st->table[key];
-    st->table[key] = sd;
-}
-
-// Search for a struct in the struct table
-struct_details* search_struct(StructTable* st, char* id) {
-    int key = hash_struct_name(id, st->size);
-    struct_details* sd = st->table[key];
-    while (sd != NULL) {
-        if (strcmp(sd->id, id) == 0) {
-            return sd;
+struct_details* search_struct(struct_table* st, char* name){
+    int key = get_key(name, st->size, st->p);
+    struct_node* temp = st->table[key];
+    while(temp != NULL){
+        if(strcmp(temp->info->id, name) == 0){
+            return temp->info;
         }
-        sd = sd->next;
+        temp = temp->next;
     }
     return NULL;
 }
 
-// Add member data to the member data list of a struct
-void add_member_data(member_data** head, char* id) {
-    member_data* new_member = (member_data*)malloc(sizeof(member_data));
-    new_member->id = strdup(id);
-    new_member->next = *head;
-    *head = new_member;
+void insert_member_data(member_data** head, char* id, char* datatype, int ndim, bool reference){
+    member_data* temp = (member_data*)malloc(sizeof(member_data));
+    temp->id = id;
+    temp->datatype = datatype;
+    temp->ndim = ndim;
+    temp->reference = reference;
+    temp->next = *head;
+    *head = temp;
 }
 
-// Initialize member data list for a struct
-member_data* init_member_data_list() {
-    return NULL; // Returns NULL as the head of an empty list
+void initialise_member_data_list(member_data** head){
+    *head = NULL;
 }
