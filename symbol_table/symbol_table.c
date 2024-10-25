@@ -34,23 +34,14 @@ symbol_table* symbol_table_init(int size) {
     st->p = 1e4+7;
     return st;
 }
-
-//binary exponentiation hash function used for hashing the entries in symbol table
-int bin_exp(int base, int power, int mod) {
-    // Recursive binary exponentiation
-    if (power == 0) return 1;
-    if (power % 2 == 0) {
-        int x = bin_exp(base, power/2, mod);
-        return (x * x) % mod;
-    }
-    return (base * bin_exp(base, power-1, mod)) % mod;
-}
-
 // used to get the key for an identifier for searching or inserting in hash table
 int get_key(char* name, int size, int p) {
     int key = 0;
+    int exponent=1;
     for (int i = 0; name[i] != '\0'; i++) {
-        key = (key % size + (name[i] * bin_exp(p, i, size)) % size) % size;
+        key = (key % size + (name[i] * exponent) % size) % size;
+        exponent*=p;
+        exponent%=size;
     }
     return key % size;
 }
