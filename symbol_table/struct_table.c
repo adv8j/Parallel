@@ -62,16 +62,28 @@ void insert_struct(struct_table* st, struct_details* s){
     st->table[key] = node;
 }
 
-struct_details* search_struct(struct_table* st, char* name){
+// struct_details* search_struct(struct_table* st, char* name){
+//     int key = get_key(name, st->size, st->p);
+//     struct_node* temp = st->table[key];
+//     while(temp != NULL){
+//         if(strcmp(temp->info->id, name) == 0){
+//             return temp->info;
+//         }
+//         temp = temp->next;
+//     }
+//     return NULL;
+// }
+///not returning the struct, just true or false
+bool search_struct(struct_table* st, char* name){
     int key = get_key(name, st->size, st->p);
     struct_node* temp = st->table[key];
     while(temp != NULL){
         if(strcmp(temp->info->id, name) == 0){
-            return temp->info;
+            return true;
         }
         temp = temp->next;
     }
-    return NULL;
+    return false;
 }
 
 void insert_member_data(member_data** head, char* id, char* datatype, int ndim, bool reference){
@@ -86,4 +98,18 @@ void insert_member_data(member_data** head, char* id, char* datatype, int ndim, 
 
 void initialise_member_data_list(member_data** head){
     *head = NULL;
+}
+
+void free_struct_table(struct_table* st) {
+    for (int i = 0; i < st->size; i++) {
+        struct_node* node = st->table[i];
+        while (node != NULL) {
+            struct_node* temp = node;
+            node = node->next;
+            free(temp->info);
+            free(temp);
+        }
+    }
+    free(st->table);
+    free(st);
 }
