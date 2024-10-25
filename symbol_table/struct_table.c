@@ -38,6 +38,15 @@ int bin_exp(int base, int power, int mod) {
     return (base * bin_exp(base, power - 1, mod)) % mod;
 }
 
+//creating a struct table
+struct_table* struct_table_init(int size) {
+    struct_table* st = (struct_table*)malloc(sizeof(struct_table));
+    st->table = (struct_node**)malloc(size * sizeof(struct_node*));
+    st->size = size;
+    st->p = 1e4+7;
+    return st;
+}
+
 int get_key(char* name, int size, int p) {
     int key = 0;
     for (int i = 0; name[i] != '\0'; i++) {
