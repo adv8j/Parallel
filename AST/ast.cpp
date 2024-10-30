@@ -35,8 +35,9 @@ typedef enum
 	EXPR_FUNC_CALL,
 	EXPR_FLOAT_LITERAL,
 	EXPR_CHAR_LITERAL
-
 } expr_t;
+
+
 struct expr
 {
 	expr_t kind;
@@ -45,6 +46,8 @@ struct expr
 	const char* name;
 	int integer_value;
 	const char* string_literal;
+	float float_value;
+	char char_value;
 };
 
 struct decl
@@ -52,11 +55,11 @@ struct decl
 	const char* name;
 	const char* type;
 	int ndim;
-	bool reference;
+	bool constant_ptr;
 	int line_number;
 	struct expr* value;
 	struct stmt* code;
-	struct decl* next;
+	struct decl* next;		//int i,j;  here next will be for j
 };
 typedef enum
 {
@@ -81,3 +84,56 @@ struct stmt
 	stmt* next;
 	int line_number = 0;
 };
+
+
+struct decl* decl_create( char *name, struct type *type, int ndim,bool reference, int line_number, struct expr *value, struct stmt *code, struct decl *next ) {
+	struct decl *d = malloc(sizeof(struct decl));
+	d->name = name;
+	d->type = type;
+	d->ndim = ndim;
+	d-> reference = reference;
+	d->line_number = line_number;
+	d->value = value;
+	d->code = code;
+	d->next = next;
+	return d;
+}
+
+
+struct stmt * stmt_create( stmt_t kind, struct decl *decl, struct expr *init_expr, struct expr *expr, struct expr *next_expr, struct stmt *body, struct stmt *else_body, struct stmt *next ) {
+    struct stmt *st = malloc(sizeof(struct stmt));
+    if (!st) {
+        fprintf(stderr, "Error: Could not allocate memory for stmt\n");
+        exit(1);
+    }
+
+    st->kind = kind;
+    st->decl = decl;
+    st->init_expr = init_expr;
+    st->expr = expr;
+    st->next_expr = next_expr;
+    st->body = body;
+    st->else_body = else_body;
+    st->next = next;
+
+    return st;
+}
+
+struct expr* expr_create(expr_t kind, struct expr* left, struct expr* right, const char* name, int integer_value, const char* string_literal) {
+    struct expr* e = malloc(sizeof(struct expr));
+    if (!e) {
+        fprintf(stderr, "Error: Could not allocate memory for expr\n");
+        exit(1);
+    }
+
+    e->kind = kind;
+    e->left = left;
+    e->right = right;
+    e->name = name;
+    e->integer_value = integer_value;
+    e->string_literal = string_literal;
+
+    return e;
+}
+
+
