@@ -89,6 +89,33 @@ typedef struct stmt
 	struct stmt* next;
 	int line_number;
 } stmt ;
+typedef struct order_stmt{
+	char** name;
+} order_stmt;
+
+typedef struct task_stmt{
+	char* name;
+	stmt* code;	
+} task_stmt;
+
+typedef struct mem_stmt{
+	char* name;
+	char** tasks;
+	bool accesses;
+} mem_stmt;
+
+typedef struct shared_stmt{
+	char* name;
+	char** tasks;
+	char* type;
+} shared_stmt;
+typedef struct taskgroup_stmt{
+	task_stmt* task;
+	order_stmt* order;
+	mem_stmt* mem;
+	shared_stmt* shared;
+};
+
 
 
 struct decl* decl_create( char *name, struct type* type, int ndim,bool reference, int line_number, struct expr *value, struct stmt *code, struct decl *next ) {

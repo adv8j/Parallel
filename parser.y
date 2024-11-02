@@ -78,7 +78,7 @@ initializer_dims: LBRACKET expression COMMA expression RBRACKET
     | 
     ;
 
-statement: iterative_statement
+statement: iterative_statement{$$.stmt_t = ITERATIVE; $$.child = $1;}
     | selection_statement
     | expression_statement
     | compound_statement
