@@ -1,9 +1,9 @@
 #pragma once
-#include <iostream>
-#include <string>
-#include <vector>
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdbool.h>
 
-using namespace std;
+
 typedef enum
 {
 	EXPR_ADD,
@@ -37,30 +37,35 @@ typedef enum
 	EXPR_CHAR_LITERAL
 } expr_t;
 
-
-struct expr
-{
-	expr_t kind;
-	struct expr* left;
-	struct expr* right;
+typedef struct terminal{
 	const char* name;
 	int integer_value;
 	const char* string_literal;
 	float float_value;
 	char char_value;
-};
+	bool bool_literal;
+}terminal;
 
-struct decl
+typedef struct expr
+{
+	expr_t kind;
+	struct expr* left;
+	struct expr* right;
+	struct terminal* value;
+} expr;
+
+typedef struct decl
 {
 	const char* name;
-	const char* type;
+	const struct type* type; // to decided , const char* or type*
 	int ndim;
+	bool reference;
 	bool constant_ptr;
 	int line_number;
 	struct expr* value;
 	struct stmt* code;
 	struct decl* next;		//int i,j;  here next will be for j
-};
+} decl;
 typedef enum
 {
 	STMT_DECL,
@@ -72,21 +77,21 @@ typedef enum
 	STMT_BLOCK
 } stmt_t;
 
-struct stmt
+typedef struct stmt
 {
 	stmt_t kind; // tells the statment type
 	decl* decl;
 	expr* init_expr;
 	expr* expr;
 	struct expr* next_expr;
-	stmt* body;
-	stmt* else_body;
-	stmt* next;
-	int line_number = 0;
-};
+	struct stmt* body;
+	struct stmt* else_body;
+	struct stmt* next;
+	int line_number;
+} stmt ;
 
 
-struct decl* decl_create( char *name, struct type *type, int ndim,bool reference, int line_number, struct expr *value, struct stmt *code, struct decl *next ) {
+struct decl* decl_create( char *name, struct type* type, int ndim,bool reference, int line_number, struct expr *value, struct stmt *code, struct decl *next ) {
 	struct decl *d = malloc(sizeof(struct decl));
 	d->name = name;
 	d->type = type;
@@ -103,7 +108,10 @@ struct decl* decl_create( char *name, struct type *type, int ndim,bool reference
 struct stmt * stmt_create( stmt_t kind, struct decl *decl, struct expr *init_expr, struct expr *expr, struct expr *next_expr, struct stmt *body, struct stmt *else_body, struct stmt *next ) {
     struct stmt *st = malloc(sizeof(struct stmt));
     if (!st) {
-        fprintf(stderr, "Error: Could not allocate memory for stmt\n");
+        // fprintf(stderr, "Error: Could not allocate memory for stmt\n");
+		// print 
+		printf("Error: Could not allocate memory for stmt\n");
+
         exit(1);
     }
 
@@ -122,7 +130,7 @@ struct stmt * stmt_create( stmt_t kind, struct decl *decl, struct expr *init_exp
 struct expr* expr_create(expr_t kind, struct expr* left, struct expr* right, const char* name, int integer_value, const char* string_literal) {
     struct expr* e = malloc(sizeof(struct expr));
     if (!e) {
-        fprintf(stderr, "Error: Could not allocate memory for expr\n");
+        printf( "Error: Could not allocate memory for expr\n");
         exit(1);
     }
 
