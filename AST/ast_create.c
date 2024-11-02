@@ -5,11 +5,29 @@ typedef struct stmt_list{
     stmt* tail;
 } stmt_list;
 
+struct Node{
+    int line_no;
+    int col_no;
+    enum_t kind;
+    vector<Node*> children;
+    string content;
+    Node* next;
+};
+
 // Function to add a statement to the AST list
 void add_statement(stmt_list* list, stmt_t kind, void* s, int line_number) {
     stmt* statement = (stmt*) malloc(sizeof(stmt));
-    
+    statement -> kind = kind;
+    statement -> line_number = line_number;
+    statement -> statement = s;
 
+    if(list -> head == NULL){
+        list -> head = list -> tail = statement;
+    }
+    else{
+        list -> tail -> next = statement;
+        list -> tail = list -> tail -> next;
+    }
 }
 
 // Adds a declaration statement to the AST

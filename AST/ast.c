@@ -89,12 +89,10 @@ typedef struct parameter_list
 
 typedef struct iteration_type1
 {
-	expression_stmt* init;
+	expression_stmt* init;		// if they are empty point towards NULL
 	expression_stmt* condition;
 	expression_stmt* update;
-	bool empty1;
-	bool empty2;
-	bool empty3;
+
 
 }iteration_t1;
 
@@ -144,6 +142,7 @@ typedef struct stmt
 	stmt_t kind; // tells the statment type
 	void * statement; // to store the statement type cast as per use
 	int line_number;
+	struct stmt* next;
 } stmt ;
 typedef struct order_stmt{
 	char** name;
