@@ -52,7 +52,7 @@ typedef struct expr
 	struct expr* left;
 	struct expr* right;
 	struct terminal* value;
-} expr;
+} expression_stmt;
 
 typedef struct decl
 {
@@ -65,28 +65,84 @@ typedef struct decl
 	struct expr* value;
 	struct stmt* code;
 	struct decl* next;		//int i,j;  here next will be for j
-} decl;
+} declaration_stmt;
 typedef enum
 {
 	STMT_DECL,
 	STMT_EXPR,
-	STMT_IF_ELSE,
-	STMT_FOR,
-	STMT_PRINT,
-	STMT_RETURN,
-	STMT_BLOCK
+	STMT_ITERATIVE,
+	STMT_SELECTION,
+	STMT_COMPOUND,
+	STMT_FUNCTION,
+	STMT_STRUCT,
+	STMT_PARALLEL,
+	STMT_TASKGROUP
 } stmt_t;
+
+typedef struct parameter_list
+{
+	char* name;
+	char* type;
+	bool reference;
+	struct parameter_list* next;
+}param_list;
+
+typedef struct iteration_type1
+{
+	expression_stmt* init;
+	expression_stmt* condition;
+	expression_stmt* update;
+	bool empty1;
+	bool empty2;
+	bool empty3;
+
+}iteration_t1;
+
+typedef struct iteration_type2
+{
+	char*name_iterator;
+	bool reference;
+	char*name_container;
+
+}iteration_t2;
+
+typedef struct itr_stmt
+{
+	
+	bool type; // type of iteration// normal for loop, or for loop using in keyword
+	iteration_t1 type1;
+	iteration_t2 type2;
+	struct stmt* comp_stmt;
+
+
+} iterative_stmt;
+typedef struct selc_stmt
+{
+	expression_stmt* condition;
+	struct stmt* if_stmt;
+	struct selc_stmt* else_stmt;
+
+} selection_stmt;
+
+typedef struct func_stmt
+{
+	char* function_name;
+	char* return_types;
+	param_list* param;
+	struct stmt* comp_stmt;
+} function_stmt;
+typedef struct struct_decl
+{
+	char* struct_name;
+	param_list* member_list;
+
+} struct_decl;
+
 
 typedef struct stmt
 {
 	stmt_t kind; // tells the statment type
-	decl* decl;
-	expr* init_expr;
-	expr* expr;
-	struct expr* next_expr;
-	struct stmt* body;
-	struct stmt* else_body;
-	struct stmt* next;
+	void * statement; // to store the statement type cast as per use
 	int line_number;
 } stmt ;
 typedef struct order_stmt{
@@ -169,6 +225,18 @@ struct expr* expr_create(expr_t kind, struct expr* left, struct expr* right, con
     e->string_literal = string_literal;
 
     return e;
+}
+
+stmt * add_node(stmt * head, stmt * node) {
+	if (head == NULL) {
+		return node;
+	}
+	stmt * temp = head;
+	while (temp->next != NULL) {
+		temp = temp->next;
+	}
+	temp->next = node;
+	return head;
 }
 
 
