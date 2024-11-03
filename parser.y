@@ -2,10 +2,11 @@
 #include <stdio.h>
 #include "symbol_table/symbol_table.c"
 #include "lex.yy.c"
+#include "AST.cpp"
 extern int yylex();
 extern void yyerror(const char *s);
 extern int num_errs;
-// extern int yydebug =0;
+extern int yydebug =0;
 
 %}
 
