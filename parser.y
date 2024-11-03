@@ -2,12 +2,11 @@
 #include <stdio.h>
 #include "symbol_table/symbol_table.c"
 #include "lex.yy.c"
-#include "AST.cpp"
 extern int yylex();
 extern void yyerror(const char *s);
 extern int num_errs;
-extern int yydebug =0;
-
+// extern int yydebug =0;
+ASTNode* root = new ASTNode();
 %}
 
 %token ASSIGN PLUS MINUS MUL DIV MOD EQ NEQ GT LT GTE LTE AND OR NOT ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN
@@ -50,21 +49,23 @@ program: statement_list {}
     ;
 
 
-statement_list: statement_list statement
-    | statement
+statement_list: statement_list statement{
+        root->add_child($2);
+    }
+    | statement{root->add_child($1);}
     ;
 // ------------------------------------- Data Types ----------------------------------------
-generic_dtypes: INT 
-    | LONG
-    | FLOAT
-    | STRING
-    | BOOL
-    | CHAR
-    | STRUCT IDENTIFIER 
+generic_dtypes: INT { $$ = new ASTNode(type_t, int_t);}
+    | LONG {$$ = new ASTNode(type_t, long_t);}
+    | FLOAT {$$ = new ASTNode(type_t, float_t);}
+    | STRING {$$ = new ASTNode(type_t, string_t);}
+    | BOOL {$$ = new ASTNode(type_t, bool_t);}
+    | CHAR {$$ = new ASTNode(type_t, char_t);}
+    | STRUCT IDENTIFIER  {$$= new ASTNode(type_t, struct_t);}
     ;
 
-dtype: generic_dtypes
-    | array
+dtype: generic_dtypes { $$ = $1;}
+    | array {$$ = $1;}
     ;
 
 array: generic_dtypes dims initializer_dims
@@ -86,7 +87,9 @@ statement: iterative_statement
     | compound_statement
     | function_declaration
     | taskgroup_statement
-    | declaration_statement
+    | declaration_statement{
+        $$ = $1;
+    }
     | parallel_statement
     | struct_declaration
     | error SEMICOLON {  yyerrok; }
@@ -211,20 +214,44 @@ logical_expression: expression AND expression
     // this non-terminal is for writing logical expression
 
 // declaration statements
-declaration_statement: dtype declaration_list SEMICOLON;
+declaration_statement: dtype declaration_list SEMICOLON{
+        $$ = new ASTNode(decl_stmt, $1->type);
+        $$->add_child($2);
+        delete $1;
+    }
+    | dtype REFERENCE declaration_list SEMICOLON{
+        $$ = new ASTNode(decl_stmt, $1->type);
+        $$->type.reference = true;
+        $$->add_child($2);
+
+        delete $1;
+    }
+    ;
     // variable declaration
 
-declaration_list : declaration_list COMMA declaration
-    | declaration
+declaration_list : declaration_list COMMA declaration{
+        $1->reach_end()->next = $3;
+        $$ = $1;
+    }
+    | declaration {
+        $$ = $1;    
+    }
     ;
 
 //TODO: references are dicey, should be assigned to variable only? or any expression
-declaration: REFERENCE IDENTIFIER optional_value_assignment
-    | IDENTIFIER optional_value_assignment
+declaration: IDENTIFIER optional_value_assignment{
+        if($2 == NULL){
+            $$ = new ASTNode(variable);
+            $$->name = $1->name;
+        }
+        else{
+            $$ = new ASTNode(expr_stmt);
+        }
+    }
     ;
 
-optional_value_assignment: ASSIGN initializer    //optional value assign
-    | 
+optional_value_assignment: ASSIGN initializer  {$$ = new ASTNode(expr_stmt);}   //optional value assign
+    | { $$ = NULL; }
     ;
 
 // initialisers
@@ -573,6 +600,7 @@ int main(int argc, char** argv) {
         yydebug = 1;
     }
 	yyparse();
+    traverse(root);
     return num_errs;
 }
 

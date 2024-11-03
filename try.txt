@@ -1,7 +1,0 @@
-func my_function int(int a){
-    
-    return a;
-}
-
-a1 = 0;
-x = my_function(a1);
