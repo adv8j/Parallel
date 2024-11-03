@@ -1,9 +1,7 @@
-
-
 build: 
 	yacc -dtv parser.y 
 	lex $(LEXFLAGS) parallel_lex.l
-	gcc lex.yy.c y.tab.c -o parser.out
+	g++ y.tab.c -o parser.out
 	
 all: lex
 	./parser.out
@@ -14,9 +12,9 @@ run: build
 
 
 build_lex_tests:
-	gcc test/lex/generate_token.c -o test/lex/token_header.out
+	g++ test/lex/generate_token.c -o test/lex/token_header.out
 	cd test/lex/ && ./token_header.out
-	gcc test/lex/lex_tester.c -o test/lex/lex_tester.out
+	g++ test/lex/lex_tester.c -o test/lex/lex_tester.out
 
 
 lex_tests: build build_lex_tests	;

@@ -1,7 +1,17 @@
 %{
+#include "AST.cpp"
+
+#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
+#define YYSTYPE ASTNode*
+# define YYSTYPE_IS_TRIVIAL 1
+# define YYSTYPE_IS_DECLARED 1
+#endif
+
+
 #include "y.tab.h"
 #include <stdio.h>
 #include <string.h>
+
 
 #define CUR_MAX_LEN 10000
 
@@ -190,24 +200,24 @@ for { process_text(yytext); return FOR;}
 in { process_text(yytext); return IN;}
 
 
-true { process_text(yytext); return TRUE;}
+true { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, literal, std::string(yytext), bool_t); return TRUE;}
 
-false { process_text(yytext); return FALSE;}
+false { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, literal, std::string(yytext), bool_t); return FALSE;}
 
-[a-zA-Z][a-zA-Z0-9_]*  { process_text(yytext); return IDENTIFIER;}
+[a-zA-Z][a-zA-Z0-9_]*  { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, variable, std::string(yytext), unknown_t ); return IDENTIFIER;}
 
 
 
-([1-9][0-9]*)|0   { process_text(yytext); return INT_LITERAL;}
+([1-9][0-9]*)|0   { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, literal, std::string(yytext), int_t); return INT_LITERAL;}
  
-[0-9]+\.[^\.][0-9]*   { process_text(yytext); return FLOAT_LITERAL;}
+[0-9]+\.[^\.][0-9]*   { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, literal, std::string(yytext), float_t); return FLOAT_LITERAL;}
 
-(([1-9][0-9]*)|0)e(([1-9][0-9]*)|0) { process_text(yytext); return FLOAT_LITERAL;}
+(([1-9][0-9]*)|0)e(([1-9][0-9]*)|0) { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, literal, std::string(yytext), float_t); return FLOAT_LITERAL;}
 
 
-\"([^\"\n]|(\\\"))*\"        { process_text(yytext); return STRING_LITERAL;}
+\"([^\"\n]|(\\\"))*\"        { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, literal, std::string(yytext), string_t); return STRING_LITERAL;}
  
-\'([^\\\']|(\\[nr\'\"]))\'        { process_text(yytext); return CHARACTER_LITERAL;}
+\'([^\\\']|(\\[nr\'\"]))\'        { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, literal, std::string(yytext), char_t); return CHARACTER_LITERAL;}
  
 
 \.                 { process_text(yytext); return DOT;}
@@ -231,6 +241,8 @@ false { process_text(yytext); return FALSE;}
 	cur_line[strlen(cur_line)] = yytext[0];
 }
 %%
+
+int yylex(void);
 
 void yyerror(const char* s) {
 	num_errs++;

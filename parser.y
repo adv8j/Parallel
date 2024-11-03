@@ -1,12 +1,13 @@
 %{
 #include <stdio.h>
 #include "symbol_table/symbol_table.c"
-int yylex(void);
+#include "lex.yy.c"
+extern int yylex();
 extern void yyerror(const char *s);
 extern int num_errs;
-int yydebug =0;
-%}
+// extern int yydebug =0;
 
+%}
 
 %token ASSIGN PLUS MINUS MUL DIV MOD EQ NEQ GT LT GTE LTE AND OR NOT ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN
 
@@ -78,7 +79,7 @@ initializer_dims: LBRACKET expression COMMA expression RBRACKET
     | 
     ;
 
-statement: iterative_statement{$$.stmt_t = ITERATIVE; $$.child = $1;}
+statement: iterative_statement
     | selection_statement
     | expression_statement
     | compound_statement
