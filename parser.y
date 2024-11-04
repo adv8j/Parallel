@@ -9,9 +9,7 @@ extern int num_errs;
 ASTNode* root = new ASTNode();
 %}
 
-%union {
-    ASTNode* node;
-}
+
 
 %token ASSIGN PLUS MINUS MUL DIV MOD EQ NEQ GT LT GTE LTE AND OR NOT ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN
 
@@ -27,7 +25,7 @@ ASTNode* root = new ASTNode();
 
 %token FUNC RETURN CONTINUE BREAK STRUCT IF ELSE FOR IN
 
-%token <node> TRUE FALSE IDENTIFIER INT_LITERAL FLOAT_LITERAL STRING_LITERAL CHARACTER_LITERAL
+%token TRUE FALSE IDENTIFIER INT_LITERAL FLOAT_LITERAL STRING_LITERAL CHARACTER_LITERAL
 
 %define parse.error verbose
 
@@ -45,7 +43,6 @@ ASTNode* root = new ASTNode();
 %left DOT
 %right NOT  // Unary operator problem
 
-%type <node> generic_dtypes dtype  expression arithmetic_expression assignment_expression unary_expression comparison_expression logical_expression declaration_statement declaration_list declaration optional_value_assignment array dims  initializer list_initialiser initialiser_member_list_tail list_member expression_statement initializer_dims struct_declaration number_literals statement_list statement taskgroup_statement value function_call struct_body decl_stmt_list inner_statement inner_statement_list non_empty_inner_statement_list literals array_literal variable fixed_dims array_element function_call_tail function_arguments
 
 
 %%
@@ -72,18 +69,24 @@ dtype: generic_dtypes { $$ = $1;}
     | array {$$ = $1;}
     ;
 
+func_dtype: generic_dtypes {$$ = $1;}
+        | generic_dtypes REFERENCE {
+            $$ = $1;
+            ($$ -> type).reference = true;
+        }
+
 array: generic_dtypes fixed_dims initializer_dims{
     $$ = $1;
     ASTNode* dims_head = $2;
     while(dims_head){
-        ($$ -> type).ndims.push_back(atoi(dims_head -> name));
+        ($$ -> type).ndims.push_back(stoi(dims_head -> name));
         ASTNode* temp = dims_head;
         dims_head = dims_head -> next;
         delete temp;
     }
 
     if($3) {
-        ($$ -> type).ndims.push_back(atoi($3 -> name));
+        ($$ -> type).ndims.push_back(stoi($3 -> name));
         ASTNode* temp = $3;
         $3 = $3 -> next;
         delete temp;
@@ -582,11 +585,11 @@ if_chain_statement: ELSE selection_statement
     // if else-if else-if else
 
 
-function_declaration: FUNC IDENTIFIER dtype params  compound_statement
-    | FUNC IDENTIFIER dtype params SEMICOLON //function prototype
+function_declaration: FUNC IDENTIFIER func_dtype params  compound_statement
+    | FUNC IDENTIFIER func_dtype params SEMICOLON //function prototype
     | FUNC error RBRACE {  yyerrok; }
     | FUNC IDENTIFIER error RBRACE {  yyerrok; }
-    | FUNC IDENTIFIER dtype error RBRACE {  yyerrok; }
+    | FUNC IDENTIFIER func_dtype error RBRACE {  yyerrok; }
     ;
 
 params: LPAREN parameter_list RPAREN
@@ -596,12 +599,21 @@ params: LPAREN parameter_list RPAREN
 
 
 
-datatype_and_ref: parameter_dtype| dtype REFERENCE;
+datatype_and_ref: parameter_dtype
+| parameter_dtype REFERENCE;
 // includes the data types and references (like: int&)
 
 parameter_dtype : generic_dtypes
-    | generic_dtypes dims 
+    | generic_dtypes parameter_dims
     ;
+
+parameter_dims: parameter_dims_tail
+            | fixed_dims parameter_dims_tail
+            ;
+parameter_dims_tail: LBRACKET RBRACKET
+                | LBRACKET INT_LITERAL COMMA expression RBRACKET
+                | LBRACKET INT_LITERAL RBRACKET
+                ;
 
 parameter_list: parameter_list COMMA parameter_declaration
 	| parameter_declaration

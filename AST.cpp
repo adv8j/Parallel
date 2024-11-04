@@ -29,6 +29,7 @@ enum kind_t{
     order_rule,
     order_node,
     array_element, // eg: arr[1][2]
+    struct_decl
 };
 
 const std::string kind_t_strings[] = {
@@ -57,7 +58,8 @@ const std::string kind_t_strings[] = {
     "properties_stmt",
     "order_rule",
     "order_node",
-    "array_element"
+    "array_element",
+    "struct_decl"
 };
 
 enum dtypes{
