@@ -1,6 +1,6 @@
 %{
 #include <stdio.h>
-// #include "symbol_table/symbol"
+#include "symbol_table/symbol_table.c"
 #include "lex.yy.c"
 extern int yylex();
 extern void yyerror(const char *s);
@@ -10,7 +10,7 @@ ASTNode* root = new ASTNode();
 %}
 
 %union {
-    ASTNode* node;    
+    ASTNode* node;
 }
 
 %token ASSIGN PLUS MINUS MUL DIV MOD EQ NEQ GT LT GTE LTE AND OR NOT ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN
@@ -27,7 +27,7 @@ ASTNode* root = new ASTNode();
 
 %token FUNC RETURN CONTINUE BREAK STRUCT IF ELSE FOR IN
 
-%token TRUE FALSE IDENTIFIER INT_LITERAL FLOAT_LITERAL STRING_LITERAL CHARACTER_LITERAL
+%token <node> TRUE FALSE IDENTIFIER INT_LITERAL FLOAT_LITERAL STRING_LITERAL CHARACTER_LITERAL
 
 %define parse.error verbose
 
@@ -45,8 +45,8 @@ ASTNode* root = new ASTNode();
 %left DOT
 %right NOT  // Unary operator problem
 
-%type <node> generic_dtypes dtype statement expression arithmetic_expression assignment_expression unary_expression comparison_expression logical_expression declaration_statement declaration_list declaration optional_value_assignment
-%type initialiser_list_struct* initializer_dims
+%type <node> generic_dtypes dtype  expression arithmetic_expression assignment_expression unary_expression comparison_expression logical_expression declaration_statement declaration_list declaration optional_value_assignment array dims  initializer list_initialiser initialiser_member_list_tail list_member expression_statement initializer_dims struct_declaration number_literals statement_list statement taskgroup_statement value function_call
+
 
 %%
 program: statement_list {}
@@ -74,11 +74,20 @@ dtype: generic_dtypes { $$ = $1;}
 
 array: generic_dtypes dims initializer_dims{
     $$ = $1;
-    ($$ -> type).ndims = ($2 -> type).ndims;
-    if($3 != NULL){
-        ($$ -> type).ndims.push_back($3 -> int_literal);
-        ($$ -> type).init_exp = $3 -> exp;
-        delete $3;
+    ASTNode* dims_head = $2;
+    while(dims_head){
+        ($$ -> type).ndims.push_back(atoi(dims_head -> name));
+        ASTNode* temp = dims_head;
+        dims_head = dims_head -> next;
+        delete temp;
+    }
+
+    if($3) {
+        ($$ -> type).ndims.push_back(atoi($3 -> name));
+        ASTNode* temp = $3;
+        $3 = $3 -> next;
+        delete temp;
+        ($$ -> type).init_exp = $3;
     }
 }
     ;
@@ -87,37 +96,37 @@ array_element: IDENTIFIER dims ;
 
 dims: dims LBRACKET INT_LITERAL RBRACKET{
     $$ = $1;
-    ($$ -> type).ndim.push_back(atoi(INT_LITERAL));
+    $$ -> reach_end() -> next = $3;
 }
     | LBRACKET INT_LITERAL RBRACKET{
-        $$ = new ASTNode(type_t);
-        ($$ -> type).ndims.push_back(atoi(INT_LITERAL));
+        $$ = $2;
     }
-    ; 
+    ;
 
 initializer_dims: LBRACKET INT_LITERAL COMMA expression RBRACKET{
-    $$ = new initialiser_list_struct($2, $4);
+    $$ = $2;
+    $$ -> reach_end() -> next = $4;
 }
     | {$$ = NULL;}
     ;
 
-statement: iterative_statement{ $$ = $1; }
-    | selection_statement{ $$ = $1; }
-    | expression_statement{$$ = $1;}
-    | compound_statement{$$ = $1;}
-    | function_declaration{$$ = $1;}
+statement: iterative_statement
+    | selection_statement
+    | expression_statement
+    | compound_statement
+    | function_declaration
     | taskgroup_statement{$$ = $1;}
     | declaration_statement{
         $$ = $1;
     }
-    | parallel_statement    { $$ = $1; }
-    | struct_declaration    { $$ = $1; }
+    | parallel_statement  
+    | struct_declaration   
     | error SEMICOLON {  yyerrok; }
     ;
     // specifies various types of statements(these are the ones which won't need context of being in a function/Task)
-inner_statement: iterative_statement    { $$ = $1; }
-    | selection_statement   { $$ = $1; }
-    | expression_statement  { $$ = $1; }
+inner_statement: iterative_statement    
+    | selection_statement  
+    | expression_statement 
     | compound_statement    {}
     | declaration_statement
     | parallel_statement
@@ -147,7 +156,9 @@ compound_statement: LBRACE inner_statement_list RBRACE
     // this non-terminal is for writing compound statement
     // { inner_statement }
 
-struct_declaration: STRUCT IDENTIFIER struct_body SEMICOLON 
+struct_declaration: STRUCT IDENTIFIER struct_body SEMICOLON {
+    $$ = new ASTNode(struct_decl);
+}
     | STRUCT error SEMICOLON {  yyerrok; }
     | STRUCT IDENTIFIER error SEMICOLON {  yyerrok; }
     ;
@@ -161,8 +172,8 @@ decl_stmt_list: decl_stmt_list declaration_statement
     ;
 
 
-expression_statement: expression SEMICOLON
-    | SEMICOLON
+expression_statement: expression SEMICOLON {$$ = $1;}
+    | SEMICOLON {$$ = NULL;}
     ;
     // this non-terminal is for writing expression statement
 
@@ -331,8 +342,12 @@ unary_expression:
     ;
     // this non-terminal is for writing unary expression
 
-number_literals: FLOAT_LITERAL
-    | INT_LITERAL
+number_literals: FLOAT_LITERAL{
+    $$ = $1;
+}
+    | INT_LITERAL{
+        $$ = $1;
+    }
     ;
 
 comparison_expression: 
@@ -441,7 +456,7 @@ declaration: IDENTIFIER optional_value_assignment{
         else{
             $$ = new ASTNode(variable);
             $$-> name = $1 -> name;
-
+            $$ -> add_child($1);
         }
     }
     ;
@@ -475,8 +490,8 @@ initialiser_member_list_tail: COMMA list_member initialiser_member_list_tail    
     $$ = $2;
     $$ -> next = $3;
 }
-                            |
-                            ;
+|{ $$ = NULL; }
+;
 list_member : list_initialiser  // a single member in a list
 { $$ = $1; }
         | expression{ $$ = $1; }
@@ -619,10 +634,7 @@ wait_statement: CHANNEL_WAIT LBRACE IDENTIFIER COMMA expression RBRACE
     | CHANNEL_WAIT LBRACE IDENTIFIER COMMA expression RBRACE ARROW IDENTIFIER
     ;
 
-taskgroup_statement: TASKGROUP IDENTIFIER taskgroup_declaration_list LBRACE taskgroup_definition RBRACE SEMICOLON{
-        $$ = $5;
-        $$->name = $2->name;
-    }
+taskgroup_statement: TASKGROUP IDENTIFIER taskgroup_declaration_list LBRACE taskgroup_definition RBRACE SEMICOLON
 	;  // this non-terminal is for @TaskGroup t1{ taskgroup_definition}
 
 taskgroup_declaration_list: LPAREN taskgroup_argument_list RPAREN
@@ -639,34 +651,16 @@ taskgroup_argument: LOG ASSIGN STRING_LITERAL
     | NUM_THREADS ASSIGN expression
     ;
 
-taskgroup_definition:  task_declaration_list properties_declaration {
-        $$ = new ASTNode(taskgroup_stmt);
-        $$->add_child($1);
-        if($2 != NULL){
-            $$->add_child($2);
-        }
-    }
+taskgroup_definition:  task_declaration_list properties_declaration 
     ; 
 
 
-task_declaration_list: task_declaration_list task_declaration{
-        $1->reach_end()->next = $2;
-        $$ = $1;
-    }
-    | task_declaration {$$ = $1;}
+task_declaration_list: task_declaration_list task_declaration
+    | 
     ; // this non-terminal is for writing list of tasks
 
-task_declaration: TASK IDENTIFIER task_argument LBRACE task_statement_list RBRACE{
-        $$ = new ASTNode(task_stmt);
-        $$->name = $2->name;
-        $$->add_child($5);
-    }
-    | SUPERVISOR IDENTIFIER LBRACE supervisor_statement_list RBRACE{
-
-        $$ = new ASTNode(supervisor_stmt);
-        $$->name = $2->name;
-        $$->add_child($4);
-    }
+task_declaration: TASK IDENTIFIER task_argument LBRACE task_statement_list RBRACE 
+    | SUPERVISOR IDENTIFIER LBRACE supervisor_statement_list RBRACE
     | error RPAREN { yyerrok;}
     ; /* this non-terminal is for writing task or supervisor 
         @Task t1(num_threads = exp){ task_statements} or @Supervisor t1{ task_statements} */
@@ -676,18 +670,15 @@ task_argument:  LPAREN NUM_THREADS ASSIGN expression RPAREN
     |   error RPAREN {  yyerrok; }
     ;
 
-supervisor_statement_list: supervisor_statement_list supervisor_statement{
-        $$ = $1;
-        $1->reach_end()->next = $2;
-    }
-    | supervisor_statement {$$ = $1;}
+supervisor_statement_list: supervisor_statement_list supervisor_statement
+    | 
     ;
 
 supervisor_statement:  iterative_statement
     | selection_statement
     | expression_statement
     | compound_statement
-    | declaration_statement {$$ = $1;}
+    | declaration_statement
     | parallel_statement
 	| channel_statement
     | other_statements
@@ -696,11 +687,8 @@ supervisor_statement:  iterative_statement
     ;
 
 
-task_statement_list: task_statement_list task_statement {
-        $$ = $1;
-        $1->reach_end()->next = $2;
-    }
-    |   task_statement {$$ = $1;}
+task_statement_list: task_statement_list task_statement
+    |   
     ;
 
 //TODO: task_statements STILL HAVE TO FIX STUFF HERE.
@@ -708,104 +696,50 @@ task_statement: iterative_statement
     | selection_statement
     | expression_statement
     | compound_statement
-    | declaration_statement {$$ = $1;}
+    | declaration_statement
     | parallel_statement
     | return_statement
     | channel_statement
     | error SEMICOLON {  yyerrok; }
     ;
 
-properties_declaration: PROPERTIES LBRACE taskgroup_properties RBRACE{
-        $$ = $3;
-    }
-    |{$$ = NULL;}
+properties_declaration: PROPERTIES LBRACE taskgroup_properties RBRACE
+    |
     | error RBRACE {  yyerrok; }
     ;
 
-taskgroup_properties: taskgroup_properties taskgroup_property{
-        if($2 == NULL){
-            $$ = NULL;
-        }
-        else $1->reach_end()->next = $2;
-    }
-    | taskgroup_property{ 
-        if($1 != NULL){
-            $$ = $1;
-        }
-        else $$ = NULL;
-    }
+taskgroup_properties: taskgroup_properties taskgroup_property
+    | 
     ;
 
-taskgroup_property : order_block {$$ = $1;}
-                | shared_block {$$ = new ASTNode(properties_stmt, "shared");}
-                | mem_block {$$ = new ASTNode(properties_stmt, "mem_block");}
+taskgroup_property: order_block
+                | shared_block
+                | mem_block
                 | error RBRACE {  yyerrok; }
                 ;
 
-order_block: ORDER LBRACE order_rule_list RBRACE{
-        $$ = new ASTNode(properties_stmt, "order");
-        $$->convert_to_children($3);
-    }
+order_block: ORDER LBRACE order_rule_list RBRACE
     | error SEMICOLON {  yyerrok; }
     ;
 
-order_rule_list: order_rule_list order_rule {
-        $$ = $1;
-        $$->reach_end()->next = $2;
-    }
-    | order_rule{
-        $$ = $1;
-    }
+order_rule_list: order_rule_list order_rule 
+    | 
     ;
     
-order_rule: order_rule_start order_rule_mid order_rule_end {
-        $$ = new ASTNode(order_rule);
-        if($1 != NULL){
-            $$->add_child($1);
-        }
-
-        $$->convert_to_children($2);
-
-        if($3 != NULL){
-            $$->add_child($3);
-        }
-    }
+order_rule: order_rule_start order_rule_mid order_rule_end 
     ;
 
-order_rule_start: ALL ARROW{
-        $$ = new ASTNode(order_node, "all");
-    }
-    |{ $$ = NULL;}
+order_rule_start: ALL ARROW   
+    |
     ;
     // ALL ->m
 
-order_rule_mid: order_rule_mid ARROW task_identifier_list {
-        $$ = $1;   
-        ASTNode* x = new ASTNode(order_node, "task");
-        x->add_to_metadata($3);
-        $$->reach_end()->next = x;
-    }
-    | task_identifier_list {
-        $$ = new ASTNode(order_node, "task");
-        $$->add_to_metadata($1);
-    }
+order_rule_mid: order_rule_mid ARROW identifier_list 
+    | identifier_list
     ;
 
-task_identifier_list: task_identifier_list COMMA IDENTIFIER{
-        $$ = $1;
-        $1->kind = order_node;
-        $$->reach_end()->next = $3;
-    }
-    | IDENTIFIER {
-        $$ = $1;
-        $$->kind = order_node;
-    }
-    ;
-
-order_rule_end: ARROW ALL SEMICOLON  {
-        $$ = new ASTNode(order_node, "all");
-    }
-    | SEMICOLON { $$ = NULL;}
+order_rule_end: ARROW ALL SEMICOLON  
+    | SEMICOLON
     ;
 
 
