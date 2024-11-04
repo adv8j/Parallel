@@ -126,17 +126,17 @@ initializer_dims: LBRACKET INT_LITERAL COMMA expression RBRACKET{
     | {$$ = NULL;}
     ;
 
-statement: iterative_statement{$$ = NULL;}
-    | selection_statement{$$ = NULL;}
-    | expression_statement{$$ = $1;}
-    | compound_statement{$$ = NULL;}
-    | function_declaration{$$ = NULL;}
+statement: iterative_statement
+    | selection_statement
+    | expression_statement
+    | compound_statement
+    | function_declaration
     | taskgroup_statement{$$ = $1;}
     | declaration_statement{
         $$ = $1;
     }
-    | parallel_statement  {$$ = NULL;}
-    | struct_declaration   {$$ = $1;}
+    | parallel_statement  
+    | struct_declaration   
     | error SEMICOLON {  yyerrok; }
     ;
     // specifies various types of statements(these are the ones which won't need context of being in a function/Task)
