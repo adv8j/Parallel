@@ -29,7 +29,12 @@ enum kind_t{
     order_rule,
     order_node,
     array_element, // eg: arr[1][2]
-    struct_decl
+    struct_decl,
+    parallel_stmt,
+    keyword,
+    reduction_operator,
+    channel_stmt,
+    iterative_stmt,
 };
 
 const std::string kind_t_strings[] = {
@@ -59,7 +64,12 @@ const std::string kind_t_strings[] = {
     "order_rule",
     "order_node",
     "array_element",
-    "struct_decl"
+    "struct_decl",
+    "parallel_stmt",
+    "keyword",
+    "reduction_operator",
+    "channel_stmt",
+    "iterative_stmt",
 };
 
 enum dtypes{
@@ -188,7 +198,18 @@ std::ostream& operator<<(std::ostream& os, const ASTNode* node) {
         case decl_stmt:
             os << ": " << dtype_strings[node->type.type] << std::endl;
             break;
-        
+        case channel_stmt:
+            os << ": " << node->name << std::endl;
+            break;
+        case keyword:
+            os << ": " << node->name << std::endl;
+            break;
+        case parallel_stmt:
+            os <<": " << node->name << std::endl;
+            break;
+        case reduction_operator:
+            os << ": " << node->name << std::endl;
+            break;
         case root_t:
         case order_rule:
             os << std::endl;

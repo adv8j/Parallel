@@ -627,53 +627,158 @@ parameter_declaration: datatype_and_ref IDENTIFIER
 
 //parallel statements
 parallel_statement: PARALLEL LPAREN parallel_stmt_argument_list RPAREN compound_statement // parallel block statement
+    {
+            $$ = new ASTNode(parallel_stmt);
+            $$->add_child($3);
+            // $$->add_child($5); // uncommment this whenever compound stmt is done
+            $$->add_child(new ASTNode(compound_stmt));
+    }
     | PARALLEL compound_statement
+    {
+        $$ = new ASTNode(parallel_stmt);
+        // $$->add_child($2); // uncommment this whenever compound stmt is done
+        $$->add_child(new ASTNode(compound_stmt));
+    }
     | PARALLEL LPAREN parallel_stmt_argument_list RPAREN iterative_statement // parallel for statement
+    {
+        $$ = new ASTNode(parallel_stmt);
+        $$->add_child($3);
+        // $$->add_child($5); // uncommment this whenever iterative stmt is done
+        $$->add_child(new ASTNode(iterative_stmt,"loop"));
+
+    }
     ;
 
 parallel_stmt_argument_list: parallel_stmt_argument_list COMMA parallel_stmt_argument
+    {
+        $$ = $1;
+        $1->reach_end()->next = $3;
+    }
     | parallel_stmt_argument
+    {
+        $$ = $1;
+    }
     ;
 
 // this consists of all the arguments which are inside the parallel construct like shared, private, reduction, etc. 
 parallel_stmt_argument: SHARED ASSIGN LBRACKET identifier_list RBRACKET 
+    {
+        $$ = new ASTNode(keyword, "shared");
+        $$->add_child($4);
+    }
     | PRIVATE ASSIGN LBRACKET identifier_list RBRACKET 
-    | REDUCTION ASSIGN LBRACKET reduction_list RBRACKET;
+    {
+        $$ = new ASTNode(keyword, "private");
+        $$->add_child($4);
+    }
+    | REDUCTION ASSIGN LBRACKET reduction_list RBRACKET
+    {
+        $$ = new ASTNode(keyword, "reduction");
+        $$->add_child($4);
+    }
     | SCHEDULE ASSIGN schedule_list
+    {
+        $$ = new ASTNode(keyword, "schedule");
+        $$->add_child($3);
+    }
     | NUM_THREADS ASSIGN number
+    {
+        $$ = new ASTNode(keyword, "num_threads");
+        $$->add_child($3);
+    }
     ;
 
-schedule_list: STATIC_SCHEDULE|	DYNAMIC_SCHEDULE;
+schedule_list: STATIC_SCHEDULE
+{
+    $$ = new ASTNode(keyword, "static");
+}
+|	DYNAMIC_SCHEDULE
+{
+    $$ = new ASTNode(keyword, "dynamic");
+}
+;
 
 
 // reduction list contains operator: identifier list. for eg. +: a,b,c
-reduction_list: reduction_list SEMICOLON reduction_operator_list 
+reduction_list: reduction_list SEMICOLON reduction_operator_list
+    {
+        $$ = $1;
+        $$->reach_end()->next = $3;
+    }
     | reduction_operator_list 
+    {
+        $$ = $1;
+    }
     ;
 
 // reduction operator list contains all the reduction operators like +, -, *, /, % and the reduction is applied on operator assign versions (like +=, -=, *=, /=, %=).
 reduction_operator_list: PLUS COLON identifier_list
+    {
+        $$ = new ASTNode(reduction_operator, "+");
+        $$->add_child($3);
+    }
     | MINUS COLON identifier_list
+    {
+        $$ = new ASTNode(reduction_operator, "-");
+        $$->add_child($3);
+    }
     | MUL COLON identifier_list
+    {
+        $$ = new ASTNode(reduction_operator, "*");
+        $$->add_child($3);
+    }
     | DIV COLON identifier_list
+    {
+        $$ = new ASTNode(reduction_operator, "/");
+        $$->add_child($3);
+    }
     | MOD COLON identifier_list
-    ; 
+    {
+        $$ = new ASTNode(reduction_operator, "%");
+        $$->add_child($3);
+    }
+    ;
+
 // conditional signals and return statements
 channel_statement: signal_statement SEMICOLON
+    {
+        $$ = $1;
+    }
     | wait_statement SEMICOLON
+    {
+        $$ = $1;
+    }
     ;
 
 // signal statement which can be either .ct or .ct <- <any-value>, or .ct(all) or .ct(all) <- x;
 signal_statement: TASK_CHANNEL task_all CHN_SEND expression
+    {
+        $$ = new ASTNode(channel_stmt,"signal");
+        $$->add_child($2);
+        $$->add_child($3);
+    }
     | TASK_CHANNEL task_all
+    {
+        $$ = new ASTNode(channel_stmt,"signal");
+        $$->add_child($2);
+    }
     ;
 
 task_all: LPAREN ALL RPAREN 
+    {
+        $$ = new ASTNode(keyword, "all");
+    }
     |
+    {$$ = NULL;}
     ;
 
 // wait statement which can be either .wt{<task-name>, number} or .wt{<task-name>, number} -> <identifier> ;
 wait_statement: CHANNEL_WAIT LBRACE IDENTIFIER COMMA expression RBRACE 
+    {
+        $$ = new ASTNode(channel_stmt,"wait");
+        $$->add_child($3);
+        $$->add_child($5);
+    }
     | CHANNEL_WAIT LBRACE IDENTIFIER COMMA expression RBRACE ARROW IDENTIFIER
     ;
 
@@ -704,7 +809,7 @@ taskgroup_definition:  task_declaration_list properties_declaration {
             $$->add_child($2);
         }
     }
-    ; 
+    ;
 
 
 task_declaration_list: task_declaration_list task_declaration{
@@ -960,7 +1065,14 @@ variable: array_element {$$ = $1;}
     ;
 
 identifier_list: identifier_list COMMA IDENTIFIER
+    {
+        $$ = $1;
+        $$ -> reach_end() -> next = new ASTNode(variable, $3->name);
+    }
     | IDENTIFIER
+    {
+        $$ = new ASTNode(variable, $1->name);
+    }
     ;
     // this non-terminal is for writing list of identifiers
 // no new rules required, if nothing is matched then.
