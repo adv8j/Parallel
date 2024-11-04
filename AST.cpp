@@ -28,6 +28,7 @@ enum kind_t{
     properties_stmt,
     order_rule,
     order_node,
+    array_element, // eg: arr[1][2]
 };
 
 const std::string kind_t_strings[] = {
@@ -56,6 +57,7 @@ const std::string kind_t_strings[] = {
     "properties_stmt",
     "order_rule",
     "order_node",
+    "array_element"
 };
 
 enum dtypes{
@@ -82,6 +84,7 @@ const std::string dtype_strings[] = {
     "task_t",
 };
 
+class ASTNode;
 
 struct DataType{
     dtypes type;

@@ -45,7 +45,7 @@ ASTNode* root = new ASTNode();
 %left DOT
 %right NOT  // Unary operator problem
 
-%type <node> generic_dtypes dtype  expression arithmetic_expression assignment_expression unary_expression comparison_expression logical_expression declaration_statement declaration_list declaration optional_value_assignment array dims  initializer list_initialiser initialiser_member_list_tail list_member expression_statement initializer_dims struct_declaration number_literals statement_list statement taskgroup_statement value function_call
+%type <node> generic_dtypes dtype  expression arithmetic_expression assignment_expression unary_expression comparison_expression logical_expression declaration_statement declaration_list declaration optional_value_assignment array dims  initializer list_initialiser initialiser_member_list_tail list_member expression_statement initializer_dims struct_declaration number_literals statement_list statement taskgroup_statement value function_call struct_body decl_stmt_list inner_statement inner_statement_list non_empty_inner_statement_list literals array_literal variable fixed_dims array_element function_call_tail function_arguments
 
 
 %%
@@ -54,25 +54,25 @@ program: statement_list {}
 
 
 statement_list: statement_list statement{
-        root->add_child($2);
+        root -> add_child($2);
     }
     | statement{root->add_child($1);}
     ;
-// ------------------------------------- Data Types ----------------------------------------
+// Data Types
 generic_dtypes: INT { $$ = new ASTNode(type_t, int_t);}
     | LONG {$$ = new ASTNode(type_t, long_t);}
     | FLOAT {$$ = new ASTNode(type_t, float_t);}
     | STRING {$$ = new ASTNode(type_t, string_t);}
     | BOOL {$$ = new ASTNode(type_t, bool_t);}
     | CHAR {$$ = new ASTNode(type_t, char_t);}
-    | STRUCT IDENTIFIER  {$$= new ASTNode(type_t, struct_t);}
+    | STRUCT IDENTIFIER  {$$ = new ASTNode(type_t, struct_t);}
     ;
 
 dtype: generic_dtypes { $$ = $1;}
     | array {$$ = $1;}
     ;
 
-array: generic_dtypes dims initializer_dims{
+array: generic_dtypes fixed_dims initializer_dims{
     $$ = $1;
     ASTNode* dims_head = $2;
     while(dims_head){
@@ -92,13 +92,26 @@ array: generic_dtypes dims initializer_dims{
 }
     ;
 
-array_element: IDENTIFIER dims ;
+array_element: IDENTIFIER dims {
+    $$ = new ASTNode(array_element);
+    $$ -> add_child($1);
+    $$ -> add_child($2);
+};
 
-dims: dims LBRACKET INT_LITERAL RBRACKET{
+fixed_dims: fixed_dims LBRACKET INT_LITERAL RBRACKET{
     $$ = $1;
     $$ -> reach_end() -> next = $3;
 }
     | LBRACKET INT_LITERAL RBRACKET{
+        $$ = $2;
+    }
+    ;
+
+dims: dims LBRACKET expression RBRACKET{
+    $$ = $1;
+    $$ -> reach_end() -> next = $3;
+}
+    | LBRACKET expression RBRACKET{
         $$ = $2;
     }
     ;
@@ -110,37 +123,40 @@ initializer_dims: LBRACKET INT_LITERAL COMMA expression RBRACKET{
     | {$$ = NULL;}
     ;
 
-statement: iterative_statement
-    | selection_statement
-    | expression_statement
-    | compound_statement
-    | function_declaration
+statement: iterative_statement{$$ = NULL;}
+    | selection_statement{$$ = NULL;}
+    | expression_statement{$$ = $1;}
+    | compound_statement{$$ = NULL;}
+    | function_declaration{$$ = NULL;}
     | taskgroup_statement{$$ = $1;}
     | declaration_statement{
         $$ = $1;
     }
-    | parallel_statement  
-    | struct_declaration   
+    | parallel_statement  {$$ = NULL;}
+    | struct_declaration   {$$ = $1;}
     | error SEMICOLON {  yyerrok; }
     ;
     // specifies various types of statements(these are the ones which won't need context of being in a function/Task)
 inner_statement: iterative_statement    
     | selection_statement  
-    | expression_statement 
+    | expression_statement  {$$ = $1;} 
     | compound_statement    {}
-    | declaration_statement
+    | declaration_statement{$$ = $1;}
     | parallel_statement
     | return_statement
     | error SEMICOLON {  yyerrok; }
     ;
 
 
-inner_statement_list: non_empty_inner_statement_list
-    |
+inner_statement_list: non_empty_inner_statement_list    {$$ = $1;}
+    |   {$$ = NULL;}
     ;
 
-non_empty_inner_statement_list: non_empty_inner_statement_list inner_statement
-    | inner_statement
+non_empty_inner_statement_list: non_empty_inner_statement_list inner_statement  {
+    $$ = $1;
+    $$ -> reach_end() -> next = $2;
+}
+    | inner_statement   {$$ = $1;}
     ;
     // specifies various types of statements(these will be used in a function)
 
@@ -158,17 +174,25 @@ compound_statement: LBRACE inner_statement_list RBRACE
 
 struct_declaration: STRUCT IDENTIFIER struct_body SEMICOLON {
     $$ = new ASTNode(struct_decl);
+    $$ -> add_child($3);
 }
     | STRUCT error SEMICOLON {  yyerrok; }
     | STRUCT IDENTIFIER error SEMICOLON {  yyerrok; }
     ;
 
-struct_body: LBRACE decl_stmt_list RBRACE
+struct_body: LBRACE decl_stmt_list RBRACE{
+    $$ = $2;
+}
     | LBRACE error RBRACE {  yyerrok; }
 
 //TODO: Can remove declaration_statement and write something which only allows constant literals to be assigned, currently it allows any expression to be assigned. need some semantic checks here.
-decl_stmt_list: decl_stmt_list declaration_statement
-    | declaration_statement
+decl_stmt_list: decl_stmt_list declaration_statement{
+    $$ = $1;
+    $$ -> reach_end() -> next = $2;
+}
+    | declaration_statement{
+        $$ = $1;
+    }
     ;
 
 
@@ -179,9 +203,7 @@ expression_statement: expression SEMICOLON {$$ = $1;}
 
 
 expression: value{
-       $$=new ASTNode(expr_stmt,$1->type);
-       $$->name=to_string($1->value);
-       
+       $$ = $1;
 }
     | LPAREN expression RPAREN
     {  
@@ -214,17 +236,26 @@ expression: value{
     ;
     // This is for writing various expressions
 
-function_call: IDENTIFIER LPAREN function_call_tail
+function_call: IDENTIFIER LPAREN function_call_tail {
+    $$ = new ASTNode(function_call_stmt);
+    $$ -> add_child($1);
+    if($3){
+        $$ -> add_child($3);
+    }
+}
             | IDENTIFIER LPAREN error RPAREN {  yyerrok; }
             ;
 
     // this is for writing function call
 
-function_call_tail : RPAREN 
-                    | function_arguments RPAREN
+function_call_tail : RPAREN {$$ = NULL;}
+                    | function_arguments RPAREN {$$ = $1;}
                     ;
 
-function_arguments: list_member initialiser_member_list_tail;
+function_arguments: list_member initialiser_member_list_tail{
+    $$ = $1;
+    $$ -> next = $2;
+};
 
 
 arithmetic_expression: 
@@ -431,7 +462,7 @@ declaration_statement: dtype declaration_list SEMICOLON{
     | dtype REFERENCE declaration_list SEMICOLON{
         $$ = new ASTNode(decl_stmt, $1->type);
         $$->type.reference = true;
-        $$->add_child($2);
+        $$->add_child($3);
 
         delete $1;
     }
@@ -471,7 +502,7 @@ initializer : expression  {
     $$ -> add_child($1);
 }  // assign an expression
     | list_initialiser{
-        $$ = new ASTNode(list_init_stmt);
+        $$ = new ASTNode(list_init);
         $$ -> add_child($1);
     }  //this is used to initialise arrays and struct like {{1,2,3},{4,5,6},{7,8,9}}
     ; 
@@ -494,7 +525,7 @@ initialiser_member_list_tail: COMMA list_member initialiser_member_list_tail    
 ;
 list_member : list_initialiser  // a single member in a list
 { $$ = $1; }
-        | expression{ $$ = $1; }
+        | expression{ $$ = $1 ; }
         ;
 
 
@@ -797,22 +828,43 @@ call_statement: CALL IDENTIFIER  SEMICOLON
     ;
 
 
-array_literal: expression RANGE expression 
-    | expression RANGE_INCL expression
+array_literal: INT_LITERAL RANGE INT_LITERAL {
+    $$ = new ASTNode(literal);
+    $$ -> name = "range";
+    $$ -> add_child($1);
+    $$ -> add_child($3);    
+}
+    | INT_LITERAL RANGE_INCL INT_LITERAL{
+        $$ = new ASTNode(literal);
+        $$ -> name = "range_incl";
+        $$ -> add_child($1);
+        $$ -> add_child($3);
+    }
     ;
     // this non-terminal is for writing array literal
 
-literals: INT_LITERAL| FLOAT_LITERAL| STRING_LITERAL| CHARACTER_LITERAL| TRUE| FALSE | array_literal ;
+literals: INT_LITERAL{$$ = $1;}
+    | FLOAT_LITERAL{$$ = $1;}
+    | STRING_LITERAL{$$ = $1;}
+    | CHARACTER_LITERAL{$$ = $1;}
+    | TRUE{$$ = $1;}
+    | FALSE {$$ = $1;}
+    | array_literal {$$ = $1;};
     // constant literals
 
-value: literals 
-    | variable
+value: literals {$$ = $1;}
+    | variable  {$$ = $1;}
     ;
     // this non-terminal is for writing value
 
-variable: array_element
-    | IDENTIFIER 
-    | variable DOT variable
+variable: array_element {$$ = $1;}
+    | IDENTIFIER {$$ = $1;}
+    | variable DOT variable {
+        $$ = new ASTNode(expr_stmt);
+        $$ -> name = ".";
+        $$ -> add_child($1);
+        $$ -> add_child($3);
+    }
     ;
 
 identifier_list: identifier_list COMMA IDENTIFIER
