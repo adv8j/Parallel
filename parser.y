@@ -677,7 +677,10 @@ wait_statement: CHANNEL_WAIT LBRACE IDENTIFIER COMMA expression RBRACE
     | CHANNEL_WAIT LBRACE IDENTIFIER COMMA expression RBRACE ARROW IDENTIFIER
     ;
 
-taskgroup_statement: TASKGROUP IDENTIFIER taskgroup_declaration_list LBRACE taskgroup_definition RBRACE SEMICOLON
+taskgroup_statement: TASKGROUP IDENTIFIER taskgroup_declaration_list LBRACE taskgroup_definition RBRACE SEMICOLON{
+        $$ = $5;
+        $$->name = $2->name;
+    }
 	;  // this non-terminal is for @TaskGroup t1{ taskgroup_definition}
 
 taskgroup_declaration_list: LPAREN taskgroup_argument_list RPAREN
@@ -694,16 +697,34 @@ taskgroup_argument: LOG ASSIGN STRING_LITERAL
     | NUM_THREADS ASSIGN expression
     ;
 
-taskgroup_definition:  task_declaration_list properties_declaration 
+taskgroup_definition:  task_declaration_list properties_declaration {
+        $$ = new ASTNode(taskgroup_stmt);
+        $$->add_child($1);
+        if($2 != NULL){
+            $$->add_child($2);
+        }
+    }
     ; 
 
 
-task_declaration_list: task_declaration_list task_declaration
-    | 
+task_declaration_list: task_declaration_list task_declaration{
+        $1->reach_end()->next = $2;
+        $$ = $1;
+    }
+    | task_declaration {$$ = $1;}
     ; // this non-terminal is for writing list of tasks
 
-task_declaration: TASK IDENTIFIER task_argument LBRACE task_statement_list RBRACE 
-    | SUPERVISOR IDENTIFIER LBRACE supervisor_statement_list RBRACE
+task_declaration: TASK IDENTIFIER task_argument LBRACE task_statement_list RBRACE{
+        $$ = new ASTNode(task_stmt);
+        $$->name = $2->name;
+        $$->add_child($5);
+    }
+    | SUPERVISOR IDENTIFIER LBRACE supervisor_statement_list RBRACE{
+
+        $$ = new ASTNode(supervisor_stmt);
+        $$->name = $2->name;
+        $$->add_child($4);
+    }
     | error RPAREN { yyerrok;}
     ; /* this non-terminal is for writing task or supervisor 
         @Task t1(num_threads = exp){ task_statements} or @Supervisor t1{ task_statements} */
@@ -713,15 +734,18 @@ task_argument:  LPAREN NUM_THREADS ASSIGN expression RPAREN
     |   error RPAREN {  yyerrok; }
     ;
 
-supervisor_statement_list: supervisor_statement_list supervisor_statement
-    | 
+supervisor_statement_list: supervisor_statement_list supervisor_statement{
+        $$ = $1;
+        $1->reach_end()->next = $2;
+    }
+    | supervisor_statement {$$ = $1;}
     ;
 
 supervisor_statement:  iterative_statement
     | selection_statement
     | expression_statement
     | compound_statement
-    | declaration_statement
+    | declaration_statement {$$ = $1;}
     | parallel_statement
 	| channel_statement
     | other_statements
@@ -730,8 +754,11 @@ supervisor_statement:  iterative_statement
     ;
 
 
-task_statement_list: task_statement_list task_statement
-    |   
+task_statement_list: task_statement_list task_statement {
+        $$ = $1;
+        $1->reach_end()->next = $2;
+    }
+    |   task_statement {$$ = $1;}
     ;
 
 //TODO: task_statements STILL HAVE TO FIX STUFF HERE.
@@ -739,52 +766,105 @@ task_statement: iterative_statement
     | selection_statement
     | expression_statement
     | compound_statement
-    | declaration_statement
+    | declaration_statement {$$ = $1;}
     | parallel_statement
     | return_statement
     | channel_statement
     | error SEMICOLON {  yyerrok; }
     ;
 
-properties_declaration: PROPERTIES LBRACE taskgroup_properties RBRACE
-    |
+properties_declaration: PROPERTIES LBRACE taskgroup_properties RBRACE{
+        $$ = $3;
+    }
+    |{$$ = NULL;}
     | error RBRACE {  yyerrok; }
     ;
 
-taskgroup_properties: taskgroup_properties taskgroup_property
-    | 
+taskgroup_properties: taskgroup_properties taskgroup_property{
+        if($2 == NULL){
+            $$ = NULL;
+        }
+        else $1->reach_end()->next = $2;
+    }
+    | taskgroup_property{ 
+        if($1 != NULL){
+            $$ = $1;
+        }
+        else $$ = NULL;
+    }
     ;
 
-taskgroup_property: order_block
-                | shared_block
-                | mem_block
+taskgroup_property : order_block {$$ = $1;}
+                | shared_block {$$ = new ASTNode(properties_stmt, "shared");}
+                | mem_block {$$ = new ASTNode(properties_stmt, "mem_block");}
                 | error RBRACE {  yyerrok; }
                 ;
 
-order_block: ORDER LBRACE order_rule_list RBRACE
+order_block: ORDER LBRACE order_rule_list RBRACE{
+        $$ = new ASTNode(properties_stmt, "order");
+        $$->convert_to_children($3);
+    }
     | error SEMICOLON {  yyerrok; }
     ;
 
-order_rule_list: order_rule_list order_rule 
-    | 
+order_rule_list: order_rule_list order_rule {
+        $$ = $1;
+        $$->reach_end()->next = $2;
+    }
+    | order_rule{
+        $$ = $1;
+    }
     ;
     
-order_rule: order_rule_start order_rule_mid order_rule_end 
+order_rule: order_rule_start order_rule_mid order_rule_end {
+        $$ = new ASTNode(order_rule);
+        if($1 != NULL){
+            $$->add_child($1);
+        }
+
+        $$->convert_to_children($2);
+
+        if($3 != NULL){
+            $$->add_child($3);
+        }
+    }
     ;
 
-order_rule_start: ALL ARROW   
-    |
+order_rule_start: ALL ARROW{
+        $$ = new ASTNode(order_node, "all");
+    }
+    |{ $$ = NULL;}
     ;
     // ALL ->m
 
-order_rule_mid: order_rule_mid ARROW identifier_list 
-    | identifier_list
+order_rule_mid: order_rule_mid ARROW task_identifier_list {
+        $$ = $1;   
+        ASTNode* x = new ASTNode(order_node, "task");
+        x->add_to_metadata($3);
+        $$->reach_end()->next = x;
+    }
+    | task_identifier_list {
+        $$ = new ASTNode(order_node, "task");
+        $$->add_to_metadata($1);
+    }
     ;
 
-order_rule_end: ARROW ALL SEMICOLON  
-    | SEMICOLON
+task_identifier_list: task_identifier_list COMMA IDENTIFIER{
+        $$ = $1;
+        $1->kind = order_node;
+        $$->reach_end()->next = $3;
+    }
+    | IDENTIFIER {
+        $$ = $1;
+        $$->kind = order_node;
+    }
     ;
 
+order_rule_end: ARROW ALL SEMICOLON  {
+        $$ = new ASTNode(order_node, "all");
+    }
+    | SEMICOLON { $$ = NULL;}
+    ;
 
 shared_block: SHARED_DIRECTIVE LBRACE shared_rule_list RBRACE
     ;
