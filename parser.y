@@ -9,6 +9,10 @@ extern int num_errs;
 ASTNode* root = new ASTNode();
 %}
 
+%union {
+    ASTNode* node;    
+}
+
 %token ASSIGN PLUS MINUS MUL DIV MOD EQ NEQ GT LT GTE LTE AND OR NOT ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN
 
 %token  SEMICOLON COLON LPAREN RPAREN LBRACKET RBRACKET LBRACE RBRACE COMMA DOT RANGE RANGE_INCL REFERENCE
@@ -41,7 +45,7 @@ ASTNode* root = new ASTNode();
 %left DOT
 %right NOT  // Unary operator problem
 
-
+%type <node> generic_dtypes dtype statement expression arithmetic_expression assignment_expression unary_expression comparison_expression logical_expression declaration_statement declaration_list declaration optional_value_assignment
 
 
 %%
