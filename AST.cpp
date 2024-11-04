@@ -19,7 +19,9 @@ enum kind_t{
     function_call_stmt,
     literal,
     variable,
-    type_t
+    type_t,
+    expr_init_stmt,
+    list_init
 };
 
 const std::string kind_t_strings[] = {
@@ -39,7 +41,9 @@ const std::string kind_t_strings[] = {
     "function_call_stmt",
     "literal",
     "variable",
-    "type_t"
+    "type_t",
+    "expr_init_stmt",
+    "list_init"
 };
 
 enum dtypes{
@@ -69,6 +73,7 @@ struct DataType{
     dtypes type;
     std::vector<int> ndims;
     bool reference;
+    string struct_name;
     DataType(){}
     DataType(dtypes name, std::vector<int> ndim, bool reference):type(name),ndims(ndim),reference(reference){}
     DataType(dtypes type, bool ref = false) : type(type), ndims({}), reference(ref){}

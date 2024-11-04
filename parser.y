@@ -73,11 +73,11 @@ array: generic_dtypes dims initializer_dims
 
 array_element: IDENTIFIER dims ;
 
-dims: dims LBRACKET expression RBRACKET
-    | LBRACKET expression RBRACKET
+dims: dims LBRACKET INT_LITERAL RBRACKET
+    | LBRACKET INT_LITERAL RBRACKET
     ; 
 
-initializer_dims: LBRACKET expression COMMA expression RBRACKET
+initializer_dims: LBRACKET INT_LITERAL COMMA INT_LITERAL RBRACKET
     | 
     ;
 
@@ -85,8 +85,8 @@ statement: iterative_statement
     | selection_statement
     | expression_statement
     | compound_statement
-    | function_declaration
-    | taskgroup_statement
+    | function_declaration{$$ = $1;}
+    | taskgroup_statement{$$ = $1;}
     | declaration_statement{
         $$ = $1;
     }
@@ -414,34 +414,52 @@ declaration_list : declaration_list COMMA declaration{
 
 //TODO: references are dicey, should be assigned to variable only? or any expression
 declaration: IDENTIFIER optional_value_assignment{
-        if($2 == NULL){
+        if($2 == NULL){ //when there is no assignment
             $$ = new ASTNode(variable);
             $$->name = $1->name;
         }
         else{
-            $$ = new ASTNode(expr_stmt);
+            $$ = new ASTNode(variable);
+            $$-> name = $1 -> name;
+
         }
     }
     ;
 
-optional_value_assignment: ASSIGN initializer  {$$ = new ASTNode(expr_stmt);}   //optional value assign
+optional_value_assignment: ASSIGN initializer  {$$ = $2;}   //optional value assign
     | { $$ = NULL; }
     ;
 
 // initialisers
-initializer : expression    // assign an expression
-    | list_initialiser  //this is used to initialise arrays and struct like {{1,2,3},{4,5,6},{7,8,9}}
+initializer : expression  {
+    $$ = new ASTNode(expr_init_stmt);
+    $$ -> add_child($1);
+}  // assign an expression
+    | list_initialiser{
+        $$ = new ASTNode(list_init_stmt);
+        $$ -> add_child($1);
+    }  //this is used to initialise arrays and struct like {{1,2,3},{4,5,6},{7,8,9}}
     ; 
 
-list_initialiser: LBRACE list_member initialiser_member_list_tail RBRACE
+list_initialiser: LBRACE list_member initialiser_member_list_tail RBRACE{
+    $$ = new ASTNode(list_init);
+    $$ -> add_child($2);
+    $2 -> next = $3;
+
+}
     | LBRACE error RBRACE {  yyerrok; }
     ; 
 
 initialiser_member_list_tail: COMMA list_member initialiser_member_list_tail       // (,list_member)*
+{
+    $$ = $2;
+    $$ -> next = $3;
+}
                             |
                             ;
 list_member : list_initialiser  // a single member in a list
-        | expression
+{ $$ = $1; }
+        | expression{ $$ = $1; }
         ;
 
 
