@@ -46,7 +46,7 @@ ASTNode* root = new ASTNode();
 %right NOT  // Unary operator problem
 
 %type <node> generic_dtypes dtype statement expression arithmetic_expression assignment_expression unary_expression comparison_expression logical_expression declaration_statement declaration_list declaration optional_value_assignment
-
+%type initialiser_list_struct* initializer_dims
 
 %%
 program: statement_list {}
@@ -72,37 +72,53 @@ dtype: generic_dtypes { $$ = $1;}
     | array {$$ = $1;}
     ;
 
-array: generic_dtypes dims initializer_dims
+array: generic_dtypes dims initializer_dims{
+    $$ = $1;
+    ($$ -> type).ndims = ($2 -> type).ndims;
+    if($3 != NULL){
+        ($$ -> type).ndims.push_back($3 -> int_literal);
+        ($$ -> type).init_exp = $3 -> exp;
+        delete $3;
+    }
+}
     ;
 
 array_element: IDENTIFIER dims ;
 
-dims: dims LBRACKET INT_LITERAL RBRACKET
-    | LBRACKET INT_LITERAL RBRACKET
+dims: dims LBRACKET INT_LITERAL RBRACKET{
+    $$ = $1;
+    ($$ -> type).ndim.push_back(atoi(INT_LITERAL));
+}
+    | LBRACKET INT_LITERAL RBRACKET{
+        $$ = new ASTNode(type_t);
+        ($$ -> type).ndims.push_back(atoi(INT_LITERAL));
+    }
     ; 
 
-initializer_dims: LBRACKET INT_LITERAL COMMA INT_LITERAL RBRACKET
-    | 
+initializer_dims: LBRACKET INT_LITERAL COMMA expression RBRACKET{
+    $$ = new initialiser_list_struct($2, $4);
+}
+    | {$$ = NULL;}
     ;
 
-statement: iterative_statement
-    | selection_statement
-    | expression_statement
-    | compound_statement
+statement: iterative_statement{ $$ = $1; }
+    | selection_statement{ $$ = $1; }
+    | expression_statement{$$ = $1;}
+    | compound_statement{$$ = $1;}
     | function_declaration{$$ = $1;}
     | taskgroup_statement{$$ = $1;}
     | declaration_statement{
         $$ = $1;
     }
-    | parallel_statement
-    | struct_declaration
+    | parallel_statement    { $$ = $1; }
+    | struct_declaration    { $$ = $1; }
     | error SEMICOLON {  yyerrok; }
     ;
     // specifies various types of statements(these are the ones which won't need context of being in a function/Task)
-inner_statement: iterative_statement
-    | selection_statement
-    | expression_statement
-    | compound_statement
+inner_statement: iterative_statement    { $$ = $1; }
+    | selection_statement   { $$ = $1; }
+    | expression_statement  { $$ = $1; }
+    | compound_statement    {}
     | declaration_statement
     | parallel_statement
     | return_statement

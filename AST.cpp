@@ -87,7 +87,12 @@ struct DataType{
     dtypes type;
     std::vector<int> ndims;
     bool reference;
+<<<<<<< HEAD
     std::string struct_name;
+=======
+    string struct_name;     //used to store name of struct
+    ASTNode* init_exp; // used in case of initialiser dims
+>>>>>>> b77d6a3 (add some stuff in AST)
     DataType(){}
     DataType(dtypes name, std::vector<int> ndim, bool reference):type(name),ndims(ndim),reference(reference){}
     DataType(dtypes type, bool ref = false) : type(type), ndims({}), reference(ref){}
@@ -227,4 +232,10 @@ void traverse(ASTNode* node, int tab = 0){
     if(node->next != NULL){
         traverse(node->next, tab);
     }
+}
+
+struct initialiser_list_struct{
+    int int_literal;
+    ASTNode* exp;
+    initialiser_list_struct(char* int_literal, ASTNode* exp): int_literal(atoi(int_literal)), exp(exp){} 
 }
