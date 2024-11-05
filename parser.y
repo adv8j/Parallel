@@ -804,9 +804,9 @@ taskgroup_argument: LOG ASSIGN STRING_LITERAL
 
 taskgroup_definition:  task_declaration_list properties_declaration {
         $$ = new ASTNode(taskgroup_stmt);
-        $$->add_child($1);
+        $$->convert_to_children($1);
         if($2 != NULL){
-            $$->add_child($2);
+            $$->convert_to_children($2);
         }
     }
     ;
@@ -853,7 +853,7 @@ supervisor_statement:  iterative_statement
     | declaration_statement {$$ = $1;}
     | parallel_statement
 	| channel_statement
-    | other_statements
+    | other_statements {$$ = $1;}
     | return_statement 
     | error SEMICOLON {  yyerrok;}
     ;
@@ -900,8 +900,8 @@ taskgroup_properties: taskgroup_properties taskgroup_property{
     ;
 
 taskgroup_property : order_block {$$ = $1;}
-                | shared_block {$$ = new ASTNode(properties_stmt, "shared");}
-                | mem_block {$$ = new ASTNode(properties_stmt, "mem_block");}
+                | shared_block {$$ = $1;}
+                | mem_block {$$ = $1;}
                 | error RBRACE {  yyerrok; }
                 ;
 
@@ -936,92 +936,152 @@ order_rule: order_rule_start order_rule_mid order_rule_end {
     ;
 
 order_rule_start: ALL ARROW{
-        $$ = new ASTNode(order_node, "all");
+        $$ = new ASTNode(order_node);
+        ASTNode* x = new ASTNode(task_t, "all");
+        $$->add_child(x);
     }
     |{ $$ = NULL;}
     ;
     // ALL ->m
 
-order_rule_mid: order_rule_mid ARROW task_identifier_list {
+order_rule_mid: order_rule_mid ARROW non_struct_identifier_list {
         $$ = $1;   
-        ASTNode* x = new ASTNode(order_node, "task");
-        x->add_to_metadata($3);
+        ASTNode* x = new ASTNode(order_node);
+        x->convert_to_children($3);
+        for(ASTNode* child: x->children){
+            child->kind = task_t;
+        }
         $$->reach_end()->next = x;
     }
-    | task_identifier_list {
-        $$ = new ASTNode(order_node, "task");
-        $$->add_to_metadata($1);
+    | non_struct_identifier_list {
+        $$ = new ASTNode(order_node);
+        $$->convert_to_children($1);
+        for(ASTNode* child: $$->children){
+            child->kind = task_t;
+        }
     }
     ;
 
-task_identifier_list: task_identifier_list COMMA IDENTIFIER{
+non_struct_identifier_list: non_struct_identifier_list COMMA IDENTIFIER{
         $$ = $1;
-        $1->kind = order_node;
+        $1->kind = variable;
         $$->reach_end()->next = $3;
     }
     | IDENTIFIER {
         $$ = $1;
-        $$->kind = order_node;
+        $$->kind = variable;
     }
     ;
 
 order_rule_end: ARROW ALL SEMICOLON  {
-        $$ = new ASTNode(order_node, "all");
+        $$ = new ASTNode(task_t, "all");
     }
     | SEMICOLON { $$ = NULL;}
     ;
 
-shared_block: SHARED_DIRECTIVE LBRACE shared_rule_list RBRACE
+shared_block: SHARED_DIRECTIVE LBRACE shared_rule_list RBRACE{
+        $$ = new ASTNode(properties_stmt, "shared");
+        $$->convert_to_children($3);
+    }
     ;
     // this non-terminal is for writing shared rules
     // SHARED { shared_rule_list }
 
-shared_rule_list: shared_rule_list shared_rule 
-    | 
+shared_rule_list: shared_rule_list shared_rule {
+        $$ = $1;
+        $$->reach_end()->next = $2;
+    }
+    | shared_rule {$$ = $1;}
     ;
     // this non-terminal is for writing list of shared rules
 
-shared_rule: identifier_list COLON dtype ARROW identifier_list SEMICOLON    
+shared_rule: non_struct_identifier_list COLON dtype ARROW non_struct_identifier_list SEMICOLON    {
+        $$ = new ASTNode(shared_rule, $3->type);
+        ASTNode* left = new ASTNode(shared_node);
+        ASTNode* right = new ASTNode(shared_node);
+        left->convert_to_children($1);
+        for(ASTNode* child: left->children){
+            child->kind = task_t;
+        }
+        right->convert_to_children($5);
+        $$->add_child(left);
+        $$->add_child(right);
+    }
     | error SEMICOLON {  yyerrok; } 
     ;
     // this non-terminal is for writing shared rule
     // IDENTIFIER : dtype -> IDENTIFIER
 
-
-mem_block: MEM LBRACE mem_statement_list RBRACE
-    |	MEM UNSAFE LBRACE mem_statement_list RBRACE
+mem_block: MEM LBRACE mem_statement_list RBRACE{
+        $$ = new ASTNode(properties_stmt, "mem");
+        $$->convert_to_children($3);
+    }
+    |	MEM UNSAFE LBRACE mem_statement_list RBRACE{
+        $$ = new ASTNode(properties_stmt, "mem");
+        $$->metadata.push_back("unsafe");
+        $$->convert_to_children($4);
+    }
     ;
     // this non-terminal is for writing mem rules
     // @Mem { mem_statement_list }
 
 
-mem_statement_list: mem_statement_list mem_statement 
-    |   
+mem_statement_list: mem_statement_list mem_statement {
+        $$ = $1;
+        $$->reach_end()->next = $2;
+    }
+    |   mem_statement{$$ = $1;}
     ;
     // this non-terminal is for writing list of mem statements
 
 
-mem_statement: identifier_list ARROW mem_task_list SEMICOLON
+mem_statement: non_struct_identifier_list ARROW mem_task_list SEMICOLON{
+        $$ = new ASTNode(mem_rule);
+        ASTNode* left = new ASTNode(mem_node);
+        ASTNode* right = new ASTNode(mem_node);
+
+        left->convert_to_children($1);
+        right->convert_to_children($3);
+
+        $$->add_child(left);
+        $$->add_child(right);
+    }
     | error SEMICOLON {  yyerrok; }
     ;
 
-mem_task_list: mem_task_list COMMA mem_task_name
-    |	mem_task_name
+mem_task_list: mem_task_list COMMA mem_task_name{
+        $$ = $1;
+        $$->reach_end()->next = $3;
+    }
+    |	mem_task_name{$$ = $1;}
     ;
 
 
-mem_task_name: IDENTIFIER
-    |   IDENTIFIER MUT
+mem_task_name: IDENTIFIER{
+        $$ = $1;
+        $1->kind = task_t;
+    }
+    |   IDENTIFIER MUT{
+        $$ = $1;
+        $1->kind = task_t;
+        $$->metadata.push_back("mut");
+    }
     ;
 
-other_statements: join_statement
-    | call_statement
+other_statements: join_statement{$$ = $1;}
+    | call_statement {$$ = $1;}
     ;
 
-join_statement: JOIN IDENTIFIER  SEMICOLON
+join_statement: JOIN IDENTIFIER  SEMICOLON{
+        $$ = $2;
+        $$->kind = join_stmt;
+    }
     ;
 
-call_statement: CALL IDENTIFIER  SEMICOLON
+call_statement: CALL IDENTIFIER  SEMICOLON{
+        $$ = $2;
+        $$->kind = call_stmt;
+    }
     ;
 
 

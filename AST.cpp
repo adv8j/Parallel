@@ -35,6 +35,11 @@ enum kind_t{
     reduction_operator,
     channel_stmt,
     iterative_stmt,
+    shared_rule,
+    shared_node,
+    task_t,
+    mem_rule,
+    mem_node,
 };
 
 const std::string kind_t_strings[] = {
@@ -70,6 +75,11 @@ const std::string kind_t_strings[] = {
     "reduction_operator",
     "channel_stmt",
     "iterative_stmt",
+    "shared_rule",
+    "shared_node",
+    "task_t",
+    "mem_rule",
+    "mem_node",
 };
 
 enum dtypes{
@@ -81,7 +91,6 @@ enum dtypes{
     string_t,
     unknown_t,
     struct_t,
-    task_t,
 };
 
 const std::string dtype_strings[] = {
@@ -93,7 +102,6 @@ const std::string dtype_strings[] = {
     "string_t",
     "unknown_t",
     "struct_t",
-    "task_t",
 };
 
 class ASTNode;
@@ -212,24 +220,54 @@ std::ostream& operator<<(std::ostream& os, const ASTNode* node) {
             break;
         case root_t:
         case order_rule:
+        case order_node:
             os << std::endl;
             break;
         case properties_stmt:
-            os << ": " << node->name << std::endl;
+            os << ": " << node->name ;
+            if(node->metadata.size() > 0){
+                os << "-> ";
+                for(auto data : node->metadata){
+                    os << data << " ";
+                }
+            
+            }
+            os << std::endl;
+
             break;
 
-        case order_node:
+        case task_t:
             os << ": ";
-            if (node->name== "task"){
-                for(std::string s : node->metadata){
-                    os << s << " ";
-                }
+            os << node->name;
+            for(auto data : node->metadata){
+                os << "-> " << data;
             }
-            else os << node->name;
-            
             os << std::endl;
             break;
-    
+
+        case shared_rule:
+            os << ": " << dtype_strings[node->type.type] << std::endl;
+            break;
+        case shared_node:
+            os << std::endl;
+            break;
+        case mem_rule:
+            os << ": " << dtype_strings[node->type.type] << std::endl;
+            break;
+        
+        case mem_node:
+            os << std::endl;
+            break;
+        
+        case join_stmt:
+            os << ": " << node->name << std::endl;
+            break;
+        case call_stmt:
+            os << ": " << node->name << std::endl;
+            break;
+        case supervisor_stmt:
+            os << ": " << node->name << std::endl;
+            break;
     }
     return os;
 }

@@ -10,16 +10,23 @@ char x, u;
         char z,sf,w34;
     }
 
+    @Supervisor t2{
+        string oonga_boonga;
+        call t2;
+        join x;
+    }
+
     @Properties{
         @Order{
             all -> t1 -> t2,t3;
             t2->t3, t4 -> all;
         }
-        @Mem{
-
-        }
         @Shared{
-
+            x,y, z: int -> t2,t3, t4;
         }
+        @Mem{
+            x,y,z -> t2, t3 mut;
+        }
+
     }
 };
