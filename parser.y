@@ -32,7 +32,7 @@ ASTNode* root = new ASTNode();
 %start program
 
 // Precedence
-%left RANGE RANGE_INCL
+%left RANGE RANGE_INCL 
 %right ASSIGN ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN
 %left OR 
 %left AND
@@ -40,7 +40,7 @@ ASTNode* root = new ASTNode();
 %left GT LT GTE LTE
 %left PLUS MINUS
 %left MUL DIV MOD
-%left DOT
+%right DOT
 %right NOT  // Unary operator problem
 
 
@@ -181,7 +181,6 @@ compound_statement: LBRACE inner_statement_list RBRACE
 struct_declaration: STRUCT IDENTIFIER struct_body SEMICOLON {
     $$ = new ASTNode(struct_decl);
     $$ -> add_child($2);
-    std::cout <<"hehehe";
     $$ -> add_child($3);
 }
     | STRUCT error SEMICOLON {  yyerrok; }

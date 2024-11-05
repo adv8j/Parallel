@@ -6,7 +6,7 @@ string x = "hefj";
 
 string x = 'd';
 
-arr[1].x.y[4].x;
+arr[1].x.y[4].z;
 
 x();
 
