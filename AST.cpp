@@ -119,16 +119,31 @@ public:
     std::vector<ASTNode*> children;
     ASTNode* next;
     std::vector<std::string> metadata;
+    std::vector<DataType> parameters;        // Holds the parameter types for function declarations
+    std::vector<ASTNode*> arguments;         // Holds the arguments for function calls
+
     ASTNode(): kind(root_t), line_number(0), col_number(0), next(NULL){}
     ASTNode(kind_t kind, DataType type, std::string name ="",int line_no = 0, int col_no = 0): kind(kind), line_number(line_no), name(name),col_number(col_no), type(type), next(NULL){
         // std::cout << "Creating node of type " << kind_t_strings[kind] << std::endl;
     }
     ASTNode(kind_t kind, std::string name = "", int line_no = 0, int col_no =0): kind(kind), line_number(line_no), col_number(col_no), name(name), next(NULL){}
     ASTNode(int line_no, int col_no,kind_t kind, std::string name, DataType type):line_number(line_no), col_number(col_no),kind(kind),name(name), type(DataType(type)), next(NULL){}
+    // Constructor for function declaration nodes
+    ASTNode(kind_t kind, DataType return_type, std::string func_name, 
+            std::vector<DataType> params, int line_no = 0, int col_no = 0)
+        : kind(kind), type(return_type), name(func_name), line_number(line_no), 
+        col_number(col_no), parameters(params), next(NULL) {}
+
+    // Constructor for function call nodes
+    ASTNode(kind_t kind, std::string func_name, std::vector<ASTNode*> args, 
+            int line_no = 0, int col_no = 0)
+        : kind(kind), name(func_name), line_number(line_no), 
+        col_number(col_no), arguments(args), next(NULL) {}
+
     void add_child(ASTNode* child){
         children.push_back(child);
     }
-
+    
     void add_to_metadata(ASTNode* node){
         ASTNode * tail = node;
 
@@ -227,6 +242,22 @@ std::ostream& operator<<(std::ostream& os, const ASTNode* node) {
             }
             else os << node->name;
             
+            os << std::endl;
+            break;
+        case function_decl_stmt:
+            os << "Function Declaration: " << node->name << " returns " 
+               << dtype_strings[node->type.type] << " with parameters: ";
+            for (const auto& param : node->parameters) {
+                os << dtype_strings[param.type] << " ";
+            }
+            os << std::endl;
+            break;
+
+        case function_call_stmt:
+            os << "Function Call: " << node->name << " with arguments: ";
+            for (const auto& arg : node->arguments) {
+                os << arg->name << " ";
+            }
             os << std::endl;
             break;
     
