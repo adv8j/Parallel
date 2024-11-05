@@ -62,7 +62,10 @@ generic_dtypes: INT { $$ = new ASTNode(type_t, int_t);}
     | STRING {$$ = new ASTNode(type_t, string_t);}
     | BOOL {$$ = new ASTNode(type_t, bool_t);}
     | CHAR {$$ = new ASTNode(type_t, char_t);}
-    | STRUCT IDENTIFIER  {$$ = new ASTNode(type_t, struct_t);}
+    | STRUCT IDENTIFIER  {
+        $$ = new ASTNode(type_t, struct_t);
+        ($$ -> type).init_exp_or_id = $2;
+    }
     ;
 
 dtype: generic_dtypes { $$ = $1;}
@@ -90,7 +93,7 @@ array: generic_dtypes fixed_dims initializer_dims{
         ASTNode* temp = $3;
         $3 = $3 -> next;
         delete temp;
-        ($$ -> type).init_exp = $3;
+        ($$ -> type).init_exp_or_id = $3;
     }
 }
     ;
@@ -177,6 +180,8 @@ compound_statement: LBRACE inner_statement_list RBRACE
 
 struct_declaration: STRUCT IDENTIFIER struct_body SEMICOLON {
     $$ = new ASTNode(struct_decl);
+    $$ -> add_child($2);
+    std::cout <<"hehehe";
     $$ -> add_child($3);
 }
     | STRUCT error SEMICOLON {  yyerrok; }
@@ -466,7 +471,6 @@ declaration_statement: dtype declaration_list SEMICOLON{
         $$ = new ASTNode(decl_stmt, $1->type);
         $$->type.reference = true;
         $$->add_child($3);
-
         delete $1;
     }
     ;
@@ -490,7 +494,7 @@ declaration: IDENTIFIER optional_value_assignment{
         else{
             $$ = new ASTNode(variable);
             $$-> name = $1 -> name;
-            $$ -> add_child($1);
+            $$ -> add_child($2);
         }
     }
     ;
@@ -501,12 +505,10 @@ optional_value_assignment: ASSIGN initializer  {$$ = $2;}   //optional value ass
 
 // initialisers
 initializer : expression  {
-    $$ = new ASTNode(expr_init_stmt);
-    $$ -> add_child($1);
+    $$ = $1;
 }  // assign an expression
     | list_initialiser{
-        $$ = new ASTNode(list_init);
-        $$ -> add_child($1);
+        $$ = $1;
     }  //this is used to initialise arrays and struct like {{1,2,3},{4,5,6},{7,8,9}}
     ; 
 

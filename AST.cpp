@@ -20,7 +20,6 @@ enum kind_t{
     literal,
     variable,
     type_t,
-    expr_init_stmt,
     list_init,
     taskgroup_stmt,
     task_stmt,
@@ -60,7 +59,6 @@ const std::string kind_t_strings[] = {
     "literal",
     "variable",
     "type_t",
-    "expr_init_stmt",
     "list_init",
     "taskgroup_stmt",
     "task_stmt",
@@ -110,8 +108,7 @@ struct DataType{
     dtypes type;
     std::vector<int> ndims;
     bool reference;
-    std::string struct_name;  //used to store name of struct
-    ASTNode* init_exp; // used in case of initialiser dims
+    ASTNode* init_exp_or_id = NULL; // used in case of initialiser dims, or used to store name identifier of struct
     DataType(){}
     DataType(dtypes name, std::vector<int> ndim, bool reference):type(name),ndims(ndim),reference(reference){}
     DataType(dtypes type, bool ref = false) : type(type), ndims({}), reference(ref){}
@@ -197,14 +194,18 @@ std::ostream& operator<<(std::ostream& os, const ASTNode* node) {
 
     switch(kind){
         case variable: 
-        case literal: 
         case task_stmt:
         case taskgroup_stmt:
             os << ": " << node->name << std::endl; 
             break;
 
         case decl_stmt:
-            os << ": " << dtype_strings[node->type.type] << std::endl;
+            os << ": " ;
+            if((node -> type).reference) os<<"&";
+            os<< dtype_strings[node->type.type] << "\t";
+            for(int i: (node -> type).ndims)    std::cout << i<<" ";
+            if((node -> type).init_exp_or_id) std::cout << ((node -> type).init_exp_or_id)<<"\t";
+            std::cout <<"\n";
             break;
         case channel_stmt:
             os << ": " << node->name << std::endl;
@@ -258,7 +259,30 @@ std::ostream& operator<<(std::ostream& os, const ASTNode* node) {
         case mem_node:
             os << std::endl;
             break;
+            case literal:
+            os<<": ";
+            os << node -> name<<" ";
+            os<<"\n";
+            break;
+        case expr_stmt:
+            os<<": ";
+            os<< node -> name<<"\n";
+            break;
+        case array_element:
+            os <<": \n";
+            break;
+        case struct_decl:
+            os<<":\n";
+            break;
+        case function_call_stmt:
+            os<<": \n";
+            break;
+        case list_init:
+            os<<": \n";
+            break;
         
+
+    
         case join_stmt:
             os << ": " << node->name << std::endl;
             break;

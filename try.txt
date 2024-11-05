@@ -1,1 +1,42 @@
-int a=5;
+int a=(x+y);
+
+char m = 'a';
+
+string x = "hefj";
+
+string x = 'd';
+
+arr[1].x.y[4].x;
+
+x();
+
+!(a&&b);
+
+//-x;  have to check this part
+
+int& x = j;
+
+int&j ;
+
+int x = {1,2,4};
+
+int x = {{1,2,3}, {4,5,x+y}};
+
+
+1..7;
+
+3..=543;
+
+struct z{
+    int y, x, q;
+};
+
+int a=5,y;
+
+struct z{
+    string[4][6] hdfb;
+    struct ff xx, fdh;
+};
+
+struct my_type[2][4][5] obj = {{"hghj", jbkb, 78}, {89798.89}, vgvhj};
+
