@@ -1,6 +1,4 @@
-#include <string>
-#include <vector>
-#include <iostream>
+#include "headers.hpp"
 
 enum kind_t{
     root_t,
@@ -80,27 +78,6 @@ const std::string kind_t_strings[] = {
     "mem_node",
 };
 
-enum dtypes{
-    int_t,
-    float_t,
-    long_t,
-    bool_t,
-    char_t,
-    string_t,
-    unknown_t,
-    struct_t,
-};
-
-const std::string dtype_strings[] = {
-    "int_t",
-    "float_t",
-    "long_t",
-    "bool_t",
-    "char_t",
-    "string_t",
-    "unknown_t",
-    "struct_t",
-};
 
 class ASTNode;
 
