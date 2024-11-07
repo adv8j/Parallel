@@ -37,6 +37,8 @@ enum kind_t{
     task_t,
     mem_rule,
     mem_node,
+    empty_expr_stmt,
+    itr_type,
 };
 
 const std::string kind_t_strings[] = {
@@ -76,6 +78,8 @@ const std::string kind_t_strings[] = {
     "task_t",
     "mem_rule",
     "mem_node",
+    "empty_expr_stmt",
+    "itr_type"
 };
 
 
@@ -161,14 +165,13 @@ const std::string RESET_COLOR = "\033[0m";
 
     // Output colored text
 std::ostream& operator<<(std::ostream& os, const ASTNode* node) {
-    if (node == NULL){
+    if (node == NULL|| node == nullptr){
         os << "NULL" << std::endl;
         return os;
     }
     kind_t kind = node->kind;
 
     os << CYAN_COLOR << kind_t_strings[kind] << RESET_COLOR;
-
     switch(kind){
         case variable: 
         case task_stmt:
@@ -268,6 +271,18 @@ std::ostream& operator<<(std::ostream& os, const ASTNode* node) {
             break;
         case supervisor_stmt:
             os << ": " << node->name << std::endl;
+            break;
+        case return_stmt:
+            os<<": "<< node -> name<<std::endl;
+            break;
+        case compound_stmt:
+            os<<":\n";
+            break;
+        case empty_expr_stmt:
+            os<<":\n";
+            break;
+        case itr_type:
+            os<<":"<<node -> name<<"\n";
             break;
     }
     return os;

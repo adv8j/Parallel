@@ -155,7 +155,7 @@ inner_statement: iterative_statement
 
 
 inner_statement_list: non_empty_inner_statement_list    {$$ = $1;}
-    |   {$$ = NULL;}
+    |   {$$ = nullptr;}
     ;
 
 non_empty_inner_statement_list: non_empty_inner_statement_list inner_statement  {
@@ -166,13 +166,29 @@ non_empty_inner_statement_list: non_empty_inner_statement_list inner_statement  
     ;
     // specifies various types of statements(these will be used in a function)
 
-return_statement: RETURN expression SEMICOLON
-    |   RETURN SEMICOLON
-    |   BREAK SEMICOLON
-    |   CONTINUE SEMICOLON
+return_statement: RETURN expression SEMICOLON{
+    $$ = new ASTNode(return_stmt);
+    $$ -> name = "return";
+    $$ -> add_child($1);
+}
+    |   RETURN SEMICOLON{
+        $$ = new ASTNode(return_stmt);
+        $$ -> name = "return";
+    }
+    |   BREAK SEMICOLON{
+        $$ = new ASTNode(return_stmt);
+        $$ -> name = "break";
+    }
+    |   CONTINUE SEMICOLON{
+        $$ = new ASTNode(return_stmt);
+        $$ -> name = "continue";
+    }
     ;
 
-compound_statement: LBRACE inner_statement_list RBRACE
+compound_statement: LBRACE inner_statement_list RBRACE{
+    $$ = new ASTNode(compound_stmt);
+    $$ -> add_child($2);
+}
     | error RBRACE {  yyerrok; }
     ;
     // this non-terminal is for writing compound statement
@@ -204,7 +220,7 @@ decl_stmt_list: decl_stmt_list declaration_statement{
 
 
 expression_statement: expression SEMICOLON {$$ = $1;}
-    | SEMICOLON {$$ = NULL;}
+    | SEMICOLON {$$ = nullptr;}
     ;
     // this non-terminal is for writing expression statement
 
@@ -534,32 +550,54 @@ list_member : list_initialiser  // a single member in a list
 
 
 
-iterative_statement:  FOR  iteration_condition compound_statement
+iterative_statement:  FOR  iteration_condition compound_statement{
+    $$ = new ASTNode(iterative_stmt);
+    $$ -> add_child($2);
+    $$ -> add_child($3);
+}
     ;
 
-iteration_condition: iteration_type1
-    | iteration_type2
+iteration_condition: iteration_type1{$$ = $1;}
+    | iteration_type2{$$ = $1;}
     ;
 
-iteration_type1: LPAREN expression_statement expression_statement empty_expression RPAREN 
+iteration_type1: LPAREN expression_statement expression_statement empty_expression RPAREN {
+    $$ = new ASTNode(itr_type);
+    $$ -> add_child($2);
+    $$ -> add_child($3);
+    $$ -> add_child($4);
+}
     | error RPAREN {  yyerrok; }
     ;
 
-iteration_type2: iterator IN container
+iteration_type2: iterator IN container{
+    $$ = new ASTNode(itr_type);
+    $$ -> add_child($1);
+    $$ -> add_child($3);
+}
     | error SEMICOLON {  yyerrok; }
     ;
 
-empty_expression: expression
-    | 
+empty_expression: expression{$$ = $1;}
+    | {$$ = nullptr;}
     ;
 
 
-container: variable
-    | array_literal
+container: variable{
+    $$ = $1;
+}
+    | array_literal{
+        $$ = $1;
+    }
     ;
     // basically arrays
-iterator: IDENTIFIER
-    |REFERENCE IDENTIFIER
+iterator: IDENTIFIER{
+    $$ = $1;
+}
+    |REFERENCE IDENTIFIER{
+        $$ = $2;
+        ($$ -> type).reference = true;
+    }
     ; 
     // possibility for iterator variable
 
