@@ -190,7 +190,7 @@ return_statement: RETURN expression SEMICOLON{
 
 compound_statement: LBRACE inner_statement_list RBRACE{
     $$ = new ASTNode(compound_stmt);
-    $$ -> add_child($2);
+    $$ -> next = $2;
 }
     | error RBRACE {  yyerrok; }
     ;
@@ -621,31 +621,26 @@ selection_statement: IF selection_condition compound_statement if_chain_statemen
     /*
        if else if else if else if else
     */
-    | IF selection_condition compound_statement{
-        $$ = new ASTNode(if_stmt);
-        $$->add_child($2);
-        $$->add_child($3);
-        $$->next=NULL;
-    
-}
     ;
     // if-then-else
 
 selection_condition: LPAREN expression RPAREN{
-    $$= $2;
-    $$->kind=cond_stmt;
-}
+        $$= $2;
+        $$->kind=cond_stmt;
+    }
     | error RPAREN  {yyerrok;}
     | LPAREN error RPAREN {yyerrok;}
     | LPAREN expression error SEMICOLON {yyerrok;}
     ;
 
-if_chain_statement: ELSE selection_statement{$$=$2;$$->kind=elseif_stmt;}
-    | ELSE compound_statement{$$=$2;$$->kind=else_stmt;}
+if_chain_statement: ELSE else_case{$$=$2;}
     |   {$$     = NULL;}
     ;
     // if else-if else-if else
+else_case: selection_statement{$$=$1;$$->kind=elseif_stmt;}
+    | compound_statement{$$=$1;$$->kind=else_stmt;}
 
+    ;
 
 function_declaration: FUNC IDENTIFIER func_dtype params  compound_statement
     | FUNC IDENTIFIER func_dtype params SEMICOLON //function prototype

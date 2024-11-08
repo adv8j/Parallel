@@ -308,6 +308,7 @@ std::ostream& operator<<(std::ostream& os, const ASTNode* node)
 		os << "\n";
 		break;
 	case expr_stmt:
+    case cond_stmt:
 		os << ": ";
 		os << node->name << "\n";
 		break;
