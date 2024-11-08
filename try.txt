@@ -46,5 +46,13 @@ struct my_type[2][4][5] obj = {{"hghj", jbkb, 78}, {89798.89}, vgvhj};
 
 
 for (i = 0;i <n;i+=1){
-    print(Hello);
-}       //unable to print empty statement
+    
+}      
+
+for(;;){
+
+}
+for (;i< n; i+=1){      //getting a little error
+    print(x);
+    x = y;
+}

@@ -563,6 +563,7 @@ iteration_condition: iteration_type1{$$ = $1;}
 
 iteration_type1: LPAREN expression_statement expression_statement empty_expression RPAREN {
     $$ = new ASTNode(itr_type);
+    $$ -> name = "type1";
     $$ -> add_child($2);
     $$ -> add_child($3);
     $$ -> add_child($4);
@@ -572,6 +573,7 @@ iteration_type1: LPAREN expression_statement expression_statement empty_expressi
 
 iteration_type2: iterator IN container{
     $$ = new ASTNode(itr_type);
+    $$ -> name = "type2";
     $$ -> add_child($1);
     $$ -> add_child($3);
 }

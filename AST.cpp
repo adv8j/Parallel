@@ -284,23 +284,25 @@ std::ostream& operator<<(std::ostream& os, const ASTNode* node) {
         case itr_type:
             os<<":"<<node -> name<<"\n";
             break;
+        case iterative_stmt:
+            os<<":\n";
+            break;
     }
     return os;
 }
 
 
 void traverse(ASTNode* node, int tab = 0){
-    kind_t kind = node->kind;
-
-    
-    if(node == NULL){
-        return;
-    }
     for(int i = 0; i < tab; i++){
         std::cout << "\t";
     }
     
-    std::cout << node ;
+    if((node == NULL) || (node == nullptr)){
+        std::cout<<node;
+        return;
+    }
+    kind_t kind = node->kind;
+    std::cout << node;
     for(auto child : node->children){
         traverse(child,tab+1);
     }
