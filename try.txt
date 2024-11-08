@@ -56,3 +56,19 @@ for (;i< n; i+=1){      //getting a little error
     print(x);
     x = y;
 }
+
+for i in cont{
+    print(hehe);
+}
+
+for &i in cont{
+    print(hehe);
+}
+
+for i in 1..5{
+    print(hoho);
+}
+
+if (x = 4){
+    
+}

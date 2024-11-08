@@ -604,24 +604,30 @@ iterator: IDENTIFIER{
     // possibility for iterator variable
 
 
-number: INT_LITERAL
-    | variable
+number: INT_LITERAL{$$ = $1;}
+    | variable{$$ = $1;}
     ;
     // number used for iteration in range
 
-selection_statement: IF selection_condition compound_statement if_chain_statement
-    | IF selection_condition compound_statement ELSE compound_statement
+selection_statement: IF selection_condition compound_statement if_chain_statement{
+    
+}
+    | IF selection_condition compound_statement ELSE compound_statement{
+        
+    }
     ;
     // if-then-else
 
-selection_condition: LPAREN expression RPAREN
+selection_condition: LPAREN expression RPAREN{
+    
+}
     | error RPAREN  {yyerrok;}
     | LPAREN error RPAREN {yyerrok;}
     | LPAREN expression error SEMICOLON {yyerrok;}
     ;
 
-if_chain_statement: ELSE selection_statement
-    |
+if_chain_statement: ELSE selection_statement{}
+    |   {}
     ;
     // if else-if else-if else
 

@@ -39,6 +39,7 @@ enum kind_t{
     mem_node,
     empty_expr_stmt,
     itr_type,
+    selection_stmt,
 };
 
 const std::string kind_t_strings[] = {
@@ -79,7 +80,8 @@ const std::string kind_t_strings[] = {
     "mem_rule",
     "mem_node",
     "empty_expr_stmt",
-    "itr_type"
+    "itr_type",
+    "selection_stmt",
 };
 
 
@@ -174,6 +176,9 @@ std::ostream& operator<<(std::ostream& os, const ASTNode* node) {
     os << CYAN_COLOR << kind_t_strings[kind] << RESET_COLOR;
     switch(kind){
         case variable: 
+            if((node -> type).reference)    os<<": &"<<node -> name<<"\n";
+            else os <<": "<<node -> name <<"\n";
+            break;
         case task_stmt:
         case taskgroup_stmt:
             os << ": " << node->name << std::endl; 
@@ -286,6 +291,9 @@ std::ostream& operator<<(std::ostream& os, const ASTNode* node) {
             break;
         case iterative_stmt:
             os<<":\n";
+            break;
+        case selection_stmt:
+            os <<":\n";
             break;
     }
     return os;
