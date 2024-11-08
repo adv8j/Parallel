@@ -130,7 +130,10 @@ initializer_dims: LBRACKET INT_LITERAL COMMA expression RBRACKET{
     ;
 
 statement: iterative_statement
-    | selection_statement
+    | selection_statement{
+        $$ = new ASTNode(selection_stmt);
+        $$->convert_to_children($1);
+    }
     | expression_statement
     | compound_statement
     | function_declaration
@@ -610,24 +613,36 @@ number: INT_LITERAL{$$ = $1;}
     // number used for iteration in range
 
 selection_statement: IF selection_condition compound_statement if_chain_statement{
+        $$ = new ASTNode(if_stmt);
+        $$->add_child($2);
+        $$->add_child($3);
+        $$->next = $4;
+    }
+    /*
+       if else if else if else if else
+    */
+    | IF selection_condition compound_statement{
+        $$ = new ASTNode(if_stmt);
+        $$->add_child($2);
+        $$->add_child($3);
+        $$->next=NULL;
     
 }
-    | IF selection_condition compound_statement ELSE compound_statement{
-        
-    }
     ;
     // if-then-else
 
 selection_condition: LPAREN expression RPAREN{
-    
+    $$= $2;
+    $$->kind=cond_stmt;
 }
     | error RPAREN  {yyerrok;}
     | LPAREN error RPAREN {yyerrok;}
     | LPAREN expression error SEMICOLON {yyerrok;}
     ;
 
-if_chain_statement: ELSE selection_statement{}
-    |   {}
+if_chain_statement: ELSE selection_statement{$$=$2;$$->kind=elseif_stmt;}
+    | ELSE compound_statement{$$=$2;$$->kind=else_stmt;}
+    |   {$$     = NULL;}
     ;
     // if else-if else-if else
 
