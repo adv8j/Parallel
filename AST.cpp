@@ -1,114 +1,20 @@
 #include "headers.hpp"
 
-enum kind_t
-{
-	root_t,
-	decl_stmt,
-	expr_stmt,
-	cond_stmt,
-	if_stmt,
-	else_stmt,
-	elseif_stmt,
-	loop_stmt,
-	compound_stmt,
-	return_stmt,
-	call_stmt,
-	join_stmt,
-	variable_stmt,
-	array_stmt,
-	function_decl_stmt,
-	function_call_stmt,
-	literal,
-	variable,
-	type_t,
-	list_init,
-	taskgroup_stmt,
-	task_stmt,
-	supervisor_stmt,
-	properties_stmt,
-	order_rule,
-	order_node,
-	array_element, // eg: arr[1][2]
-	struct_decl,
-	parallel_stmt,
-	keyword,
-	reduction_operator,
-	channel_stmt,
-	iterative_stmt,
-	shared_rule,
-	shared_node,
-	task_t,
-	mem_rule,
-	mem_node,
-	empty_expr_stmt,
-	itr_type,
-	selection_stmt,
-};
-
-const std::string kind_t_strings[] = {
-	"root_t",
-	"decl_stmt",
-	"expr_stmt",
-	"cond_stmt",
-	"if_stmt",
-	"else_stmt",
-	"elseif_stmt",
-	"loop_stmt",
-	"compound_stmt",
-	"return_stmt",
-	"call_stmt",
-	"join_stmt",
-	"variable_stmt",
-	"array_stmt",
-	"function_decl_stmt",
-	"function_call_stmt",
-	"literal",
-	"variable",
-	"type_t",
-	"list_init",
-	"taskgroup_stmt",
-	"task_stmt",
-	"supervisor_stmt",
-	"properties_stmt",
-	"order_rule",
-	"order_node",
-	"array_element",
-	"struct_decl",
-	"parallel_stmt",
-	"keyword",
-	"reduction_operator",
-	"channel_stmt",
-	"iterative_stmt",
-	"shared_rule",
-	"shared_node",
-	"task_t",
-	"mem_rule",
-	"mem_node",
-	"empty_expr_stmt",
-	"itr_type",
-	"selection_stmt",
-};
-
-class ASTNode;
-
 struct DataType
 {
 	dtypes type;
 	std::vector<int> ndims;
 	bool reference;
-	ASTNode* init_exp_or_id =
-		NULL; // used in case of initialiser dims, or used to store name identifier of struct
-	DataType() { }
+	ASTNode *init_exp_or_id = NULL; // used in case of initialiser dims, or used to store name identifier of struct
+	DataType() {}
 	DataType(dtypes name, std::vector<int> ndim, bool reference)
-		: type(name)
-		, ndims(ndim)
-		, reference(reference)
-	{ }
+		: type(name), ndims(ndim), reference(reference)
+	{
+	}
 	DataType(dtypes type, bool ref = false)
-		: type(type)
-		, ndims({})
-		, reference(ref)
-	{ }
+		: type(type), ndims({}), reference(ref)
+	{
+	}
 };
 
 class ASTNode
@@ -119,62 +25,50 @@ public:
 	kind_t kind;
 	std::string name;
 	DataType type;
-	std::vector<ASTNode*> children;
-	ASTNode* next;
+	std::vector<ASTNode *> children;
+	ASTNode *next;
 	std::vector<std::string> metadata;
 	ASTNode()
-		: kind(root_t)
-		, line_number(0)
-		, col_number(0)
-		, next(NULL)
-	{ }
+		: kind(root_t), line_number(0), col_number(0), next(NULL)
+	{
+	}
 	ASTNode(kind_t kind, DataType type, std::string name = "", int line_no = 0, int col_no = 0)
-		: kind(kind)
-		, line_number(line_no)
-		, name(name)
-		, col_number(col_no)
-		, type(type)
-		, next(NULL)
+		: kind(kind), line_number(line_no), name(name), col_number(col_no), type(type), next(NULL)
 	{
 		// std::cout << "Creating node of type " << kind_t_strings[kind] << std::endl;
 	}
 	ASTNode(kind_t kind, std::string name = "", int line_no = 0, int col_no = 0)
-		: kind(kind)
-		, line_number(line_no)
-		, col_number(col_no)
-		, name(name)
-		, next(NULL)
-	{ }
+		: kind(kind), line_number(line_no), col_number(col_no), name(name), next(NULL)
+	{
+	}
 	ASTNode(int line_no, int col_no, kind_t kind, std::string name, DataType type)
-		: line_number(line_no)
-		, col_number(col_no)
-		, kind(kind)
-		, name(name)
-		, type(DataType(type))
-		, next(NULL)
-	{ }
-	void add_child(ASTNode* child)
+		: line_number(line_no), col_number(col_no), kind(kind), name(name), type(DataType(type)), next(NULL)
+	{
+	}
+
+	void sem_test(SymbolTable* current);
+	void add_child(ASTNode *child)
 	{
 		children.push_back(child);
 	}
 
-	void add_to_metadata(ASTNode* node)
+	void add_to_metadata(ASTNode *node)
 	{
-		ASTNode* tail = node;
+		ASTNode *tail = node;
 
-		while(tail != NULL)
+		while (tail != NULL)
 		{
 			this->metadata.push_back(tail->name);
-			ASTNode* temp = tail;
+			ASTNode *temp = tail;
 			tail = tail->next;
 			delete temp;
 		}
 	}
 
-	ASTNode* reach_end()
+	ASTNode *reach_end()
 	{
-		ASTNode* temp = this;
-		while(temp->next != NULL)
+		ASTNode *temp = this;
+		while (temp->next != NULL)
 		{
 			temp = temp->next;
 		}
@@ -183,40 +77,31 @@ public:
 
 	void traverse_next()
 	{
-		ASTNode* temp = this;
-		while(temp != NULL)
+		ASTNode *temp = this;
+		while (temp != NULL)
 		{
 			std::cout << temp;
 			temp = temp->next;
 		}
 	}
 
-	void convert_to_children(ASTNode* head)
+	void convert_to_children(ASTNode *head)
 	{
-		ASTNode* temp = head;
-		while(temp != NULL)
+		ASTNode *temp = head;
+		while (temp != NULL)
 		{
 			children.push_back(temp);
-			ASTNode* x = temp;
+			ASTNode *x = temp;
 			temp = temp->next;
 			x->next = NULL;
 		}
 	}
 };
 
-int kind = 0; // Change this to test different values
-
-// ANSI escape codes for coloring text
-const std::string RED_COLOR = "\033[31m";
-const std::string CYAN_COLOR = "\033[36m";
-const std::string GREEN_COLOR = "\033[32m";
-const std::string YELLOW_COLOR = "\033[33m";
-const std::string RESET_COLOR = "\033[0m";
-
 // Output colored text
-std::ostream& operator<<(std::ostream& os, const ASTNode* node)
+std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 {
-	if(node == NULL || node == nullptr)
+	if (node == NULL || node == nullptr)
 	{
 		os << "NULL" << std::endl;
 		return os;
@@ -224,10 +109,10 @@ std::ostream& operator<<(std::ostream& os, const ASTNode* node)
 	kind_t kind = node->kind;
 
 	os << CYAN_COLOR << kind_t_strings[kind] << RESET_COLOR;
-	switch(kind)
+	switch (kind)
 	{
-	case variable:
-		if((node->type).reference)
+	case variable_t:
+		if ((node->type).reference)
 			os << ": &" << node->name << "\n";
 		else
 			os << ": " << node->name << "\n";
@@ -239,12 +124,12 @@ std::ostream& operator<<(std::ostream& os, const ASTNode* node)
 
 	case decl_stmt:
 		os << ": ";
-		if((node->type).reference)
+		if ((node->type).reference)
 			os << "&";
 		os << dtype_strings[node->type.type] << "\t";
-		for(int i : (node->type).ndims)
+		for (int i : (node->type).ndims)
 			std::cout << i << " ";
-		if((node->type).init_exp_or_id)
+		if ((node->type).init_exp_or_id)
 			std::cout << ((node->type).init_exp_or_id) << "\t";
 		std::cout << "\n";
 		break;
@@ -267,10 +152,10 @@ std::ostream& operator<<(std::ostream& os, const ASTNode* node)
 		break;
 	case properties_stmt:
 		os << ": " << node->name;
-		if(node->metadata.size() > 0)
+		if (node->metadata.size() > 0)
 		{
 			os << "-> ";
-			for(auto data : node->metadata)
+			for (auto data : node->metadata)
 			{
 				os << data << " ";
 			}
@@ -282,7 +167,7 @@ std::ostream& operator<<(std::ostream& os, const ASTNode* node)
 	case task_t:
 		os << ": ";
 		os << node->name;
-		for(auto data : node->metadata)
+		for (auto data : node->metadata)
 		{
 			os << "-> " << data;
 		}
@@ -308,7 +193,7 @@ std::ostream& operator<<(std::ostream& os, const ASTNode* node)
 		os << "\n";
 		break;
 	case expr_stmt:
-    case cond_stmt:
+	case cond_stmt:
 		os << ": ";
 		os << node->name << "\n";
 		break;
@@ -365,26 +250,26 @@ std::ostream& operator<<(std::ostream& os, const ASTNode* node)
 	return os;
 }
 
-void traverse(ASTNode* node, int tab = 0)
+void traverse(ASTNode *node, int tab = 0)
 {
-	for(int i = 0; i < tab; i++)
+	for (int i = 0; i < tab; i++)
 	{
 		std::cout << "\t";
 	}
 
-	if((node == NULL) || (node == nullptr))
+	if ((node == NULL) || (node == nullptr))
 	{
 		std::cout << node;
 		return;
 	}
 	kind_t kind = node->kind;
 	std::cout << node;
-	for(auto child : node->children)
+	for (auto child : node->children)
 	{
 		traverse(child, tab + 1);
 	}
 
-	if(node->next != NULL)
+	if (node->next != NULL)
 	{
 		traverse(node->next, tab);
 	}

@@ -1,5 +1,5 @@
 %{
-#include "AST.cpp"
+#include "semantics.cpp"
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 #define YYSTYPE ASTNode*
@@ -204,7 +204,7 @@ true { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, literal, s
 
 false { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, literal, std::string(yytext), bool_t); return FALSE;}
 
-[a-zA-Z][a-zA-Z0-9_]*  { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, variable, std::string(yytext), unknown_t ); return IDENTIFIER;}
+[a-zA-Z][a-zA-Z0-9_]*  { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, variable_t, std::string(yytext), unknown_t ); return IDENTIFIER;}
 
 
 

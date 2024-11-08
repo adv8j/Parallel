@@ -1,6 +1,5 @@
 %{
 #include <stdio.h>
-#include "symbol_table/symbol_table.c"
 #include "lex.yy.c"
 extern int yylex();
 extern void yyerror(const char *s);
@@ -492,7 +491,7 @@ declaration_statement: dtype declaration_list SEMICOLON{
         delete $1;
     }
     ;
-    // variable declaration
+    // variable_t declaration
 
 declaration_list : declaration_list COMMA declaration{
         $1->reach_end()->next = $3;
@@ -503,14 +502,14 @@ declaration_list : declaration_list COMMA declaration{
     }
     ;
 
-//TODO: references are dicey, should be assigned to variable only? or any expression
+//TODO: references are dicey, should be assigned to variable_t only? or any expression
 declaration: IDENTIFIER optional_value_assignment{
         if($2 == NULL){ //when there is no assignment
-            $$ = new ASTNode(variable);
+            $$ = new ASTNode(variable_t);
             $$->name = $1->name;
         }
         else{
-            $$ = new ASTNode(variable);
+            $$ = new ASTNode(variable_t);
             $$-> name = $1 -> name;
             $$ -> add_child($2);
         }
@@ -588,7 +587,7 @@ empty_expression: expression{$$ = $1;}
     ;
 
 
-container: variable{
+container: variable_t{
     $$ = $1;
 }
     | array_literal{
@@ -604,11 +603,11 @@ iterator: IDENTIFIER{
         ($$ -> type).reference = true;
     }
     ; 
-    // possibility for iterator variable
+    // possibility for iterator variable_t
 
 
 number: INT_LITERAL{$$ = $1;}
-    | variable{$$ = $1;}
+    | variable_t{$$ = $1;}
     ;
     // number used for iteration in range
 
@@ -1021,12 +1020,12 @@ order_rule_mid: order_rule_mid ARROW non_struct_identifier_list {
 
 non_struct_identifier_list: non_struct_identifier_list COMMA IDENTIFIER{
         $$ = $1;
-        $1->kind = variable;
+        $1->kind = variable_t;
         $$->reach_end()->next = $3;
     }
     | IDENTIFIER {
         $$ = $1;
-        $$->kind = variable;
+        $$->kind = variable_t;
     }
     ;
 
@@ -1167,13 +1166,13 @@ literals: INT_LITERAL{$$ = $1;}
     // constant literals
 
 value: literals {$$ = $1;}
-    | variable  {$$ = $1;}
+    | variable_t  {$$ = $1;}
     ;
     // this non-terminal is for writing value
 
-variable: array_element {$$ = $1;}
+variable_t: array_element {$$ = $1;}
     | IDENTIFIER {$$ = $1;}
-    | variable DOT variable {
+    | variable_t DOT variable_t {
         $$ = new ASTNode(expr_stmt);
         $$ -> name = ".";
         $$ -> add_child($1);
@@ -1184,11 +1183,11 @@ variable: array_element {$$ = $1;}
 identifier_list: identifier_list COMMA IDENTIFIER
     {
         $$ = $1;
-        $$ -> reach_end() -> next = new ASTNode(variable, $3->name);
+        $$ -> reach_end() -> next = new ASTNode(variable_t, $3->name);
     }
     | IDENTIFIER
     {
-        $$ = new ASTNode(variable, $1->name);
+        $$ = new ASTNode(variable_t, $1->name);
     }
     ;
     // this non-terminal is for writing list of identifiers

@@ -1,10 +1,3 @@
-#ifndef HEADERS_HPP
-#define HEADERS_HPP
-
-#include <iostream>
-#include <string>
-#include <vector>
-#include <unordered_map>
 
 enum entry_type
 {
@@ -24,7 +17,6 @@ const std::string entry_type_strings[] = {
     "struct_data",
     "supervisor",
 };
-
 
 enum dtypes
 {
@@ -139,31 +131,3 @@ const std::string kind_t_strings[] = {
     "itr_type",
     "selection_stmt",
 };
-
-class Variable;
-class Function;
-class Struct;
-class SymbolTableEntry;
-class SymbolTable;
-class TaskGroup;
-
-
-// AST Node
-class ASTNode;
-struct DataType;
-
-int kind = 0; // Change this to test different values
-
-// ANSI escape codes for coloring text
-const std::string RED_COLOR = "\033[31m";
-const std::string CYAN_COLOR = "\033[36m";
-const std::string GREEN_COLOR = "\033[32m";
-const std::string YELLOW_COLOR = "\033[33m";
-const std::string RESET_COLOR = "\033[0m";
-
-// Output colored text
-std::ostream &operator<<(std::ostream &os, const ASTNode *node);
-
-void traverse(ASTNode , int);
-
-#endif

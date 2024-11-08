@@ -1,23 +1,5 @@
 #include "headers.hpp"
 
-enum entry_type{
-    function,
-    variable,
-    taskgroup,
-    task,
-    struct_data,
-    supervisor,
-};
-
-const std::string entry_type_strings[] = {
-    "function",
-    "variable",
-    "taskgroup",
-    "task",
-    "struct_data",
-    "supervisor",
-};
-
 
 
 
@@ -32,7 +14,7 @@ public:
     bool has_value;
     int line_number;
     int col_no;
-    Variable(std::string name, dtypes type, std::vector<int> dims ={}, bool reference = false, bool has_value = false, int line_number = 0, int col_no = 0, std::string struct_name):name(name),type(type),dims(dims),reference(reference),has_value(has_value),line_number(line_number),col_no(col_no), struct_name(struct_name){}
+    Variable(std::string name, dtypes type, std::vector<int> dims ={}, bool reference = false, bool has_value = false, int line_number = 0, int col_no = 0, std::string struct_name=""):name(name),type(type),dims(dims),reference(reference),has_value(has_value),line_number(line_number),col_no(col_no), struct_name(struct_name){}
 };
 
 class Function{
@@ -62,11 +44,10 @@ class SymbolTableEntry{
     entry_type type;
     std::string name;
     void* ptr;
-
+    SymbolTableEntry(){}
     SymbolTableEntry(entry_type type, std::string name, void* ptr):type(type),name(name),ptr(ptr){}
 };
 
-#include <unordered_map>
 
 class SymbolTable {
 private:
