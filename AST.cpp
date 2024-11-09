@@ -96,6 +96,14 @@ public:
 			x->next = NULL;
 		}
 	}
+
+	bool childExists(){
+		return this->children.size() != 0;
+	}
+
+	dtypes getType(){
+		return this->type.type;
+	}
 };
 
 // Output colored text
@@ -113,9 +121,11 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 	{
 	case variable_t:
 		if ((node->type).reference)
-			os << ": &" << node->name << "\n";
+			os << ": &" << node->name << " -> ";
 		else
-			os << ": " << node->name << "\n";
+			os << ": " << node->name << " -> ";
+
+		os<< dtype_strings[(node->type).type] << "\n";
 		break;
 	case task_stmt:
 	case taskgroup_stmt:
@@ -193,6 +203,9 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 		os << "\n";
 		break;
 	case expr_stmt:
+		os << ": ";
+		os << node->name << " : " << dtype_strings[node->type.type] << "\n";
+		break;
 	case cond_stmt:
 		os << ": ";
 		os << node->name << "\n";

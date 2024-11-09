@@ -1,9 +1,7 @@
 #include "headers.hpp"
 
-
-
-
-class Variable{
+class Variable
+{
 public:
     std::string name;
     dtypes type;
@@ -14,10 +12,11 @@ public:
     bool has_value;
     int line_number;
     int col_no;
-    Variable(std::string name, dtypes type, std::vector<int> dims ={}, bool reference = false, bool has_value = false, int line_number = 0, int col_no = 0, std::string struct_name=""):name(name),type(type),dims(dims),reference(reference),has_value(has_value),line_number(line_number),col_no(col_no), struct_name(struct_name){}
+    Variable(std::string name, dtypes type, std::vector<int> dims = {}, bool reference = false, bool has_value = false, int line_number = 0, int col_no = 0, std::string struct_name = "") : name(name), type(type), dims(dims), reference(reference), has_value(has_value), line_number(line_number), col_no(col_no), struct_name(struct_name) {}
 };
 
-class Function{
+class Function
+{
 public:
     std::string name;
     dtypes return_type;
@@ -26,72 +25,102 @@ public:
     int line_number;
     int col_no;
 
-    Function(std::string name, dtypes return_type, std::vector<Variable> param_list = {}, int line_number = 0, int col_no = 0, std::string return_struct_name = ""):name(name),return_type(return_type),param_list(param_list),line_number(line_number),col_no(col_no), return_struct_name(return_struct_name){}
+    Function(std::string name, dtypes return_type, std::vector<Variable> param_list = {}, int line_number = 0, int col_no = 0, std::string return_struct_name = "") : name(name), return_type(return_type), param_list(param_list), line_number(line_number), col_no(col_no), return_struct_name(return_struct_name) {}
 };
 
-class Struct{
+class Struct
+{
 public:
     std::string name;
     std::vector<Variable> member_data;
     int line_number;
     int col_no;
-    Struct(std::string name, std::vector<Variable> member_data = {}, int line_number = 0, int col_no = 0):name(name),member_data(member_data),line_number(line_number),col_no(col_no){}
+    Struct(std::string name, std::vector<Variable> member_data = {}, int line_number = 0, int col_no = 0) : name(name), member_data(member_data), line_number(line_number), col_no(col_no) {}
 };
 
-
-class SymbolTableEntry{
-    public:
+class SymbolTableEntry
+{
+public:
     entry_type type;
     std::string name;
-    void* ptr;
-    SymbolTableEntry(){}
-    SymbolTableEntry(entry_type type, std::string name, void* ptr):type(type),name(name),ptr(ptr){}
+    void *ptr;
+    SymbolTableEntry() {}
+    SymbolTableEntry(entry_type type, std::string name, void *ptr = NULL) : type(type), name(name), ptr(ptr) {}
 };
 
-
-class SymbolTable {
+class SymbolTable
+{
 private:
     std::unordered_map<std::string, SymbolTableEntry> table;
-    SymbolTable* next = nullptr;
+    SymbolTable *next = nullptr;
 
 public:
-    void addEntry(const SymbolTableEntry& entry) {
+    void addEntry(const SymbolTableEntry &entry){
         table[entry.name] = entry;
     }
 
-    SymbolTableEntry* getEntry(const std::string& name) {
+    void addVariable(const std::string &name, const dtypes type, bool has_value = false, bool reference = false,
+                std::vector<int> dims = {}, std::string struct_name = "", int line_no = 0, int col_no = 0)
+    {
+        Variable *v = new Variable(name, type, dims, reference, has_value, line_no, col_no);
+        SymbolTableEntry e(variable, name, (void *)v);
+        this->addEntry(e);
+    }
+
+    SymbolTableEntry *getEntry(const std::string &name){
         auto it = table.find(name);
-        if (it != table.end()) {
+        if (it != table.end())
+        {
             return &(it->second);
         }
         return nullptr;
     }
 
-    bool removeEntry(const std::string& name) {
-        return table.erase(name) > 0;
+    bool checkName(const std::string &name){
+        return this->getEntry(name) != nullptr;
     }
 
+    bool checkNameNested(const std::string &name){
+        SymbolTable *temp = this;
+        while (temp != nullptr){
+            if (temp->checkName(name))
+                return true;
+            temp = temp->next;
+        }
+        return false;
+    }
+
+    bool checkNameType(const std::string &name, const entry_type entry){
+        SymbolTableEntry *e = getEntry(name);
+        return e != nullptr && e->type == entry;
+    }
+
+    bool removeEntry(const std::string &name){
+        return table.erase(name) > 0;
+    }
 };
 
-class TaskGroup{
+class TaskGroup
+{
     std::string name;
     int line_number;
     int col_no;
     std::unordered_map<std::string, SymbolTable> task_table;
 
-    TaskGroup(std::string name, int line_number = 0, int col_no = 0):name(name),line_number(line_number),col_no(col_no){}
+    TaskGroup(std::string name, int line_number = 0, int col_no = 0) : name(name), line_number(line_number), col_no(col_no) {}
 
-    void addTask(const std::string& task_name){
+    void addTask(const std::string &task_name)
+    {
         task_table[task_name] = SymbolTable();
     }
 
-    SymbolTable* retrieveTask(const std::string& task_name){
+    SymbolTable *retrieveTask(const std::string &task_name)
+    {
         auto it = task_table.find(task_name);
-        if(it != task_table.end()){
+        if (it != task_table.end())
+        {
             return &(it->second);
         }
         return nullptr;
     }
 };
-
-

@@ -5,7 +5,7 @@ extern int yylex();
 extern void yyerror(const char *s);
 extern int num_errs;
 // extern int yydebug =0;
-ASTNode* root = new ASTNode();
+ASTNode* root ;
 %}
 
 
@@ -50,9 +50,9 @@ program: statement_list {}
 
 
 statement_list: statement_list statement{
-        root -> add_child($2);
+        root ->reach_end()-> next = $2;
     }
-    | statement{root->add_child($1);}
+    | statement{root->next = $1;}
     ;
 // Data Types
 generic_dtypes: INT { $$ = new ASTNode(type_t, int_t);}
@@ -481,13 +481,13 @@ logical_expression: expression AND expression
 // declaration statements
 declaration_statement: dtype declaration_list SEMICOLON{
         $$ = new ASTNode(decl_stmt, $1->type);
-        $$->add_child($2);
+        $$->convert_to_children($2);
         delete $1;
     }
     | dtype REFERENCE declaration_list SEMICOLON{
         $$ = new ASTNode(decl_stmt, $1->type);
         $$->type.reference = true;
-        $$->add_child($3);
+        $$->convert_to_children($3);
         delete $1;
     }
     ;
@@ -1198,7 +1198,10 @@ int main(int argc, char** argv) {
     if(argc > 1) {
         yydebug = 1;
     }
+    root = new ASTNode();
 	yyparse();
+    SymbolTable* st = new SymbolTable();
+    sem_test(root, st, st);
     traverse(root);
     return num_errs;
 }
