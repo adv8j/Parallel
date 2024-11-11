@@ -94,6 +94,8 @@ enum kind_t
     empty_expr_stmt,
     itr_type,
     selection_stmt,
+    param_list_t,
+    param_decl,
 };
 
 const std::string kind_t_strings[] = {
@@ -138,6 +140,8 @@ const std::string kind_t_strings[] = {
     "empty_expr_stmt",
     "itr_type",
     "selection_stmt",
+    "param_list_t",
+    "param_decl",
 };
 
 class Variable;

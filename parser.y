@@ -135,7 +135,7 @@ statement: iterative_statement
     }
     | expression_statement
     | compound_statement
-    | function_declaration
+    | function_declaration {$$=$1;}
     | taskgroup_statement{$$ = $1;}
     | declaration_statement{
         $$ = $1;
@@ -641,14 +641,26 @@ else_case: selection_statement{$$=$1;$$->kind=elseif_stmt;}
 
     ;
 
-function_declaration: FUNC IDENTIFIER func_dtype params  compound_statement
+function_declaration: FUNC IDENTIFIER func_dtype params  compound_statement{
+        $$ = new ASTNode(function_decl_stmt, $3->type, $2->name);
+        $$->add_parameters($4->children);
+        $$->add_child($5);
+        }
     | FUNC IDENTIFIER func_dtype params SEMICOLON //function prototype
+    {
+        $$ = new ASTNode(function_decl_stmt, $3->type, $2->name);
+        $$->add_parameters($4->children);
+        }
     | FUNC error RBRACE {  yyerrok; }
     | FUNC IDENTIFIER error RBRACE {  yyerrok; }
     | FUNC IDENTIFIER func_dtype error RBRACE {  yyerrok; }
     ;
 
-params: LPAREN parameter_list RPAREN
+params: LPAREN parameter_list RPAREN {
+        $$ = new ASTNode(param_list_t); 
+        $$->add_parameters($2->children); 
+    }
+
     | LPAREN error RPAREN {  yyerrok; }
     | error RPAREN {  yyerrok; }
     ;
@@ -671,13 +683,25 @@ parameter_dims_tail: LBRACKET RBRACKET
                 | LBRACKET INT_LITERAL RBRACKET
                 ;
 
-parameter_list: parameter_list COMMA parameter_declaration
-	| parameter_declaration
+parameter_list: parameter_list COMMA parameter_declaration {
+        $$ = $1;
+        $$->add_child($3);
+    }
+	| parameter_declaration{
+        $$ = new ASTNode(param_list_t);
+        $$->add_child($1);
+    }
     | 
 	;
 
-parameter_declaration: datatype_and_ref IDENTIFIER 
+parameter_declaration: datatype_and_ref IDENTIFIER {
+        $$ = new ASTNode(param_decl, $1->type, $2->name);
+    }
     | datatype_and_ref IDENTIFIER ASSIGN expression // for default arguments
+    {
+        $$ = new ASTNode(param_decl, $1->type, $2->name);
+        $$->add_child($4);
+    }
     ; 
 
 
