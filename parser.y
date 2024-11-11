@@ -641,7 +641,8 @@ else_case: selection_statement{$$=$1;$$->kind=elseif_stmt;}
 
     ;
 
-function_declaration: FUNC IDENTIFIER func_dtype params  compound_statement{
+function_declaration: FUNC IDENTIFIER func_dtype params  compound_statement
+        {
         $$ = new ASTNode(function_decl_stmt, $3->type, $2->name);
         $$->add_parameters($4->children);
         $$->add_child($5);
@@ -656,7 +657,8 @@ function_declaration: FUNC IDENTIFIER func_dtype params  compound_statement{
     | FUNC IDENTIFIER func_dtype error RBRACE {  yyerrok; }
     ;
 
-params: LPAREN parameter_list RPAREN {
+params: LPAREN parameter_list RPAREN 
+    {
         $$ = new ASTNode(param_list_t); 
         $$->add_parameters($2->children); 
     }
@@ -683,7 +685,8 @@ parameter_dims_tail: LBRACKET RBRACKET
                 | LBRACKET INT_LITERAL RBRACKET
                 ;
 
-parameter_list: parameter_list COMMA parameter_declaration {
+parameter_list: parameter_list COMMA parameter_declaration 
+    {
         $$ = $1;
         $$->add_child($3);
     }
@@ -1227,6 +1230,7 @@ int main(int argc, char** argv) {
     SymbolTable* st = new SymbolTable();
     sem_test(root, st, st);
     traverse(root);
+    
     return num_errs;
 }
 
