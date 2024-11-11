@@ -109,6 +109,7 @@ public:
         for (auto* param : params) {
             children.push_back(param);
         }
+	}
 };
 
 // Output colored text
@@ -266,17 +267,13 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 		break;
 
 	case function_decl_stmt: 
-            os << ": Function " << node->name << " (";
-            for (size_t i = 0; i < node->parameters.size(); ++i)//for parameters
-            {
-                os << dtype_strings[node->parameters[i].type];
-                if (node->parameters[i].is_reference)
-                    os << "&";
-                if (i < node->parameters.size() - 1)
-                    os << ", ";
-            }
-            os << ") -> " << dtype_strings[node->return_type.type] << std::endl;
-            break;
+        os << ": Function " << node->name;
+		if ((node->type).reference)
+			os << "&";
+		os << dtype_strings[node->type.type] << "\t";
+	
+		std::cout << "\n";
+		break;
 	}
 	
 
