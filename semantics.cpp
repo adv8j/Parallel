@@ -128,6 +128,25 @@ void sem_test(ASTNode* curNode, SymbolTable* current, SymbolTable* global){
             std:: cout << "Checking expression statement" << std::endl;
             resolve_expression(curNode, current);
         }
+        // case function_decl_stmt:
+        // {
+        //     std::cout << "Checking function declaration" << std::endl;
+        //     std::string name = curNode->name;
+        //     if(current->checkName(name)){
+        //         std::string message = "Function " + name + " already declared";
+        //         yy_sem_error(message);
+        //     }
+        //     std::vector<Variable> params;
+        //     for(ASTNode* node: curNode->children){
+        //         if(node->kind == decl_stmt){
+        //             for(ASTNode* param: node->children){
+        //                 params.push_back(Variable(param->name, param->getType()));
+        //             }
+        //         }
+        //     }
+        //     global->addFunction(name, curNode->getType());
+        //     break;
+        // }
     }
     if(curNode->next != nullptr)
         sem_test(curNode->next, current, global);

@@ -19,13 +19,14 @@ class Function
 {
 public:
     std::string name;
+    bool is_prototype = false;
     dtypes return_type;
     std::string return_struct_name;
     std::vector<Variable> param_list;
     int line_number;
     int col_no;
 
-    Function(std::string name, dtypes return_type, std::vector<Variable> param_list = {}, int line_number = 0, int col_no = 0, std::string return_struct_name = "") : name(name), return_type(return_type), param_list(param_list), line_number(line_number), col_no(col_no), return_struct_name(return_struct_name) {}
+    Function(std::string name, dtypes return_type,bool is_prototype, std::vector<Variable> param_list = {}, int line_number = 0, int col_no = 0, std::string return_struct_name = "") : name(name),is_prototype(is_prototype), return_type(return_type), param_list(param_list), line_number(line_number), col_no(col_no), return_struct_name(return_struct_name) {}
 };
 
 class Struct
@@ -64,6 +65,12 @@ public:
     {
         Variable *v = new Variable(name, type, dims, reference, has_value, line_no, col_no);
         SymbolTableEntry e(variable, name, (void *)v);
+        this->addEntry(e);
+    }
+    void addFunction(const std::string &name, const dtypes return_type,bool is_prototype, std::vector<Variable> param_list = {}, int line_no = 0, int col_no = 0, std::string return_struct_name = "")
+    {
+        Function *f = new Function(name, return_type,is_prototype, param_list, line_no, col_no, return_struct_name);
+        SymbolTableEntry e(function, name, (void *)f);
         this->addEntry(e);
     }
 

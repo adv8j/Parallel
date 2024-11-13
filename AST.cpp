@@ -219,6 +219,15 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 	case function_call_stmt:
 		os << ": \n";
 		break;
+	case function_decl_stmt:
+		os<<": "<<node->name<< " : " << dtype_strings[node->type.type]<<std::endl;
+		
+		
+		break;
+	case prototype_stmt:
+		os<<": "<<node->name<< " : " << dtype_strings[node->type.type]<<std::endl;
+		
+		break;
 	case list_init:
 		os << ": \n";
 		break;
@@ -258,6 +267,14 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 		break;
 	case elseif_stmt:
 		os << ":\n";
+		break;
+	case params_list:
+
+		os << ":\n";
+		break;
+	case params_t:
+		os<<": "<<node->name<< " : " << dtype_strings[node->type.type]<<((node->type.reference)?"&":"")<<std::endl;
+		
 		break;
 	}
 	return os;

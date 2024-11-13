@@ -72,10 +72,7 @@ dtype: generic_dtypes { $$ = $1;}
     ;
 
 func_dtype: generic_dtypes {$$ = $1;}
-        | generic_dtypes REFERENCE {
-            $$ = $1;
-            ($$ -> type).reference = true;
-        }
+        
 
 array: generic_dtypes fixed_dims initializer_dims{
     $$ = $1;
@@ -264,9 +261,11 @@ expression: value{
 function_call: IDENTIFIER LPAREN function_call_tail {
     $$ = new ASTNode(function_call_stmt);
     $$ -> add_child($1);
+    $$->name=$1->name;
     if($3){
         $$ -> add_child($3);
     }
+    delete $1;
 }
             | IDENTIFIER LPAREN error RPAREN {  yyerrok; }
             ;
@@ -642,42 +641,80 @@ else_case: selection_statement{$$=$1;$$->kind=elseif_stmt;}
     ;
 
 function_declaration: FUNC IDENTIFIER func_dtype params  compound_statement
+    {
+        $$ = new ASTNode(function_decl_stmt);
+        $$->name = $2->name;
+        $$->type=$3->type;       
+        $$->add_child($4);// first child is the parameters
+        $$->add_child($5);// second child is the compound statement
+
+    }
     | FUNC IDENTIFIER func_dtype params SEMICOLON //function prototype
+    {
+        $$ = new ASTNode(prototype_stmt);
+        $$->name = $2->name;
+        $$->type=$3->type;
+        $$->add_child($4);// first child is the parameters
+    }
     | FUNC error RBRACE {  yyerrok; }
     | FUNC IDENTIFIER error RBRACE {  yyerrok; }
     | FUNC IDENTIFIER func_dtype error RBRACE {  yyerrok; }
     ;
 
 params: LPAREN parameter_list RPAREN
+    {
+        $$ = new ASTNode(params_list);
+        $$->convert_to_children($2);
+    }
     | LPAREN error RPAREN {  yyerrok; }
     | error RPAREN {  yyerrok; }
     ;
 
 
 
-datatype_and_ref: parameter_dtype
-| parameter_dtype REFERENCE;
-// includes the data types and references (like: int&)
-
-parameter_dtype : generic_dtypes
-    | generic_dtypes parameter_dims
+datatype_and_ref: dtype
+    {
+        $$ = $1;
+    }
+    | dtype REFERENCE
+    {
+        $$ = $1;
+        ($$ -> type).reference = true;
+    }
     ;
 
-parameter_dims: parameter_dims_tail
-            | fixed_dims parameter_dims_tail
-            ;
-parameter_dims_tail: LBRACKET RBRACKET
-                | LBRACKET INT_LITERAL COMMA expression RBRACKET
-                | LBRACKET INT_LITERAL RBRACKET
-                ;
+// includes the data types and references (like: int&)
+
+
 
 parameter_list: parameter_list COMMA parameter_declaration
+    {
+        $$ = $1;
+        $1->reach_end()->next = $3;
+    }
 	| parameter_declaration
-    | 
+    {
+        $$ = $1;
+    }
+    | // return null node if no parameters
+    {
+        $$ = NULL;
+    }
 	;
 
 parameter_declaration: datatype_and_ref IDENTIFIER 
+    {
+        $$ = new ASTNode(params_t);
+        $$->name = $2->name;
+        $$->type = $1->type;
+    }
     | datatype_and_ref IDENTIFIER ASSIGN expression // for default arguments
+    {
+        $$ = new ASTNode(params_t);
+        $$->name = $2->name;
+        $$->type = $1->type;
+        $$->add_child($4);// if params_t have any child its expression
+    }
     ; 
 
 

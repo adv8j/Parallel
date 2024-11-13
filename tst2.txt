@@ -1,0 +1,4 @@
+func uttam int(int a, int b,int&c){
+    int x=5;
+    string donothing="59%";
+}

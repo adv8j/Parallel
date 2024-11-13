@@ -68,6 +68,7 @@ enum kind_t
     variable_stmt,
     array_stmt,
     function_decl_stmt,
+    prototype_stmt,
     function_call_stmt,
     literal,
     variable_t,
@@ -94,6 +95,8 @@ enum kind_t
     empty_expr_stmt,
     itr_type,
     selection_stmt,
+    params_list,
+    params_t,
 };
 
 const std::string kind_t_strings[] = {
@@ -112,6 +115,7 @@ const std::string kind_t_strings[] = {
     "variable_stmt",
     "array_stmt",
     "function_decl_stmt",
+    "prototype_stmt",
     "function_call_stmt",
     "literal",
     "variable_t",
@@ -138,6 +142,8 @@ const std::string kind_t_strings[] = {
     "empty_expr_stmt",
     "itr_type",
     "selection_stmt",
+    "params_list",
+    "params_t",
 };
 
 class Variable;
