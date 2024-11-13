@@ -285,8 +285,8 @@ function_arguments: list_member initialiser_member_list_tail{
 arithmetic_expression: 
     expression PLUS expression
     {
-        $$ = new ASTNode();
-        $$->kind = expr_stmt;
+        $$ = new ASTNode(expr_stmt, unknown_t);
+        
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "+";
@@ -294,32 +294,32 @@ arithmetic_expression:
     }
     | expression MINUS expression
     {
-        $$ = new ASTNode();
-        $$->kind = expr_stmt;
+        $$ = new ASTNode(expr_stmt, unknown_t);
+        
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "-";
     }
     | expression MUL expression
     {
-        $$ = new ASTNode();
-        $$->kind = expr_stmt;
+        $$ = new ASTNode(expr_stmt, unknown_t);
+        
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "*";
     }
     | expression DIV expression
     {
-        $$ = new ASTNode();
-        $$->kind = expr_stmt;
+        $$ = new ASTNode(expr_stmt, unknown_t);
+        
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "/";
     }
     | expression MOD expression
     {
-        $$ = new ASTNode();
-        $$->kind = expr_stmt;
+        $$ = new ASTNode(expr_stmt, unknown_t);
+        
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "%";
@@ -330,48 +330,48 @@ arithmetic_expression:
 assignment_expression: 
     expression ASSIGN expression
     {
-        $$ = new ASTNode();
-        $$->kind = expr_stmt;
+        $$ = new ASTNode(expr_stmt, unknown_t);
+        
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "=";
     }
     | expression ADD_ASSIGN expression
     {
-        $$ = new ASTNode();
-        $$->kind = expr_stmt;
+        $$ = new ASTNode(expr_stmt, unknown_t);
+        
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "+=";
     }
     | expression SUB_ASSIGN expression
     {
-        $$ = new ASTNode();
-        $$->kind = expr_stmt;
+        $$ = new ASTNode(expr_stmt, unknown_t);
+        
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "-=";
     }
     | expression MUL_ASSIGN expression
     {
-        $$ = new ASTNode();
-        $$->kind = expr_stmt;
+        $$ = new ASTNode(expr_stmt, unknown_t);
+        
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "*=";
     }
     | expression DIV_ASSIGN expression
     {
-        $$ = new ASTNode();
-        $$->kind = expr_stmt;
+        $$ = new ASTNode(expr_stmt, unknown_t);
+        
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "/=";
     }
     | expression MOD_ASSIGN expression
     {
-        $$ = new ASTNode();
-        $$->kind = expr_stmt;
+        $$ = new ASTNode(expr_stmt, unknown_t);
+        
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "%=";
@@ -382,34 +382,28 @@ assignment_expression:
 
 
 unary_expression: 
-    MINUS %prec NOT number_literals
+    MINUS %prec NOT expression
     {
         $$=new ASTNode(expr_stmt);
-        $$->name = "-unary";
+        $$->name = "-";
         $$->add_child($2);
     }
     | NOT expression
     {
         $$=new ASTNode(expr_stmt);
-        $$->name = "!unary";
+        $$->name = "!";
         $$->add_child($2);
     }
     ;
     // this non-terminal is for writing unary expression
 
-number_literals: FLOAT_LITERAL{
-    $$ = $1;
-}
-    | INT_LITERAL{
-        $$ = $1;
-    }
-    ;
+
 
 comparison_expression: 
     expression LT expression
     {
-        $$ = new ASTNode();
-        $$->kind = expr_stmt;
+        $$ = new ASTNode(expr_stmt, unknown_t);
+        
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "<";
@@ -417,40 +411,40 @@ comparison_expression:
     }
     | expression GT expression
     {
-        $$ = new ASTNode();
-        $$->kind = expr_stmt;
+        $$ = new ASTNode(expr_stmt, unknown_t);
+        
         $$->add_child($1);
         $$->add_child($3);
         $$->name = ">";
     }
     | expression GTE expression
     {
-        $$ = new ASTNode();
-        $$->kind = expr_stmt;
+        $$ = new ASTNode(expr_stmt, unknown_t);
+        
         $$->add_child($1);
         $$->add_child($3);
         $$->name = ">=";
     }
     | expression LTE expression
     {
-        $$ = new ASTNode();
-        $$->kind = expr_stmt;
+        $$ = new ASTNode(expr_stmt, unknown_t);
+        
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "<=";
     }
     | expression EQ expression
     {
-        $$ = new ASTNode();
-        $$->kind = expr_stmt;
+        $$ = new ASTNode(expr_stmt, unknown_t);
+        
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "==";
     }
     | expression NEQ expression
     {
-        $$ = new ASTNode();
-        $$->kind = expr_stmt;
+        $$ = new ASTNode(expr_stmt, unknown_t);
+        
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "!=";
@@ -460,16 +454,16 @@ comparison_expression:
 
 logical_expression: expression AND expression
     {
-        $$ = new ASTNode();
-        $$->kind = expr_stmt;
+        $$ = new ASTNode(expr_stmt, unknown_t);
+        
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "&&";
     }
     | expression OR expression
     {
-        $$ = new ASTNode();
-        $$->kind = expr_stmt;
+        $$ = new ASTNode(expr_stmt, unknown_t);
+        
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "||";
@@ -1208,7 +1202,7 @@ value: literals {$$ = $1;}
     // this non-terminal is for writing value
 
 variable_t: array_element {$$ = $1;}
-    | IDENTIFIER {$$ = $1;}
+    | IDENTIFIER {$$ = $1; $$->kind = variable_t;}
     | variable_t DOT variable_t {
         $$ = new ASTNode(expr_stmt);
         $$ -> name = ".";

@@ -39,6 +39,7 @@ enum dtypes
     unknown_t,
     struct_t,
     void_t,
+    error_type
 };
 
 const std::string dtype_strings[] = {
@@ -51,6 +52,7 @@ const std::string dtype_strings[] = {
     "unknown",
     "struct",
     "void",
+    "error",
 };
 
 enum kind_t

@@ -96,7 +96,7 @@ public:
 			x->next = NULL;
 		}
 	}
-
+	// Returns true if the node has children
 	bool childExists(){
 		return this->children.size() != 0;
 	}

@@ -73,6 +73,7 @@ public:
         Variable *v = new Variable(name, type, dims, reference, has_value, struct_name, line_no, col_no);
         SymbolTableEntry e(variable, name, (void *)v);
         this->addEntry(e);
+        std:: cout << "Added variable " << name << " of type " << dtype_strings[type] << std::endl;
     }
     void addFunction(const std::string &name, const dtypes return_type,bool is_prototype,std::vector<Variable> param_list = {},std::string return_struct_name = "",  int line_no = 0, int col_no = 0 )
     {
@@ -86,6 +87,17 @@ public:
         if (it != table.end())
         {
             return &(it->second);
+        }
+        return nullptr;
+    }
+
+    SymbolTableEntry* getEntryNested(const std::string &name){
+        SymbolTable *temp = this;
+        while (temp != nullptr){
+            SymbolTableEntry *e = temp->getEntry(name);
+            if (e != nullptr){
+                return e;}
+            temp = temp->next;
         }
         return nullptr;
     }
@@ -104,10 +116,23 @@ public:
         return false;
     }
 
-    bool checkNameType(const std::string &name, const entry_type entry){
+    // check if the name is of the given type
+    bool checkName(const std::string &name, const entry_type entry){
         SymbolTableEntry *e = getEntry(name);
         return e != nullptr && e->type == entry;
     }
+
+    // check if the name is of the given type in the nested symbol tables
+    bool checkNameNested(const std::string &name, const entry_type entry){
+        SymbolTable *temp = this;
+        while (temp != nullptr){
+            if (temp->checkName(name, entry))
+                return true;
+            temp = temp->next;
+        }
+        return false;
+    }
+    
 
     bool removeEntry(const std::string &name){
         return table.erase(name) > 0;

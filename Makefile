@@ -1,7 +1,7 @@
 build: 
 	yacc -dtv parser.y 
 	lex $(LEXFLAGS) parallel_lex.l
-	g++ y.tab.c -o parser.out
+	g++ -g y.tab.c -o parser.out
 	
 all: lex
 	./parser.out

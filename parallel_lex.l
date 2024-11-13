@@ -88,7 +88,7 @@ int num_errs = 0;
 
 \|\|               { process_text(yytext); return OR;}
 
-!                { process_text(yytext); return NOT;}
+\!                { process_text(yytext); return NOT;}
 
 ;                 { process_text(yytext); return SEMICOLON;}
 
