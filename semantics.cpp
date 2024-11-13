@@ -1,18 +1,6 @@
 #include "symbol_table.cpp"
 #include "AST.cpp"
 
-std::vector<std::string> assignment_operators = {
-    "=", "+=" , "-=" , "*=" , "/=", "%="
-};
-
-bool isAssignOperator(std::string op){
-    int i =0;
-    for(i = 0; i < assignment_operators.size(); i++){
-        if(assignment_operators[i] == op)
-            return true;
-    }
-    return false;
-}
 
 
 int yy_sem_error(const std::string msg){
@@ -35,7 +23,7 @@ bool coerceTypesOverOperator(std::string op, dtypes left, dtypes right){
     if(left == right){
         return true;
     }
-    if(left == unknown_t && isAssignOperator(op)){
+    if(left == unknown_t && op == "="){
         return true;
     }
 
@@ -49,9 +37,10 @@ bool coerceTypesOverOperator(std::string op, dtypes left, dtypes right){
     }
 
     return false;
-
-
 }
+
+
+
 
 
 
@@ -60,7 +49,7 @@ void resolve_operator(ASTNode* curNode, SymbolTable* current){
     ASTNode* left = curNode->children[0];
     ASTNode* right = curNode->children[1];
     if(checkVariable(left) &&  !current->checkNameNested(left->name)){
-        if(isAssignOperator(op)){
+        if(op == "="){
             current->addVariable(left->name, (left->type).type);
             std::cout << "Variable " << left->name << " added to symbol table" << std::endl;
         }
@@ -79,7 +68,7 @@ void resolve_operator(ASTNode* curNode, SymbolTable* current){
         std::string message = "Type mismatch in operator " + op;
         yy_sem_error(message);
     }
-    else if(isAssignOperator(op)){
+    else if(op == "="){
         Variable* v = (Variable*)current->getEntry(left->name)->ptr;
         if(v->type == unknown_t){
             v->type = (right->type).type;
@@ -95,6 +84,7 @@ void resolve_operator(ASTNode* curNode, SymbolTable* current){
     // curNode->children.clear();
  
 }
+
 
 
 
