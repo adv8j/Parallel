@@ -1,3 +1,4 @@
+#include "headers.hpp"
 #include "symbol_table.cpp"
 #include "AST.cpp"
 
@@ -128,25 +129,62 @@ void sem_test(ASTNode* curNode, SymbolTable* current, SymbolTable* global){
             std:: cout << "Checking expression statement" << std::endl;
             resolve_expression(curNode, current);
         }
-        // case function_decl_stmt:
-        // {
-        //     std::cout << "Checking function declaration" << std::endl;
-        //     std::string name = curNode->name;
-        //     if(current->checkName(name)){
-        //         std::string message = "Function " + name + " already declared";
-        //         yy_sem_error(message);
-        //     }
-        //     std::vector<Variable> params;
-        //     for(ASTNode* node: curNode->children){
-        //         if(node->kind == decl_stmt){
-        //             for(ASTNode* param: node->children){
-        //                 params.push_back(Variable(param->name, param->getType()));
-        //             }
-        //         }
-        //     }
-        //     global->addFunction(name, curNode->getType());
-        //     break;
-        // }
+        case function_decl_stmt:
+        {
+            std::cout << "Checking function declaration" << std::endl;
+            std::string name = curNode->name;
+            if(current->checkName(name)){
+                std::string message = "Function " + name + " already declared as a " +entry_type_strings[current->getEntry(name)->type];
+                yy_sem_error(message);
+            }
+            if(current->checkNameType(name, function) ){
+
+                std::string message = "Function " + name + " already declared";
+                yy_sem_error(message);
+            }
+            if(global->checkNameType(name, prototype)){
+                Function* func = (Function*)global->getEntry(name)->ptr;
+                std::vector<Variable> params = func->param_list;
+                for(int i = 0; i < params.size(); i++){
+                    Variable v = params[i];
+                    ASTNode*temp= curNode->children[0]->children[i];
+                    Variable v2(temp->name, (temp->type).type,(temp->type).ndims, (temp->type).reference,false, temp->name);
+                    if(v != v2){
+                        std::string message = "Type mismatch in function " + name;
+                        yy_sem_error(message);
+                    }
+                }
+            }
+            std::vector<Variable> params;
+           ASTNode* params_list = curNode->children[0];
+              for(ASTNode* param: params_list->children){
+                Variable v(param->name, param->getType());
+                params.push_back(v);
+              }
+            global->addFunction(name, curNode->getType(), false, params, curNode->name);
+            break;
+        }
+        case prototype_stmt:
+        {
+            std::cout << "Checking function prototype" << std::endl;
+            std::string name = curNode->name;
+            if(current->checkName(name)){
+                std::string message = "Function " + name + " already declared";
+                yy_sem_error(message);
+            }
+            std::vector<Variable> params;
+            ASTNode* params_list = curNode->children[0];
+            for(ASTNode* param: params_list->children){
+                Variable v(param->name, param->type.type, param->type.ndims, param->type.reference, false, param->name);
+                params.push_back(v);
+            }
+            global->addFunction(name, curNode->getType(), true, params,curNode->name);
+            auto entry = global->getEntry(name);
+            if(entry != nullptr){
+                entry->type = prototype;
+            }
+            break;
+        }
     }
     if(curNode->next != nullptr)
         sem_test(curNode->next, current, global);

@@ -9,6 +9,7 @@
 enum entry_type
 {
     function,
+    prototype,
     variable,
     taskgroup,
     task,
@@ -18,6 +19,7 @@ enum entry_type
 
 const std::string entry_type_strings[] = {
     "function",
+    "prototype",
     "variable",
     "taskgroup",
     "task",
