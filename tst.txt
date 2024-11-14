@@ -38,16 +38,17 @@ if(x == y){
 else{
     x = z;
 }
+*/
 @TaskGroup t1{
-    @Task x{
+    @Task t5{
         int x,y;
     }
 
-    @Task y{
+    @Task t6{
         char z,sf,w34;
     }
 
-    @Supervisor t2{
+    @Supervisor t9{
         string oonga_boonga;
         call t2;
         join x;
@@ -56,7 +57,7 @@ else{
     @Properties{
         @Order{
             all -> t1 -> t2,t3;
-            t2->t3, t4 -> all;
+            all->t2->t3, t4 -> all;
         }
         @Shared{
             x,y, z: int -> t2,t3, t4;
@@ -67,4 +68,3 @@ else{
 
     }
 };
-*/

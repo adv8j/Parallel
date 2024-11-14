@@ -1061,7 +1061,9 @@ non_struct_identifier_list: non_struct_identifier_list COMMA IDENTIFIER{
     ;
 
 order_rule_end: ARROW ALL SEMICOLON  {
-        $$ = new ASTNode(task_t, "all");
+        $$ = new ASTNode(order_node);
+        ASTNode* x = new ASTNode(task_t, "all");
+        $$->add_child(x);
     }
     | SEMICOLON { $$ = NULL;}
     ;

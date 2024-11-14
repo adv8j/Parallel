@@ -282,25 +282,21 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 
 void traverse(ASTNode *node, int tab = 0)
 {
-	for (int i = 0; i < tab; i++)
-	{
+	for (int i = 0; i < tab; i++){
 		std::cout << "\t";
 	}
 
-	if ((node == NULL) || (node == nullptr))
-	{
-		std::cout << node;
+	if ((node == NULL) || (node == nullptr)){
+		std::cout << node << " , tabs = " << tab;
 		return;
 	}
 	kind_t kind = node->kind;
 	std::cout << node;
-	for (auto child : node->children)
-	{
+	for (auto child : node->children){
 		traverse(child, tab + 1);
 	}
 
-	if (node->next != NULL)
-	{
+	if (node->next != NULL){
 		traverse(node->next, tab);
 	}
 }

@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 
 enum entry_type
 {
@@ -156,6 +157,7 @@ class Struct;
 class SymbolTableEntry;
 class SymbolTable;
 class TaskGroup;
+
 
 
 // AST Node

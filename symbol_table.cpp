@@ -132,6 +132,8 @@ public:
         }
         return false;
     }
+
+    void addTaskGroup(const std::string name);
     
 
     bool removeEntry(const std::string &name){
@@ -139,27 +141,48 @@ public:
     }
 };
 
+
+
 class TaskGroup
 {
+public:
     std::string name;
     int line_number;
     int col_no;
-    std::unordered_map<std::string, SymbolTable> task_table;
-
+    std::unordered_map<std::string, SymbolTable*> task_table;
+    std::unordered_map<std::string, SymbolTable*> supervisor_table;
     TaskGroup(std::string name, int line_number = 0, int col_no = 0) : name(name), line_number(line_number), col_no(col_no) {}
 
-    void addTask(const std::string &task_name)
-    {
-        task_table[task_name] = SymbolTable();
+    void addTask(const std::string &task_name){
+        task_table[task_name] = new SymbolTable();
     }
 
-    SymbolTable *retrieveTask(const std::string &task_name)
-    {
+    SymbolTable *retrieveTask(const std::string &task_name){
         auto it = task_table.find(task_name);
         if (it != task_table.end())
         {
-            return &(it->second);
+            return it->second;
         }
         return nullptr;
     }
+
+    void addSupervisor(const std::string &supervisor_name){
+        supervisor_table[supervisor_name] = new SymbolTable();
+    }
+
+    SymbolTable *retrieveSupervisor(const std::string &supervisor_name){
+        auto it = supervisor_table.find(supervisor_name);
+        if (it != supervisor_table.end())
+            return it->second;
+            
+        return nullptr;
+    }
+
+
 };
+
+void SymbolTable::addTaskGroup(const std::string name){
+    TaskGroup *t = new TaskGroup(name);
+    SymbolTableEntry e(taskgroup, name, (void *)t);
+    this->addEntry(e);
+}

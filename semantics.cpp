@@ -201,9 +201,6 @@ bool resolve_operator(ASTNode* curNode, SymbolTable* current, SymbolTable* globa
     }
 
     return curNode->type.type != error_type;
-
-    // curNode->type = left->type; //TODO: This is not complete just for testing
-    // curNode->children.clear();
  
 }
 
@@ -225,8 +222,211 @@ bool resolve_expression(ASTNode* curNode, SymbolTable* current, SymbolTable* glo
     return true;
 }
 
+bool build_order_graph(ASTNode* curRule,  std::vector<std::vector<bool>>& graph_edges, std::unordered_map<std::string, int>& task_mapping){
+    std::vector<ASTNode*> children = curRule->children;
+
+    // check both the starting and ending must not be all
+    if(children.size() < 2){
+        std::string message = "Order rule must have atleast two nodes";
+        yy_sem_error(message);
+        return false;
+    }
+
+    if(children[0]->children[0]->name == "all" && children[children.size() -1]->children[0]->name == "all"){
+        std::string message = "Can't Resolve the Order due to all";
+        yy_sem_error(message);
+        return false;
+    }
+
+    std::vector<std::string> all_nodes;
+    std::unordered_map<std::string, bool> used_nodes;
+    // resolve the first all :: all nodes except those which come after it
+    if(children[0]->children[0]->name == "all"){
+        for(int i = 1; i < children.size(); i++){
+            for(int j = 0; j < children[i]->children.size(); j++){
+                used_nodes[children[i]->children[j]->name]= true;
+            }
+        }
+        for(auto kv: task_mapping){
+            if(used_nodes.find(kv.first) == used_nodes.end()){
+                all_nodes.push_back(kv.first);
+            }
+        }
+    
+        delete children[0]->children[0];
+        for(int i = 0; i < all_nodes.size(); i++){
+            children[0]->children.push_back(new ASTNode(task_t, all_nodes[i]));
+        }
+    }
+
+    // resolve the last all :: all nodes except those which come before it
+    if(children[children.size() - 1]->children[0]->name == "all"){
+        for(int i = 0; i < children.size() - 1; i++){
+            for(int j = 0; j < children[i]->children.size(); j++){
+                used_nodes[children[i]->children[j]->name]= true;
+            }
+        }
+        for(auto kv: task_mapping){
+            if(used_nodes.find(kv.first) == used_nodes.end()){
+                all_nodes.push_back(kv.first);
+            }
+        }
+    
+        delete children[children.size() - 1]->children[0];
+        for(int i = 0; i < all_nodes.size(); i++){
+            children[children.size() - 1]->children.push_back(new ASTNode(task_t, all_nodes[i]));
+        }
+    }
+    
+    std::vector<int> prev_nodes;
+    for(int i = 0; i < children.size(); i++){
+        std::vector<int> cur_nodes;
+        for(int j = 0; j < children[i]->children.size(); j++){
+            cur_nodes.push_back(task_mapping[children[i]->children[j]->name]);
+        }
+        for(int j = 0; j < prev_nodes.size(); j++){
+            for(int k = 0; k < cur_nodes.size(); k++){
+                graph_edges[prev_nodes[j]][cur_nodes[k]] = 1;
+            }
+        }
+        prev_nodes = cur_nodes;
+    }
+
+    return true;
+    
+}
+
+bool check_circular(int i, std::vector<std::vector<bool>>& graph_edges, std::vector<int>& visited){
+    if(visited[i] == 1){
+        return false;
+    }
+    visited[i] = 1;
+    for(int j = 0; j < graph_edges.size(); j++){
+        if(graph_edges[i][j]){
+            if(check_circular(j, graph_edges, visited)){
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void resolve_order_block(ASTNode* curNode, TaskGroup* taskGroupEntry){
+    std::vector<ASTNode*> children = curNode->children;
+    std::vector<std::string> task_names;
+    for(auto kv : taskGroupEntry->task_table){
+        task_names.push_back(kv.first);
+    }
+
+    std::unordered_map<std::string, int> task_mapping; // writing a task_mapping
+    for(int i = 0; i < task_names.size(); i++){
+        task_mapping[task_names[i]] = i;
+    }
+
+    // building a graph based on order nodes
+    std::vector<std::vector<bool>> graph_edges(task_names.size(), std::vector<bool>(task_names.size(), 0));
+
+    std::cout << "debugging " << std::endl;
+    for(auto child: children){
+        if(child->kind == order_rule){
+            if(!build_order_graph(child, graph_edges, task_mapping)){
+                return;
+            }   
+        }
+    }
+
+    // checking if the graph is cyclic or not
+    std::vector<int> visited(task_names.size(), 0);
+    int starting_point; // finding the starting point for graph
+    for(int i = 0; i < task_names.size(); i++){
+        bool flag = false;
+        for(int j = 0; j < task_names.size(); j++){
+            if(flag = graph_edges[j][i]){
+                break;
+            }
+        }
+        if(!flag){
+            starting_point = i;
+            break;
+        }
+    }
+
+    if(check_circular(starting_point, graph_edges, visited)){
+        std::string message = "Circular dependency in order block";
+        yy_sem_error(message);
+        return;
+    }
+}
+
+void resolve_properties(ASTNode* curNode,  TaskGroup* taskGroupEntry){
+    std::vector<ASTNode*> children = curNode->children;
+    std::string taskGroupName = curNode->name;
+    std::cout << "Resolving properties for " << taskGroupName << std::endl;
 
 
+    for(auto child: children){
+        if(child->kind == order_rule){
+            resolve_order_block(child, taskGroupEntry);
+        }
+    }   
+}
+
+void resolve_taskgroup(ASTNode* curNode, SymbolTable* current, SymbolTable* global){
+    int order_count = 0, mem_count =0, shared_count = 0;
+    std::vector<ASTNode*> children = curNode->children;
+
+    std::string taskGroupName = curNode->name;
+    if(global->checkNameNested(taskGroupName)){ // Checking if similar named any other thing exists
+        std::string message = "Taskgroup " + taskGroupName + " already declared as " + entry_type_strings[global->getEntry(taskGroupName)->type];
+        yy_sem_error(message);
+        return;
+    }
+
+    global->addTaskGroup(taskGroupName); 
+    TaskGroup* taskGroupEntry= (TaskGroup*)global->getEntry(taskGroupName)->ptr;
+    std::unordered_map<std::string, SymbolTable*>& task_table = taskGroupEntry->task_table; // getting reference to the task_table
+    std::unordered_map<std::string, SymbolTable*>& supervisor_table = taskGroupEntry->supervisor_table; // getting reference to the supervisor_table
+    std::unordered_set<std::string> identifiers;
+
+    for(ASTNode* child: children){
+        if(child->kind == properties_stmt){
+            order_count += (child->name == "order");
+            mem_count += (child->name == "mem");
+            shared_count += (child->name == "shared");
+            continue;
+        }
+        if(identifiers.find(child->name) != identifiers.end()){ // Checking if the task/supervisor is declared multiple times
+            std::string message = "Task/Supervisor " + child->name + " declared multiple times in taskgroup " + taskGroupName;
+            yy_sem_error(message);
+            return;
+        }
+
+        if(global->checkNameNested(child->name)){ // Checking if the task/supervisor is declared in the global scope
+            std::string message = "Task/Supervisor " + child->name + " already declared as a " + entry_type_strings[global->getEntry(child->name)->type];
+            yy_sem_error(message);
+            return;
+        }
+        identifiers.insert(child->name);
+
+        if(child->kind == task_stmt ) taskGroupEntry->addTask(child->name); // Adding the task to the task_table
+        else if(child->kind == supervisor_stmt) taskGroupEntry->addSupervisor(child->name); // Adding the supervisor to the supervisor_table
+    }
+
+
+
+    if(order_count > 1 || mem_count > 1 || shared_count > 1){ // Checking if the properties are declared multiple times
+            std::string message = "Property declared multiple times in taskgroup " + taskGroupName;
+            yy_sem_error(message);
+            return;
+    }
+
+
+    for(ASTNode* child: children){
+        if(child->kind == properties_stmt){
+            resolve_properties(child, taskGroupEntry);
+        }
+    }
+}
 void sem_test(ASTNode* curNode, SymbolTable* current, SymbolTable* global){
     switch(curNode->kind){
         case decl_stmt:{
@@ -320,6 +520,12 @@ void sem_test(ASTNode* curNode, SymbolTable* current, SymbolTable* global){
             if(entry != nullptr){
                 entry->type = prototype;
             }
+            break;
+        }
+        case taskgroup_stmt:
+        {
+            std::cout << "Checking taskgroup" << std::endl;
+            resolve_taskgroup(curNode, current, global);
             break;
         }
     }
