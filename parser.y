@@ -278,7 +278,7 @@ function_call_tail : RPAREN {$$ = NULL;}
 
 function_arguments: list_member initialiser_member_list_tail{
     $$ = $1;
-    $$ -> next = $2;
+    $$ -> convert_to_children($2) ;
 };
 
 

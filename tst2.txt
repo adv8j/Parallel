@@ -1,6 +1,9 @@
-int uttam;
 
-func uttam int(int a, int b,int&c){
+func uttam int(int a, int b){
     int x=5;
     string donothing="59%";
+    return x;
 }
+
+int v=5,y=6;
+int t=uttam(v,y);

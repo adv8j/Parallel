@@ -217,6 +217,7 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 		os << ":\n";
 		break;
 	case function_call_stmt:
+		os << ": " << node->name << std::endl;
 		os << ": \n";
 		break;
 	case function_decl_stmt:
