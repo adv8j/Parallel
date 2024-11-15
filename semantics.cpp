@@ -334,7 +334,7 @@ bool check_circular(int i, std::vector<std::vector<bool>>& graph_edges, std::vec
 
 
 
-void resolve_properties(ASTNode* curNode,  TaskGroup* taskGroupEntry){
+void resolve_properties(ASTNode* curNode,  TaskGroup* taskGroupEntry, SymbolTable* global, std::unordered_set<std::string>& identifiers){
     std::vector<ASTNode*> children = curNode->children;
     std::string taskGroupName = curNode->name;
     std::cout << "Resolving properties for " << taskGroupName << std::endl;
@@ -358,6 +358,47 @@ void resolve_properties(ASTNode* curNode,  TaskGroup* taskGroupEntry){
             if(!build_order_graph(child, graph_edges, task_mapping)){
                 return;
             }
+        }
+        else if (child->kind == shared_rule){
+            ASTNode* left = child->children[0];
+            ASTNode* right = child->children[1];
+            DataType type = child->type;
+
+            // checking if children of left are all valid task_names/supervisor names
+            for(auto grandchild: right->children){
+                if(identifiers.find(grandchild->name) == identifiers.end()){
+                    std::string message = "Task/Supervisor " + grandchild->name + " not declared";
+                    yy_sem_error(message);
+                }
+            }
+
+            // checking if names on right are not declared as Function/Struct/TaskGroup
+            for(auto grandchild: left->children){
+                grandchild->type = type;
+                SymbolTableEntry* entry = global->getEntry(grandchild->name);
+                if(entry != nullptr && entry->type != variable){ // if the entry is not a variable
+                    std::string message = "Variable " + grandchild->name + " already declared as a " + entry_type_strings[entry->type];
+                    yy_sem_error(message);
+                    continue;
+                }
+
+                if(identifiers.find(grandchild->name) != identifiers.end()){
+                    std::string message = "Variable " + grandchild->name + " already declared as a Task/Supervisor";
+                    yy_sem_error(message);
+                    continue;
+                }
+
+                for(auto tasks: right->children){
+                    SymbolTable* task_table = taskGroupEntry->retrieveTask(tasks->name);
+                    if(task_table->checkName(grandchild->name)){
+                        std::string message = "Variable " + grandchild->name + " already declared in task " + tasks->name;
+                        yy_sem_error(message);
+                    }
+
+                    task_table->addVariable(grandchild->name, type.type, false, type.reference, type.ndims, "", 0, 0);
+                }
+            }
+
         }
     }   
 
@@ -410,6 +451,7 @@ void resolve_properties(ASTNode* curNode,  TaskGroup* taskGroupEntry){
     }
 }
 
+
 void resolve_taskgroup(ASTNode* curNode, SymbolTable* current, SymbolTable* global){
     int order_count = 0, mem_count =0, shared_count = 0;
     std::vector<ASTNode*> children = curNode->children;
@@ -458,28 +500,41 @@ void resolve_taskgroup(ASTNode* curNode, SymbolTable* current, SymbolTable* glob
             yy_sem_error(message);
             return;
     }
-
+    std::reverse(children.begin(), children.end());
 
     for(ASTNode* child: children){
         if(child->kind == properties_stmt){
-            resolve_properties(child, taskGroupEntry);
+            resolve_properties(child, taskGroupEntry, global, identifiers);
+        }
+        else if(child->kind == task_stmt){
+            SymbolTable* current_table = taskGroupEntry->retrieveTask(child->name);
+            std::cout << "I am here for task: " << child->name << std::endl;
+            current_table->next = current;
+            current_table->print();
+            sem_test(child->children[0], current_table, global);
+            current_table->next = nullptr;
         }
     }
 }
+
+
 void sem_test(ASTNode* curNode, SymbolTable* current, SymbolTable* global){
+    if(curNode == nullptr)
+        return;
     switch(curNode->kind){
         case decl_stmt:{
             dtypes type = curNode->getType();
             bool ref = curNode->type.reference;
+
             for(ASTNode* node: curNode->children){
-                
-                if(current->checkName(curNode->name)){
-                    std::string message = "Variable " + curNode->name + " already declared";
+
+                if(current->checkName(node->name)){
+                    std::string message = "Variable " + node->name + " already declared";
                     yy_sem_error(message);
                     continue;
                 }
-                if(global->checkName(curNode->name, variable)){  
-                    std::string message = "Variable " + curNode->name + " already declared as a " + entry_type_strings[global->getEntry(curNode->name)->type];
+                if(global->checkName(node->name, variable)){  
+                    std::string message = "Variable " + node->name + " already declared as a " + entry_type_strings[global->getEntry(node->name)->type];
                     yy_sem_error(message);
                     continue;
                 }
@@ -561,6 +616,8 @@ void sem_test(ASTNode* curNode, SymbolTable* current, SymbolTable* global){
             }
             break;
         }
+
+
         // case function_call_stmt:
         // {
         //     std::cout << "Checking function call" << std::endl;

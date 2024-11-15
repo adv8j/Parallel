@@ -58,7 +58,7 @@ public:
 
 class SymbolTable
 {
-private:
+public:
     std::unordered_map<std::string, SymbolTableEntry> table;
     SymbolTable *next = nullptr;
 
@@ -139,6 +139,13 @@ public:
     bool removeEntry(const std::string &name){
         return table.erase(name) > 0;
     }
+
+    void print(){
+        std::cout << "Name | Type" << std::endl;
+        for (auto it = table.begin(); it != table.end(); it++){
+            std::cout  << it->first << " | " << entry_type_strings[it->second.type] << std::endl;
+        }
+    }
 };
 
 
@@ -178,6 +185,7 @@ public:
         return nullptr;
     }
 
+   
 
 };
 

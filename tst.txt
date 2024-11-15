@@ -65,7 +65,7 @@ else{
             all -> t1 ;
         }
         @Shared{
-            x,y, z: int -> t2,t3, t4;
+            x,y, z, sdfi: int -> t2,t3, t4;
         }
         @Mem{
             x,y,z -> t2, t3 mut;

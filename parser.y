@@ -1090,9 +1090,12 @@ shared_rule: non_struct_identifier_list COLON dtype ARROW non_struct_identifier_
         ASTNode* right = new ASTNode(shared_node);
         left->convert_to_children($1);
         for(ASTNode* child: left->children){
-            child->kind = task_t;
+            child->kind = variable_t;
         }
         right->convert_to_children($5);
+        for(ASTNode* child: right->children){
+            child->kind = task_t;
+        }
         $$->add_child(left);
         $$->add_child(right);
     }

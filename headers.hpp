@@ -7,6 +7,7 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <algorithm>
 
 enum entry_type
 {
@@ -179,5 +180,7 @@ const std::string RESET_COLOR = "\033[0m";
 std::ostream &operator<<(std::ostream &os, const ASTNode *node);
 
 void traverse(ASTNode , int);
+
+void sem_test(ASTNode* curNode, SymbolTable* current, SymbolTable* global);
 
 #endif
