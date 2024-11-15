@@ -389,7 +389,11 @@ void resolve_properties(ASTNode* curNode,  TaskGroup* taskGroupEntry, SymbolTabl
                 }
 
                 for(auto tasks: right->children){
+                    if(identifiers.find(tasks->name) == identifiers.end())
+                        continue;
+                    
                     SymbolTable* task_table = taskGroupEntry->retrieveTask(tasks->name);
+                    
                     if(task_table->checkName(grandchild->name)){
                         std::string message = "Variable " + grandchild->name + " already declared in task " + tasks->name;
                         yy_sem_error(message);
