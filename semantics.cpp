@@ -6,7 +6,7 @@
 
 int yy_sem_error(const std::string msg){
     std::cerr << msg << std::endl;
-    exit(1);
+    return 0;
 }
 
 int yy_sem_warning(const std::string msg){
@@ -222,6 +222,7 @@ bool resolve_expression(ASTNode* curNode, SymbolTable* current, SymbolTable* glo
     return true;
 }
 
+// Takes a current rule node and fills the graph_edges with the order of the tasks(directed)
 bool build_order_graph(ASTNode* curRule,  std::vector<std::vector<bool>>& graph_edges, std::unordered_map<std::string, int>& task_mapping){
     std::vector<ASTNode*> children = curRule->children;
 
@@ -231,6 +232,19 @@ bool build_order_graph(ASTNode* curRule,  std::vector<std::vector<bool>>& graph_
         yy_sem_error(message);
         return false;
     }
+
+    bool flag = false;
+    for(auto child: children){
+        for(auto grandchild: child->children){
+            if(task_mapping.find(grandchild->name) == task_mapping.end() && grandchild->name != "all"){
+                std::string message = "Task " + grandchild->name + " not declared";
+                yy_sem_error(message);
+                flag = true;
+            }
+        }
+    }
+
+    if(flag) return false;
 
     if(children[0]->children[0]->name == "all" && children[children.size() -1]->children[0]->name == "all"){
         std::string message = "Can't Resolve the Order due to all";
@@ -254,8 +268,11 @@ bool build_order_graph(ASTNode* curRule,  std::vector<std::vector<bool>>& graph_
         }
     
         delete children[0]->children[0];
+        children[0]->children.pop_back();
+
         for(int i = 0; i < all_nodes.size(); i++){
             children[0]->children.push_back(new ASTNode(task_t, all_nodes[i]));
+            // std::cout << "Debugging: " << all_nodes[i] << std::endl;
         }
     }
 
@@ -271,7 +288,8 @@ bool build_order_graph(ASTNode* curRule,  std::vector<std::vector<bool>>& graph_
                 all_nodes.push_back(kv.first);
             }
         }
-    
+
+        children[children.size() - 1]->children.pop_back();
         delete children[children.size() - 1]->children[0];
         for(int i = 0; i < all_nodes.size(); i++){
             children[children.size() - 1]->children.push_back(new ASTNode(task_t, all_nodes[i]));
@@ -281,12 +299,15 @@ bool build_order_graph(ASTNode* curRule,  std::vector<std::vector<bool>>& graph_
     std::vector<int> prev_nodes;
     for(int i = 0; i < children.size(); i++){
         std::vector<int> cur_nodes;
+        std::cout << "i = " << i << std::endl;
         for(int j = 0; j < children[i]->children.size(); j++){
             cur_nodes.push_back(task_mapping[children[i]->children[j]->name]);
+            // std::cout << "Debugging: " << children[i]->children[j]->name << std::endl;
         }
         for(int j = 0; j < prev_nodes.size(); j++){
             for(int k = 0; k < cur_nodes.size(); k++){
                 graph_edges[prev_nodes[j]][cur_nodes[k]] = 1;
+                // std::cout << "Debugging: edge between " << prev_nodes[j] << " and " << cur_nodes[k] << std::endl;
             }
         }
         prev_nodes = cur_nodes;
@@ -311,11 +332,16 @@ bool check_circular(int i, std::vector<std::vector<bool>>& graph_edges, std::vec
     return false;
 }
 
-void resolve_order_block(ASTNode* curNode, TaskGroup* taskGroupEntry){
+
+
+void resolve_properties(ASTNode* curNode,  TaskGroup* taskGroupEntry){
     std::vector<ASTNode*> children = curNode->children;
+    std::string taskGroupName = curNode->name;
+    std::cout << "Resolving properties for " << taskGroupName << std::endl;
     std::vector<std::string> task_names;
     for(auto kv : taskGroupEntry->task_table){
         task_names.push_back(kv.first);
+        std::cout << "Task: " << kv.first << std::endl;
     }
 
     std::unordered_map<std::string, int> task_mapping; // writing a task_mapping
@@ -326,49 +352,62 @@ void resolve_order_block(ASTNode* curNode, TaskGroup* taskGroupEntry){
     // building a graph based on order nodes
     std::vector<std::vector<bool>> graph_edges(task_names.size(), std::vector<bool>(task_names.size(), 0));
 
-    std::cout << "debugging " << std::endl;
     for(auto child: children){
         if(child->kind == order_rule){
+            // fill the graph_edges with the order of the tasks(directed)
             if(!build_order_graph(child, graph_edges, task_mapping)){
                 return;
-            }   
-        }
-    }
-
-    // checking if the graph is cyclic or not
-    std::vector<int> visited(task_names.size(), 0);
-    int starting_point; // finding the starting point for graph
-    for(int i = 0; i < task_names.size(); i++){
-        bool flag = false;
-        for(int j = 0; j < task_names.size(); j++){
-            if(flag = graph_edges[j][i]){
-                break;
             }
         }
-        if(!flag){
-            starting_point = i;
-            break;
-        }
-    }
-
-    if(check_circular(starting_point, graph_edges, visited)){
-        std::string message = "Circular dependency in order block";
-        yy_sem_error(message);
-        return;
-    }
-}
-
-void resolve_properties(ASTNode* curNode,  TaskGroup* taskGroupEntry){
-    std::vector<ASTNode*> children = curNode->children;
-    std::string taskGroupName = curNode->name;
-    std::cout << "Resolving properties for " << taskGroupName << std::endl;
-
-
-    for(auto child: children){
-        if(child->kind == order_rule){
-            resolve_order_block(child, taskGroupEntry);
-        }
     }   
+
+    if(curNode->name=="order"){
+        // checking if the graph is cyclic or not
+        std::vector<int> visited(task_names.size(), 0);
+        std::vector<int> in_degree(task_names.size(), 0);
+        for(int i = 0; i < task_names.size(); i++){
+            for(int j = 0; j < task_names.size(); j++){
+                if(graph_edges[i][j])
+                    in_degree[j]++;
+            }
+        }
+
+        std::queue<int> q;
+        for(int i = 0; i < task_names.size(); i++){
+            if(in_degree[i] == 0){
+                q.push(i);
+            }
+        }
+
+        int count = 0;
+        while(q.size()){
+            int u = q.front();
+            q.pop();
+            for(int i = 0; i < task_names.size(); i++){
+                if(graph_edges[u][i]){
+                    in_degree[i]--;
+                    if(in_degree[i] == 0){
+                        q.push(i);
+                    }
+                }
+            }
+            count++;
+        }
+
+        if(count != task_names.size()){
+            // detect exact cycle
+            std::string message = "";
+            message+= "Tasks: ";
+
+            for(int i = 0 ; i < task_names.size(); i++){
+                if(!visited[i]){
+                    message+= (task_names[i] + " ");
+                }
+            }
+            message += "form parts of cycle";
+            yy_sem_error(message);
+        }
+    }
 }
 
 void resolve_taskgroup(ASTNode* curNode, SymbolTable* current, SymbolTable* global){

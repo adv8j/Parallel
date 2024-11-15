@@ -39,15 +39,21 @@ else{
     x = z;
 }
 */
-@TaskGroup t1{
-    @Task t5{
+@TaskGroup t{
+    @Task t1{
+        char u;
+    }
+
+    @Task t2{
+        int hello;
+    }
+    @Task t3{
         int x,y;
     }
 
-    @Task t6{
+    @Task t4{
         char z,sf,w34;
     }
-
     @Supervisor t9{
         string oonga_boonga;
         call t2;
@@ -56,8 +62,7 @@ else{
 
     @Properties{
         @Order{
-            all -> t1 -> t2,t3;
-            all->t2->t3, t4 -> all;
+            all -> t1 ;
         }
         @Shared{
             x,y, z: int -> t2,t3, t4;
