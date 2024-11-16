@@ -49,6 +49,10 @@ public:
 	void sem_test(SymbolTable* current);
 	void add_child(ASTNode *child)
 	{
+		if (child==nullptr)
+		{
+			return;
+		}
 		children.push_back(child);
 	}
 
@@ -252,8 +256,13 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 		os << ":\n";
 		break;
 	case itr_type:
-		os << ":" << node->name << "\n";
+	{
+		if(node->name=="type1")
+			os << ": for"  << "\n";
+		else
+			os << ": for range" << "\n";
 		break;
+	}
 	case iterative_stmt:
 		os << ":\n";
 		break;

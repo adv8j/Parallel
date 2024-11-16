@@ -125,13 +125,13 @@ initializer_dims: LBRACKET INT_LITERAL COMMA expression RBRACKET{
     | {$$ = NULL;}
     ;
 
-statement: iterative_statement
+statement: iterative_statement {$$ = $1;}
     | selection_statement{
         $$ = new ASTNode(selection_stmt);
         $$->convert_to_children($1);
     }
     | expression_statement
-    | compound_statement
+    | compound_statement{$$ = $1;}
     | function_declaration
     | taskgroup_statement{$$ = $1;}
     | declaration_statement{
@@ -139,17 +139,17 @@ statement: iterative_statement
     }
     | parallel_statement  
     | struct_declaration   
-    | error SEMICOLON {  yyerrok; }
+    | error SEMICOLON {  $$ = new ASTNode(err_t);yyerrok; }
     ;
     // specifies various types of statements(these are the ones which won't need context of being in a function/Task)
-inner_statement: iterative_statement    
+inner_statement: iterative_statement    {$$ = $1;}
     | selection_statement  
     | expression_statement  {$$ = $1;} 
-    | compound_statement    {}
+    | compound_statement    {$$ = $1;}
     | declaration_statement{$$ = $1;}
     | parallel_statement
     | return_statement
-    | error SEMICOLON {  yyerrok; }
+    | error SEMICOLON {  $$ = new ASTNode(err_t);yyerrok; }
     ;
 
 
@@ -186,9 +186,9 @@ return_statement: RETURN expression SEMICOLON{
 
 compound_statement: LBRACE inner_statement_list RBRACE{
     $$ = new ASTNode(compound_stmt);
-    $$ -> next = $2;
+    $$->add_child($2);
 }
-    | error RBRACE {  yyerrok; }
+    | error RBRACE { $$ = new ASTNode(err_t);yyerrok; }
     ;
     // this non-terminal is for writing compound statement
     // { inner_statement }
@@ -198,14 +198,14 @@ struct_declaration: STRUCT IDENTIFIER struct_body SEMICOLON {
     $$ -> add_child($2);
     $$ -> add_child($3);
 }
-    | STRUCT error SEMICOLON {  yyerrok; }
-    | STRUCT IDENTIFIER error SEMICOLON {  yyerrok; }
+    | STRUCT error SEMICOLON {  $$ = new ASTNode(err_t);yyerrok; }
+    | STRUCT IDENTIFIER error SEMICOLON {  $$ = new ASTNode(err_t);yyerrok; }
     ;
 
 struct_body: LBRACE decl_stmt_list RBRACE{
     $$ = $2;
 }
-    | LBRACE error RBRACE {  yyerrok; }
+    | LBRACE error RBRACE {  $$ = new ASTNode(err_t);yyerrok; }
 
 //TODO: Can remove declaration_statement and write something which only allows constant literals to be assigned, currently it allows any expression to be assigned. need some semantic checks here.
 decl_stmt_list: decl_stmt_list declaration_statement{
@@ -267,7 +267,7 @@ function_call: IDENTIFIER LPAREN function_call_tail {
     }
     delete $1;
 }
-            | IDENTIFIER LPAREN error RPAREN {  yyerrok; }
+            | IDENTIFIER LPAREN error RPAREN {  $$ = new ASTNode(err_t);yyerrok; }
             ;
 
     // this is for writing function call
@@ -528,7 +528,7 @@ list_initialiser: LBRACE list_member initialiser_member_list_tail RBRACE{
     $2 -> next = $3;
 
 }
-    | LBRACE error RBRACE {  yyerrok; }
+    | LBRACE error RBRACE {  $$ = new ASTNode(err_t);yyerrok; }
     ; 
 
 initialiser_member_list_tail: COMMA list_member initialiser_member_list_tail       // (,list_member)*
@@ -563,7 +563,7 @@ iteration_type1: LPAREN expression_statement expression_statement empty_expressi
     $$ -> add_child($3);
     $$ -> add_child($4);
 }
-    | error RPAREN {  yyerrok; }
+    | error RPAREN {  $$ = new ASTNode(err_t);yyerrok; }
     ;
 
 iteration_type2: iterator IN container{
@@ -572,7 +572,7 @@ iteration_type2: iterator IN container{
     $$ -> add_child($1);
     $$ -> add_child($3);
 }
-    | error SEMICOLON {  yyerrok; }
+    | error SEMICOLON {  $$ = new ASTNode(err_t);yyerrok; }
     ;
 
 empty_expression: expression{$$ = $1;}
@@ -620,9 +620,9 @@ selection_condition: LPAREN expression RPAREN{
         $$= $2;
         $$->kind=cond_stmt;
     }
-    | error RPAREN  {yyerrok;}
-    | LPAREN error RPAREN {yyerrok;}
-    | LPAREN expression error SEMICOLON {yyerrok;}
+    | error RPAREN  {$$ = new ASTNode(err_t);yyerrok;}
+    | LPAREN error RPAREN {$$ = new ASTNode(err_t);yyerrok;}
+    | LPAREN expression error SEMICOLON {$$ = new ASTNode(err_t);yyerrok;}
     ;
 
 if_chain_statement: ELSE else_case{$$=$2;}
@@ -650,9 +650,9 @@ function_declaration: FUNC IDENTIFIER func_dtype params  compound_statement
         $$->type=$3->type;
         $$->add_child($4);// first child is the parameters
     }
-    | FUNC error RBRACE {  yyerrok; }
-    | FUNC IDENTIFIER error RBRACE {  yyerrok; }
-    | FUNC IDENTIFIER func_dtype error RBRACE {  yyerrok; }
+    | FUNC error RBRACE {  $$ = new ASTNode(err_t);yyerrok; }
+    | FUNC IDENTIFIER error RBRACE {  $$ = new ASTNode(err_t);yyerrok; }
+    | FUNC IDENTIFIER func_dtype error RBRACE {  $$ = new ASTNode(err_t);yyerrok; }
     ;
 
 params: LPAREN parameter_list RPAREN
@@ -660,8 +660,8 @@ params: LPAREN parameter_list RPAREN
         $$ = new ASTNode(params_list);
         $$->convert_to_children($2);
     }
-    | LPAREN error RPAREN {  yyerrok; }
-    | error RPAREN {  yyerrok; }
+    | LPAREN error RPAREN {  $$ = new ASTNode(err_t);yyerrok; }
+    | error RPAREN {  $$ = new ASTNode(err_t);yyerrok; }
     ;
 
 
@@ -717,21 +717,21 @@ parallel_statement: PARALLEL LPAREN parallel_stmt_argument_list RPAREN compound_
     {
             $$ = new ASTNode(parallel_stmt);
             $$->add_child($3);
-            // $$->add_child($5); // uncommment this whenever compound stmt is done
-            $$->add_child(new ASTNode(compound_stmt));
+            $$->add_child($5); // uncommment this whenever compound stmt is done
+            // $$->add_child(new ASTNode(compound_stmt));
     }
     | PARALLEL compound_statement
     {
         $$ = new ASTNode(parallel_stmt);
-        // $$->add_child($2); // uncommment this whenever compound stmt is done
-        $$->add_child(new ASTNode(compound_stmt));
+        $$->add_child($2); // uncommment this whenever compound stmt is done
+        // $$->add_child(new ASTNode(compound_stmt));
     }
     | PARALLEL LPAREN parallel_stmt_argument_list RPAREN iterative_statement // parallel for statement
     {
         $$ = new ASTNode(parallel_stmt);
         $$->add_child($3);
-        // $$->add_child($5); // uncommment this whenever iterative stmt is done
-        $$->add_child(new ASTNode(iterative_stmt,"loop"));
+        $$->add_child($5); // uncommment this whenever iterative stmt is done
+        // $$->add_child(new ASTNode(iterative_stmt,"loop"));
 
     }
     ;
@@ -877,7 +877,7 @@ taskgroup_statement: TASKGROUP IDENTIFIER taskgroup_declaration_list LBRACE task
 
 taskgroup_declaration_list: LPAREN taskgroup_argument_list RPAREN
     |
-    | error RPAREN {  yyerrok; }
+    | error RPAREN {  $$ = new ASTNode(err_t);yyerrok; }
     ;
 
 taskgroup_argument_list: taskgroup_argument COMMA taskgroup_argument
@@ -917,13 +917,13 @@ task_declaration: TASK IDENTIFIER task_argument LBRACE task_statement_list RBRAC
         $$->name = $2->name;
         $$->add_child($4);
     }
-    | error RPAREN { yyerrok;}
+    | error RPAREN { $$ = new ASTNode(err_t);yyerrok;}
     ; /* this non-terminal is for writing task or supervisor 
         @Task t1(num_threads = exp){ task_statements} or @Supervisor t1{ task_statements} */
 
 task_argument:  LPAREN NUM_THREADS ASSIGN expression RPAREN
     | 
-    |   error RPAREN {  yyerrok; }
+    |   error RPAREN {  $$ = new ASTNode(err_t);yyerrok; }
     ;
 
 supervisor_statement_list: supervisor_statement_list supervisor_statement{
@@ -933,16 +933,16 @@ supervisor_statement_list: supervisor_statement_list supervisor_statement{
     | supervisor_statement {$$ = $1;}
     ;
 
-supervisor_statement:  iterative_statement
+supervisor_statement:  iterative_statement {$$ = $1;}
     | selection_statement
     | expression_statement
-    | compound_statement
+    | compound_statement {$$ = $1;}
     | declaration_statement {$$ = $1;}
     | parallel_statement
 	| channel_statement
     | other_statements {$$ = $1;}
     | return_statement 
-    | error SEMICOLON {  yyerrok;}
+    | error SEMICOLON {  $$ = new ASTNode(err_t);yyerrok;}
     ;
 
 
@@ -954,22 +954,22 @@ task_statement_list: task_statement_list task_statement {
     ;
 
 //TODO: task_statements STILL HAVE TO FIX STUFF HERE.
-task_statement: iterative_statement
+task_statement: iterative_statement {$$ = $1;}
     | selection_statement
     | expression_statement
-    | compound_statement
+    | compound_statement {$$ = $1;}
     | declaration_statement {$$ = $1;}
     | parallel_statement
     | return_statement
     | channel_statement
-    | error SEMICOLON {  yyerrok; }
+    | error SEMICOLON {  $$ = new ASTNode(err_t);yyerrok; }
     ;
 
 properties_declaration: PROPERTIES LBRACE taskgroup_properties RBRACE{
         $$ = $3;
     }
     |{$$ = NULL;}
-    | error RBRACE {  yyerrok; }
+    | error RBRACE {  $$ = new ASTNode(err_t);yyerrok; }
     ;
 
 taskgroup_properties: taskgroup_properties taskgroup_property{
@@ -989,14 +989,14 @@ taskgroup_properties: taskgroup_properties taskgroup_property{
 taskgroup_property : order_block {$$ = $1;}
                 | shared_block {$$ = $1;}
                 | mem_block {$$ = $1;}
-                | error RBRACE {  yyerrok; }
+                | error RBRACE {  $$ = new ASTNode(err_t);yyerrok; }
                 ;
 
 order_block: ORDER LBRACE order_rule_list RBRACE{
         $$ = new ASTNode(properties_stmt, "order");
         $$->convert_to_children($3);
     }
-    | error SEMICOLON {  yyerrok; }
+    | error SEMICOLON {  $$ = new ASTNode(err_t);yyerrok; }
     ;
 
 order_rule_list: order_rule_list order_rule {
@@ -1099,7 +1099,7 @@ shared_rule: non_struct_identifier_list COLON dtype ARROW non_struct_identifier_
         $$->add_child(left);
         $$->add_child(right);
     }
-    | error SEMICOLON {  yyerrok; } 
+    | error SEMICOLON {  $$ = new ASTNode(err_t);yyerrok; } 
     ;
     // this non-terminal is for writing shared rule
     // IDENTIFIER : dtype -> IDENTIFIER
@@ -1138,7 +1138,7 @@ mem_statement: non_struct_identifier_list ARROW mem_task_list SEMICOLON{
         $$->add_child(left);
         $$->add_child(right);
     }
-    | error SEMICOLON {  yyerrok; }
+    | error SEMICOLON {  $$ = new ASTNode(err_t);yyerrok; }
     ;
 
 mem_task_list: mem_task_list COMMA mem_task_name{
