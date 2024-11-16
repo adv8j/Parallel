@@ -260,7 +260,6 @@ expression: value{
 
 function_call: IDENTIFIER LPAREN function_call_tail {
     $$ = new ASTNode(function_call_stmt);
-    $$ -> add_child($1);
     $$->name=$1->name;
     if($3){
         $$ -> add_child($3);
@@ -273,13 +272,23 @@ function_call: IDENTIFIER LPAREN function_call_tail {
     // this is for writing function call
 
 function_call_tail : RPAREN {$$ = NULL;}
-                    | function_arguments RPAREN {$$ = $1;}
+                    | function_arguments RPAREN {$$ = new ASTNode(arg_list);
+                    $$ -> convert_to_children($1);
+                    }
                     ;
 
-function_arguments: list_member initialiser_member_list_tail{
+function_arguments: function_arguments COMMA expression{
     $$ = $1;
-    $$ -> convert_to_children($2) ;
-};
+    $3->kind=arg_t;
+    $$->next = $3 ;
+}
+    | expression{
+        $$ = $1;
+        $$->kind=arg_t;
+        
+    }
+
+
 
 
 arithmetic_expression: 
@@ -540,7 +549,7 @@ initialiser_member_list_tail: COMMA list_member initialiser_member_list_tail    
 ;
 list_member : list_initialiser  // a single member in a list
 { $$ = $1; }
-        | expression{ $$ = $1 ; }
+    | expression{ $$ = $1 ; }
         ;
 
 

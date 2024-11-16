@@ -1,21 +1,6 @@
 #include "headers.hpp"
 
-struct DataType
-{
-	dtypes type;
-	std::vector<int> ndims;
-	bool reference;
-	ASTNode *init_exp_or_id = NULL; // used in case of initialiser dims, or used to store name identifier of struct
-	DataType() {}
-	DataType(dtypes name, std::vector<int> ndim, bool reference)
-		: type(name), ndims(ndim), reference(reference)
-	{
-	}
-	DataType(dtypes type, bool ref = false)
-		: type(type), ndims({}), reference(ref)
-	{
-	}
-};
+
 
 class ASTNode
 {
@@ -218,7 +203,6 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 		break;
 	case function_call_stmt:
 		os << ": " << node->name << std::endl;
-		os << ": \n";
 		break;
 	case function_decl_stmt:
 		os<<": "<<node->name<< " : " << dtype_strings[node->type.type]<<std::endl;
@@ -275,7 +259,12 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 		break;
 	case params_t:
 		os<<": "<<node->name<< " : " << dtype_strings[node->type.type]<<((node->type.reference)?"&":"")<<std::endl;
-		
+		break;
+	case arg_list:
+		os << ":\n";
+		break;
+	case arg_t:
+		os<<": "<<node->name<< " : " << dtype_strings[node->type.type]<<((node->type.reference)?"&":"")<<std::endl;
 		break;
 	}
 	return os;

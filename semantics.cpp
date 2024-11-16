@@ -620,35 +620,51 @@ void sem_test(ASTNode* curNode, SymbolTable* current, SymbolTable* global){
             }
             break;
         }
+        case function_call_stmt:
+        {
+            std::cout << "Checking function call" << std::endl;
+            std::string name = curNode->name;
+            if(!global->checkName(name, function)){
+                std::string message = "Function " + name + " not declared";
+                yy_sem_error(message);
+            }
+            Function* func = (Function*)global->getEntry(name)->ptr;
+            std::vector<Variable> params = func->param_list;
+            for(int i = 0; i < params.size(); i++){
+                Variable v = params[i];
+                ASTNode*temp= curNode->children[0]->children[i];
+                SymbolTableEntry* entry = global->getEntry(temp->name);
+                if(temp->kind==variable_t && entry != nullptr && entry->type != variable){ // if the entry is not a variable
+                    std::string message = "Variable " + temp->name + " already declared as a " + entry_type_strings[entry->type];
+                    yy_sem_error(message);
+                    return;
+                }
+                if(!current->checkNameNested(temp->name)){
+                    std::string message = "Variable " + temp->name + " already declared";
+                    yy_sem_error(message);
+                    continue;
+                }
+                else{
+                    SymbolTableEntry*symbolnode=current->getEntryNested(temp->name);
+                    temp->type.type = ((Variable*)symbolnode->ptr)->type;
+                    temp->type.reference = ((Variable*)symbolnode->ptr)->reference;
+                }
 
-
-        // case function_call_stmt:
-        // {
-        //     std::cout << "Checking function call" << std::endl;
-        //     std::string name = curNode->name;
-        //     if(!global->checkName(name, function)){
-        //         std::string message = "Function " + name + " not declared";
-        //         yy_sem_error(message);
-        //     }
-        //     Function* func = (Function*)global->getEntry(name)->ptr;
-        //     std::vector<Variable> params = func->param_list;
-        //     for(int i = 0; i < params.size(); i++){
-        //         Variable v = params[i];
-        //         ASTNode*temp= curNode->children[0]->children[i];
-        //         Variable v2(temp->name, (temp->type).type,(temp->type).ndims, (temp->type).reference,false, temp->name);
-        //         if(v != v2){
-        //             std::string message = "Type mismatch in function call " + name;
-        //             yy_sem_error(message);
-        //         }
-        //     }
-        //     break;
-        // }
+                
+               if(!v.typecheck(temp->type)){
+                   std::string message = "Type mismatch in function " + name;
+                   yy_sem_error(message);
+               }
+            }
+            break;
+        }
         case taskgroup_stmt:
         {
             std::cout << "Checking taskgroup" << std::endl;
             resolve_taskgroup(curNode, current, global);
             break;
         }
+
     }
     if(curNode->next != nullptr)
         sem_test(curNode->next, current, global);

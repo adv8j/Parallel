@@ -1,5 +1,4 @@
 #include "headers.hpp"
-
 class Variable
 {
 public:
@@ -19,6 +18,11 @@ public:
     {
         bool return_val = this->name != v.name || this->type != v.type || this->reference != v.reference || this->struct_name != v.struct_name;
         return return_val;
+    }
+    bool typecheck(DataType parameter) const
+    {
+        
+        return this->type == parameter.type&&this->reference == parameter.reference;
     }
 };
 

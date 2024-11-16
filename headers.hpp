@@ -104,7 +104,8 @@ enum kind_t
     selection_stmt,
     params_list,
     params_t,
-    
+    arg_list,
+    arg_t,
 };
 
 const std::string kind_t_strings[] = {
@@ -152,6 +153,8 @@ const std::string kind_t_strings[] = {
     "selection_stmt",
     "params_list",
     "params_t",
+    "arg_list",
+    "arg_t",
 };
 
 class Variable;
@@ -165,7 +168,23 @@ class TaskGroup;
 
 // AST Node
 class ASTNode;
-struct DataType;
+
+struct DataType
+{
+	dtypes type;
+	std::vector<int> ndims;
+	bool reference;
+	ASTNode *init_exp_or_id = NULL; // used in case of initialiser dims, or used to store name identifier of struct
+	DataType() {}
+	DataType(dtypes name, std::vector<int> ndim, bool reference)
+		: type(name), ndims(ndim), reference(reference)
+	{
+	}
+	DataType(dtypes type, bool ref = false)
+		: type(type), ndims({}), reference(ref)
+	{
+	}
+};
 
 int kind = 0; // Change this to test different values
 
