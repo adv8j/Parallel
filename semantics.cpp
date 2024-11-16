@@ -728,6 +728,21 @@ void sem_test(ASTNode* curNode, SymbolTable* current, SymbolTable* global){
             }
             break;
         }
+
+        case channel_stmt:
+        {
+            std::cout << "Checking channel statement" << std::endl;
+            for(ASTNode* node: curNode->children){
+                sem_test(node, current, global);
+            }
+            break;
+        }
+
+        case keyword:
+        {
+            std::cout << "Reached keyword" << std::endl;
+            break;
+        }
     }
     if(curNode->next != nullptr)
         sem_test(curNode->next, current, global);

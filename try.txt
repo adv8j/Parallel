@@ -82,3 +82,17 @@ for i in 0..10
     int a = 5;
     b = a*3;
 }
+
+/*
+NOTE: pls check this inside a taskgroup
+
+// signal statement which can be either .ct or .ct <- <any-value>, or .ct(all) or .ct(all) <- x;
+.ct;
+.ct <- 5;
+.ct(all);
+.ct(all) <- x;
+
+// wait statement which can be either .wt{<task-name>, number} or .wt{<task-name>, number} -> <identifier> ;
+.wt{task1, 2};
+.wt{task1, 2} -> x;
+*/

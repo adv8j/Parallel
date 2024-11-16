@@ -876,6 +876,12 @@ wait_statement: CHANNEL_WAIT LBRACE IDENTIFIER COMMA expression RBRACE
         $$->add_child($5);
     }
     | CHANNEL_WAIT LBRACE IDENTIFIER COMMA expression RBRACE ARROW IDENTIFIER
+    {
+        $$ = new ASTNode(channel_stmt,"wait");
+        $$->add_child($3);
+        $$->add_child($5);
+        $$->add_child($8);
+    }
     ;
 
 taskgroup_statement: TASKGROUP IDENTIFIER taskgroup_declaration_list LBRACE taskgroup_definition RBRACE SEMICOLON{

@@ -272,7 +272,9 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 	case arg_list:
 		os << ":\n";
 		break;
-	
+	case err_t:
+		os << "\n";
+		break;
 	}
 	return os;
 }
