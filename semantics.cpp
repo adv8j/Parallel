@@ -21,12 +21,15 @@ bool checkVariable(ASTNode* current){
 }
 
 // Function to check variable types and operator compatibility
-dtypes coerceTypesOverOperator(std::string op, dtypes left_type, dtypes right_type, kind_t left_kind, kind_t right_kind){
+dtypes coerceTypesOverOperator(std::string op, dtypes left_type, dtypes right_type, kind_t left_kind, kind_t right_kind, bool in_task = false,bool left_access){
 
     if(op == "="){
         if(left_kind != variable_t) // If the left is not a variable, then it is an error
             return error_type;
         
+        if(in_task && left_access != 2)
+            
+
         
         goto arith_check; // to avoid code duplication
     }
@@ -138,7 +141,7 @@ bool checkVariableDeclared(ASTNode* current, SymbolTable* current_table){
 }
 
 // Resolve the operator: Check if the variables are declared, check if the types are correct, check if the operators are correct
-bool resolve_operator(ASTNode* curNode, SymbolTable* current, SymbolTable* global){
+bool resolve_operator(ASTNode* curNode, SymbolTable* current, SymbolTable* global, bool in_task){
     if(curNode->getType() == error_type) // if this is the case, then some error must have occured below this level. Abort
         return false;
     
@@ -207,18 +210,18 @@ bool resolve_operator(ASTNode* curNode, SymbolTable* current, SymbolTable* globa
 
 
 // Resolve the expression: Recursively resolve the expression
-bool resolve_expression(ASTNode* curNode, SymbolTable* current, SymbolTable* global){
+bool resolve_expression(ASTNode* curNode, SymbolTable* current, SymbolTable* global, bool in_task= false){
     // std::cout << "Resolving expression " << curNode->name << std::endl;
     switch(curNode->kind){
         case variable_t:
         case literal:
             return true;
     }
-    if(!resolve_expression(curNode->children[0], current, global)) return false;
+    if(!resolve_expression(curNode->children[0], current, global, in_task)) return false;
    
-    if(curNode->children.size() > 1 && !resolve_expression(curNode->children[1], current, global)) return false;
+    if(curNode->children.size() > 1 && !resolve_expression(curNode->children[1], current, global, in_task)) return false;
 
-    if(!resolve_operator(curNode, current, global)) return false;
+    if(!resolve_operator(curNode, current, global, in_task)) return false;
     return true;
 }
 
@@ -334,7 +337,7 @@ bool check_circular(int i, std::vector<std::vector<bool>>& graph_edges, std::vec
 
 
 
-void resolve_properties(ASTNode* curNode,  TaskGroup* taskGroupEntry, SymbolTable* global, std::unordered_set<std::string>& identifiers){
+void resolve_properties(ASTNode* curNode,  TaskGroup* taskGroupEntry, SymbolTable* global, SymbolTable* current,std::unordered_set<std::string>& identifiers){
     std::vector<ASTNode*> children = curNode->children;
     std::string taskGroupName = curNode->name;
     std::cout << "Resolving properties for " << taskGroupName << std::endl;
@@ -348,7 +351,11 @@ void resolve_properties(ASTNode* curNode,  TaskGroup* taskGroupEntry, SymbolTabl
     for(int i = 0; i < task_names.size(); i++){
         task_mapping[task_names[i]] = i;
     }
-
+    if(curNode->name == "order" && taskGroupEntry->supervisor_table.size() > 0){
+        std::string message = "Supervisor Statement Declared.... Order Ignored";
+        yy_sem_warning(message);
+        return;
+    }
     // building a graph based on order nodes
     std::vector<std::vector<bool>> graph_edges(task_names.size(), std::vector<bool>(task_names.size(), 0));
 
@@ -403,6 +410,60 @@ void resolve_properties(ASTNode* curNode,  TaskGroup* taskGroupEntry, SymbolTabl
                 }
             }
 
+        }else if(child->kind == mem_rule){
+            bool unsafe = child->metadata.size() > 0;
+            ASTNode* left = child->children[0];
+            ASTNode* right = child->children[1];
+            DataType type = child->type;
+
+            // checking if children of left are all valid task_names/supervisor names
+            for(auto grandchild: right->children){
+                if(identifiers.find(grandchild->name) == identifiers.end()){
+                    std::string message = "Task/Supervisor " + grandchild->name + " not declared";
+                    yy_sem_error(message);
+                }
+            }
+
+            // checking if names on right are not declared as Function/Struct/TaskGroup
+            for(auto grandchild: left->children){
+                grandchild->type = type;
+                SymbolTableEntry* entry = global->getEntry(grandchild->name);
+                if(entry != nullptr && entry->type != variable){ // if the entry is not a variable
+                    std::string message = "Variable " + grandchild->name + " already declared as a " + entry_type_strings[entry->type];
+                    yy_sem_error(message);
+                    continue;
+                }
+
+                if(identifiers.find(grandchild->name) != identifiers.end()){
+                    std::string message = "Variable " + grandchild->name + " already declared as a Task/Supervisor";
+                    yy_sem_error(message);
+                    continue;
+                }
+
+                if(! current->checkNameNested(grandchild->name)){
+                    current->addVariable(grandchild->name, child->type.type, false, child->type.reference, child->type.ndims, "");
+                }
+
+                Variable* v = (Variable*)(current->getEntryNested(grandchild->name)->ptr);
+                Variable n = *v;
+
+                for(auto tasks: right->children){
+                    if(identifiers.find(tasks->name) == identifiers.end())
+                        continue;
+                    
+
+                    SymbolTable* task_table = taskGroupEntry->retrieveTask(tasks->name);
+                    
+                    if(task_table->checkName(grandchild->name)){
+                        std::string message = "Variable " + grandchild->name + " already declared in task " + tasks->name;
+                        yy_sem_error(message);
+                        continue;
+                    }
+
+
+                    
+                }
+            }
         }
     }   
 
@@ -508,21 +569,21 @@ void resolve_taskgroup(ASTNode* curNode, SymbolTable* current, SymbolTable* glob
 
     for(ASTNode* child: children){
         if(child->kind == properties_stmt){
-            resolve_properties(child, taskGroupEntry, global, identifiers);
+            resolve_properties(child, taskGroupEntry, global, current, identifiers);
         }
         else if(child->kind == task_stmt){
             SymbolTable* current_table = taskGroupEntry->retrieveTask(child->name);
             std::cout << "I am here for task: " << child->name << std::endl;
             current_table->next = current;
             current_table->print();
-            sem_test(child->children[0], current_table, global);
+            sem_test(child->children[0], current_table, global, true);
             current_table->next = nullptr;
         }
     }
 }
 
 
-void sem_test(ASTNode* curNode, SymbolTable* current, SymbolTable* global){
+void sem_test(ASTNode* curNode, SymbolTable* current, SymbolTable* global, bool in_task = false){
     if(curNode == nullptr)
         return;
     switch(curNode->kind){
@@ -545,7 +606,7 @@ void sem_test(ASTNode* curNode, SymbolTable* current, SymbolTable* global){
                 bool has_value = false;
 
                 if(node->childExists()){ // If a child exists, then it is an assignment
-                    sem_test(node->children[0], current, global);
+                    sem_test(node->children[0], current, global, in_task);
                     if(type != node->getType()){
                         std::string message = "Type mismatch in variable " + node->name;
                         yy_sem_error(message);
@@ -561,7 +622,7 @@ void sem_test(ASTNode* curNode, SymbolTable* current, SymbolTable* global){
 
         case expr_stmt:{
             std::cout << "Checking expression statement" << std::endl;
-            resolve_expression(curNode, current, global);
+            resolve_expression(curNode, current, global, in_task);
             break;
         }
         case function_decl_stmt:
@@ -651,5 +712,5 @@ void sem_test(ASTNode* curNode, SymbolTable* current, SymbolTable* global){
         }
     }
     if(curNode->next != nullptr)
-        sem_test(curNode->next, current, global);
+        sem_test(curNode->next, current, global, in_task);
 }

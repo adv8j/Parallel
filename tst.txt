@@ -68,7 +68,7 @@ else{
             x,y, z, sdfi: int -> t2,t3, t4;
             sf: char -> t4,t5, t6;
         }
-        @Mem{
+        @Mem unsafe{
             x,y,z -> t2, t3 mut;
         }
 
