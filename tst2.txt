@@ -1,9 +1,12 @@
 
-func uttam int(int a, int b){
+func uttam int(float a, int b){
     int x=5;
     string donothing="59%";
     return x;
 }
 
 int v=5,y=6;
-uttam(v,y);
+//uttam(v,y);
+//uttam(5,6);
+uttam(5,v);
+uttam(5.7,6);

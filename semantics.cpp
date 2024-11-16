@@ -20,6 +20,7 @@ bool checkVariable(ASTNode* current){
     return current->kind == variable_t;
 }
 
+
 // Function to check variable types and operator compatibility
 dtypes coerceTypesOverOperator(std::string op, dtypes left_type, dtypes right_type, kind_t left_kind, kind_t right_kind){
 
@@ -639,10 +640,17 @@ void sem_test(ASTNode* curNode, SymbolTable* current, SymbolTable* global){
                     yy_sem_error(message);
                     return;
                 }
-                if(!current->checkNameNested(temp->name)){
-                    std::string message = "Variable " + temp->name + " already declared";
+                
+                if((temp->kind==variable_t) && !(current->checkNameNested(temp->name))){
+                    std::string message = "Variable " + temp->name + " not declared";
                     yy_sem_error(message);
                     continue;
+                }
+                else if(temp->kind==literal)
+                {
+                    
+                    temp->type.reference=false;
+                    
                 }
                 else{
                     SymbolTableEntry*symbolnode=current->getEntryNested(temp->name);

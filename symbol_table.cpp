@@ -13,6 +13,22 @@ public:
     int col_no;
     Variable(std::string name, dtypes type, std::vector<int> dims = {}, bool reference = false, bool has_value = false,std::string struct_name = "", int line_number = 0, int col_no = 0) : name(name), type(type), dims(dims), reference(reference), has_value(has_value), line_number(line_number), col_no(col_no), struct_name(struct_name) {}
 
+    bool similar_dtype(dtypes func_para, dtypes func_arg) const
+    {
+        if(func_para==func_arg)
+            return true;
+        else if(func_para==float_t && func_arg==int_t)
+            return true;
+        else if(func_para==long_t && func_arg==int_t)
+            return true;
+        else if(func_para==float_t && func_arg==long_t)
+            return true;
+        else {
+            return false;
+        }
+        
+    }
+
     // overload != operator
     bool operator!=(const Variable &v) const
     {
@@ -22,7 +38,7 @@ public:
     bool typecheck(DataType parameter) const
     {
         
-        return this->type == parameter.type&&this->reference == parameter.reference;
+        return similar_dtype(this->type,parameter.type)&&this->reference == parameter.reference;
     }
 };
 

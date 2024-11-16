@@ -105,7 +105,7 @@ enum kind_t
     params_list,
     params_t,
     arg_list,
-    arg_t,
+    
 };
 
 const std::string kind_t_strings[] = {
@@ -154,7 +154,7 @@ const std::string kind_t_strings[] = {
     "params_list",
     "params_t",
     "arg_list",
-    "arg_t",
+    
 };
 
 class Variable;

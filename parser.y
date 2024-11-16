@@ -277,14 +277,14 @@ function_call_tail : RPAREN {$$ = NULL;}
                     }
                     ;
 
-function_arguments: function_arguments COMMA expression{
+function_arguments: function_arguments COMMA list_member{
     $$ = $1;
-    $3->kind=arg_t;
+    
     $$->next = $3 ;
 }
-    | expression{
+    | list_member{
         $$ = $1;
-        $$->kind=arg_t;
+        
         
     }
 

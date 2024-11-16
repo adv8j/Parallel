@@ -263,9 +263,7 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 	case arg_list:
 		os << ":\n";
 		break;
-	case arg_t:
-		os<<": "<<node->name<< " : " << dtype_strings[node->type.type]<<((node->type.reference)?"&":"")<<std::endl;
-		break;
+	
 	}
 	return os;
 }
