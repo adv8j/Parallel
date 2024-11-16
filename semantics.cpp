@@ -673,6 +673,60 @@ void sem_test(ASTNode* curNode, SymbolTable* current, SymbolTable* global){
             break;
         }
 
+        case parallel_stmt:
+        {
+            std::cout << "Checking parallel statement" << std::endl;
+            for(ASTNode* node: curNode->children){
+                if((node->kind == variable_t))
+                {
+                    SymbolTableEntry *curEntry = (current->getEntryNested(node->name));
+                    if((curEntry==nullptr)||(curEntry->type == function))
+                    {
+                        std::string message = "Variable " + node->name +" inside "+ node->name+ " list not declared";
+                        yy_sem_error(message);
+                        return;
+                    }
+                    entry_type node_exists = curEntry->type;
+
+                    // setting the metadata of variables inside the shared, reduction, private
+                    node->type.type = ((Variable *)(curEntry->ptr))->type;
+                    node->type.reference = ((Variable *)(curEntry->ptr))->reference;
+                    node->type.ndims = ((Variable *)(curEntry->ptr))->dims;
+
+                }
+            }
+
+            for(ASTNode* node: curNode->children){
+                if((node->kind == compound_stmt)||(node->kind == iterative_stmt))
+                    sem_test(node, current, global);
+            }
+            break;
+        }
+
+        case compound_stmt:
+        {
+            std::cout << "Checking compound statement" << std::endl;
+            for(ASTNode* node: curNode->children){
+                sem_test(node, current, global);
+            }
+            break;
+        }
+
+        case err_t:
+        {
+            std::string message = "Error in parsing, skipping further checks for this node ...";
+            yy_sem_error(message);
+            break;
+        }
+
+        case iterative_stmt:
+        {
+            std::cout << "Checking iterative statement" << std::endl;
+            for(ASTNode* node: curNode->children){
+                sem_test(node, current, global);
+            }
+            break;
+        }
     }
     if(curNode->next != nullptr)
         sem_test(curNode->next, current, global);

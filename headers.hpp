@@ -105,7 +105,7 @@ enum kind_t
     params_list,
     params_t,
     arg_list,
-    
+    err_t,
 };
 
 const std::string kind_t_strings[] = {
@@ -149,12 +149,13 @@ const std::string kind_t_strings[] = {
     "mem_rule",
     "mem_node",
     "empty_expr_stmt",
-    "itr_type",
+    "loop_type",
     "selection_stmt",
     "params_list",
     "params_t",
     "arg_list",
     
+    "err_t",
 };
 
 class Variable;
