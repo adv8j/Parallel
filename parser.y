@@ -851,7 +851,7 @@ signal_statement: TASK_CHANNEL task_all CHN_SEND expression
     {
         $$ = new ASTNode(channel_stmt,"signal");
         $$->add_child($2);
-        $$->add_child($3);
+        $$->add_child($4);
     }
     | TASK_CHANNEL task_all
     {
