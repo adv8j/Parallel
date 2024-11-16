@@ -628,6 +628,7 @@ void sem_test(ASTNode* curNode, SymbolTable* current, SymbolTable* global){
             if(!global->checkName(name, function)){
                 std::string message = "Function " + name + " not declared";
                 yy_sem_error(message);
+                return;
             }
             Function* func = (Function*)global->getEntry(name)->ptr;
             std::vector<Variable> params = func->param_list;
