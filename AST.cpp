@@ -203,7 +203,7 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 		os << ": \n";
 		break;
 	case struct_decl:
-		os << ":\n";
+		os << ": " << node -> name << "\n";
 		break;
 	case function_call_stmt:
 		os << ": " << node->name << std::endl;
@@ -274,6 +274,9 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 		break;
 	case err_t:
 		os << "\n";
+		break;
+	case member_data_t:
+		os << " : "<<node -> name << "\n";
 		break;
 	}
 	return os;

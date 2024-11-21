@@ -18,6 +18,7 @@ enum entry_type
     task,
     struct_data,
     supervisor,
+    _struct
 };
 
 const std::string entry_type_strings[] = {
@@ -28,6 +29,7 @@ const std::string entry_type_strings[] = {
     "task",
     "struct_data",
     "supervisor",
+    "_struct"
 };
 
 
@@ -106,6 +108,7 @@ enum kind_t
     params_t,
     arg_list,
     err_t,
+    member_data_t,
 };
 
 const std::string kind_t_strings[] = {
@@ -154,8 +157,8 @@ const std::string kind_t_strings[] = {
     "params_list",
     "params_t",
     "arg_list",
-    
     "err_t",
+    "member_data_t",
 };
 
 class Variable;
@@ -175,6 +178,7 @@ struct DataType
 	dtypes type;
 	std::vector<int> ndims;
 	bool reference;
+    std::string name = "";           // used to store the name of struct
 	ASTNode *init_exp_or_id = NULL; // used in case of initialiser dims, or used to store name identifier of struct
 	DataType() {}
 	DataType(dtypes name, std::vector<int> ndim, bool reference)

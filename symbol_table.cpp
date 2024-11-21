@@ -11,7 +11,7 @@ public:
     bool has_value;
     int line_number;
     int col_no;
-    Variable(std::string name, dtypes type, std::vector<int> dims = {}, bool reference = false, bool has_value = false,std::string struct_name = "", int line_number = 0, int col_no = 0) : name(name), type(type), dims(dims), reference(reference), has_value(has_value), line_number(line_number), col_no(col_no), struct_name(struct_name) {}
+    Variable(std::string name, dtypes type, std::vector<int> dims = {}, bool reference = false, bool has_value = false, std::string struct_name = "", int line_number = 0, int col_no = 0) : name(name), type(type), dims(dims), reference(reference), has_value(has_value), line_number(line_number), col_no(col_no), struct_name(struct_name) {}
 
     bool similar_dtype(dtypes func_para, dtypes func_arg) const
     {
@@ -64,6 +64,14 @@ public:
     int line_number;
     int col_no;
     Struct(std::string name, std::vector<Variable> member_data = {}, int line_number = 0, int col_no = 0) : name(name), member_data(member_data), line_number(line_number), col_no(col_no) {}
+    //searches for a member data in the struct and returns its struct (copy)
+    Variable get_member(std::string name){
+        for(const auto& member: member_data){
+            if(member.name == name){
+                return member;
+            }
+        }
+    }
 };
 
 class SymbolTableEntry
@@ -102,6 +110,14 @@ public:
         this->addEntry(e);
     }
 
+    void addStruct(std::string name, std::vector<Variable> members = {}, int line_no = 0, int col_no = 0){
+        Struct* new_struct = new Struct(name, members, line_no, col_no);
+        SymbolTableEntry e(_struct, name, (void*)new_struct);
+        this -> addEntry(e);
+        std::cout <<"Added new struct" << name << "with" << members.size() << "members\n";
+    }
+    
+
     SymbolTableEntry *getEntry(const std::string &name){
         auto it = table.find(name);
         if (it != table.end())
@@ -126,7 +142,7 @@ public:
         return this->getEntry(name) != nullptr;
     }
 
-    bool checkNameNested(const std::string &name){
+    bool checkNameNested(const std::string &name){      //if name is present return true else return false
         SymbolTable *temp = this;
         while (temp != nullptr){
             if (temp->checkName(name))

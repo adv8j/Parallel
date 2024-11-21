@@ -96,7 +96,8 @@ array: generic_dtypes fixed_dims initializer_dims{
 
 array_element: IDENTIFIER dims {
     $$ = new ASTNode(array_element);
-    $$ -> add_child($1);
+    $$ -> name = $1 -> name;
+    delete $1;
     $$ -> add_child($2);
 };
 
@@ -195,8 +196,11 @@ compound_statement: LBRACE inner_statement_list RBRACE{
 
 struct_declaration: STRUCT IDENTIFIER struct_body SEMICOLON {
     $$ = new ASTNode(struct_decl);
-    $$ -> add_child($2);
-    $$ -> add_child($3);
+    $$ -> name = $2 -> name;
+    $$ -> convert_to_children($3);
+    for (const auto& member : $$ -> children){
+        member -> kind = member_data_t;
+    }
 }
     | STRUCT error SEMICOLON {  $$ = new ASTNode(err_t);yyerrok; }
     | STRUCT IDENTIFIER error SEMICOLON {  $$ = new ASTNode(err_t);yyerrok; }
@@ -488,7 +492,7 @@ declaration_statement: dtype declaration_list SEMICOLON{
     }
     | dtype REFERENCE declaration_list SEMICOLON{
         $$ = new ASTNode(decl_stmt, $1->type);
-        $$->type.reference = true;
+        ($$->type).reference = true;
         $$->convert_to_children($3);
         delete $1;
     }
@@ -500,7 +504,7 @@ declaration_list : declaration_list COMMA declaration{
         $$ = $1;
     }
     | declaration {
-        $$ = $1;    
+        $$ = $1; 
     }
     ;
 
@@ -508,6 +512,7 @@ declaration_list : declaration_list COMMA declaration{
 declaration: IDENTIFIER optional_value_assignment{
         if($2 == NULL){ //when there is no assignment
             $$ = new ASTNode(variable_t);
+            ($$ -> type).type = unknown_t;
             $$->name = $1->name;
         }
         else{
@@ -534,7 +539,7 @@ initializer : expression  {
 list_initialiser: LBRACE list_member initialiser_member_list_tail RBRACE{
     $$ = new ASTNode(list_init);
     $$ -> add_child($2);
-    $2 -> next = $3;
+    $$ -> convert_to_children($3);
 
 }
     | LBRACE error RBRACE {  $$ = new ASTNode(err_t);yyerrok; }
@@ -599,10 +604,12 @@ container: variable_t{
     // basically arrays
 iterator: IDENTIFIER{
     $$ = $1;
+    ($$ -> type).type = unknown_t;
 }
     |REFERENCE IDENTIFIER{
         $$ = $2;
         ($$ -> type).reference = true;
+        ($$ -> type).type = unknown_t;
     }
     ; 
     // possibility for iterator variable_t
@@ -647,7 +654,9 @@ function_declaration: FUNC IDENTIFIER func_dtype params  compound_statement
     {
         $$ = new ASTNode(function_decl_stmt);
         $$->name = $2->name;
-        $$->type=$3->type;       
+        delete $2;
+        $$->type=$3->type;
+        delete $3;       
         $$->add_child($4);// first child is the parameters
         $$->add_child($5);// second child is the compound statement
 
@@ -657,6 +666,8 @@ function_declaration: FUNC IDENTIFIER func_dtype params  compound_statement
         $$ = new ASTNode(prototype_stmt);
         $$->name = $2->name;
         $$->type=$3->type;
+        delete $2;
+        delete $3;
         $$->add_child($4);// first child is the parameters
     }
     | FUNC error RBRACE {  $$ = new ASTNode(err_t);yyerrok; }
@@ -710,6 +721,8 @@ parameter_declaration: datatype_and_ref IDENTIFIER
         $$ = new ASTNode(params_t);
         $$->name = $2->name;
         $$->type = $1->type;
+        delete $2;
+        delete $1;
     }
     | datatype_and_ref IDENTIFIER ASSIGN expression // for default arguments
     {
@@ -717,6 +730,8 @@ parameter_declaration: datatype_and_ref IDENTIFIER
         $$->name = $2->name;
         $$->type = $1->type;
         $$->add_child($4);// if params_t have any child its expression
+        delete $2;
+        delete $1;
     }
     ; 
 
@@ -1222,7 +1237,7 @@ value: literals {$$ = $1;}
     // this non-terminal is for writing value
 
 variable_t: array_element {$$ = $1;}
-    | IDENTIFIER {$$ = $1; $$->kind = variable_t;}
+    | IDENTIFIER {$$ = $1; ($$ -> type).type = unknown_t; $$->kind = variable_t;}
     | variable_t DOT variable_t {
         $$ = new ASTNode(expr_stmt);
         $$ -> name = ".";
