@@ -2,8 +2,7 @@
 
 
 
-class ASTNode
-{
+class ASTNode{
 public:
 	int line_number;
 	int col_number;
@@ -125,11 +124,9 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 		os << ": ";
 		if ((node->type).reference)
 			os << "&";
-		os << dtype_strings[node->type.type] << "\t";
-		for (int i : (node->type).ndims)
-			std::cout << i << " ";
-		if ((node->type).init_exp_or_id)
-			std::cout << ((node->type).init_exp_or_id) << "\t";
+		os << dtype_strings[node->type.type] << " " << node->type.name;
+		for (int i :((node->type).ndims))
+			std::cout <<"[" <<i << "]";
 		std::cout << "\n";
 		break;
 	case channel_stmt:
@@ -199,8 +196,11 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 		os << ": ";
 		os << node->name << "\n";
 		break;
+	case identifier_chain:
+		os << "\n";
+		break;
 	case array_element:
-		os << ": \n";
+		os << ": "<< node->name <<" -> "<< dtype_strings[node->type.type]  << "\n";
 		break;
 	case struct_decl:
 		os << ": " << node -> name << "\n";
@@ -272,7 +272,7 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 	case arg_list:
 		os << ":\n";
 		break;
-	case err_t:
+	case syntax_error_stmt:
 		os << "\n";
 		break;
 	case member_data_t:

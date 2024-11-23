@@ -9,6 +9,10 @@
 #include <unordered_set>
 #include <algorithm>
 
+
+int yy_sem_error(const std::string);
+int yy_sem_warning(const std::string);
+
 enum entry_type
 {
     function,
@@ -107,8 +111,9 @@ enum kind_t
     params_list,
     params_t,
     arg_list,
-    err_t,
+    syntax_error_stmt,
     member_data_t,
+    identifier_chain
 };
 
 const std::string kind_t_strings[] = {
@@ -157,8 +162,24 @@ const std::string kind_t_strings[] = {
     "params_list",
     "params_t",
     "arg_list",
-    "err_t",
+    "syntax_error_stmt",
     "member_data_t",
+    "identifier_chain"
+};
+
+
+enum check_status{
+    success,
+    variable_not_found,
+    variable_declared,
+    identifier_declared_different_type,
+};
+
+const std::string check_status_strings[] = {
+    "success",
+    "variable_not_found",
+    "variable_declared",
+    "identifier_declared_different_type",
 };
 
 class Variable;
@@ -189,6 +210,32 @@ struct DataType
 		: type(type), ndims({}), reference(ref)
 	{
 	}
+
+    DataType(dtypes type, std::string name, bool ref = false, int line_no = 0, int col_no = 0)
+        : type(type), ndims({}), reference(ref), name(name)
+    {
+    }
+
+    bool operator==(const DataType &parameter) const{
+        bool x1 = this->type == parameter.type;
+
+        if(this->type == struct_t)
+            x1 &= this->name == parameter.name;
+        
+
+        if(this->ndims.size() != parameter.ndims.size())
+            return false;
+        
+
+        for(int i = 0; i < this->ndims.size(); i++)
+            x1 &= this->ndims[i] == parameter.ndims[i];
+        
+        return x1;
+    }
+
+    bool operator!=(const DataType &parameter) const{
+        return !(*this == parameter);
+    }
 };
 
 int kind = 0; // Change this to test different values

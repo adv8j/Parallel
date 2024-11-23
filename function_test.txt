@@ -1,0 +1,23 @@
+func ready int(int x, int y){
+    return z;
+}
+
+
+func ready int(int z, int k){
+    return l;
+}
+
+
+u = z + 5 - 7 * 5*(--5);
+int x;
+char y = u + 5 - 'a';
+
+struct hello u = {'a', 'b', 'c'};
+
+
+int[5] h = {1,2,3,4, {'a', u, 5}};
+int [5][6, 8] hel;
+
+p = hel[5][4];
+
+u = x[5].y.z.a[5].c;

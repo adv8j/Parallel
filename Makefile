@@ -1,4 +1,4 @@
-build: 
+build: parser.y parallel_lex.l AST.cpp symbol_table.cpp semantics.cpp
 	yacc -dtv parser.y 
 	lex $(LEXFLAGS) parallel_lex.l
 	g++ -g y.tab.c -o parser.out

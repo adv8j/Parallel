@@ -1,81 +1,53 @@
 #include "headers.hpp"
-class Variable
-{
+
+
+// Variable Entry for the Symbol Table
+class Variable{
 public:
     std::string name;
-    dtypes type;
-    std::string struct_name;
-    std::vector<int> dims;
-    int access = 2; // 0-> copy, 1-> read_only, 2-> read_write(useful for TaskGroup)
-    bool reference;
-    bool has_value;
+    DataType type;
     int line_number;
     int col_no;
-    Variable(std::string name, dtypes type, std::vector<int> dims = {}, bool reference = false, bool has_value = false, std::string struct_name = "", int line_number = 0, int col_no = 0) : name(name), type(type), dims(dims), reference(reference), has_value(has_value), line_number(line_number), col_no(col_no), struct_name(struct_name) {}
 
-    bool similar_dtype(dtypes func_para, dtypes func_arg) const
-    {
-        if(func_para==func_arg)
-            return true;
-        else if(func_para==float_t && func_arg==int_t)
-            return true;
-        else if(func_para==long_t && func_arg==int_t)
-            return true;
-        else if(func_para==float_t && func_arg==long_t)
-            return true;
-        else {
-            return false;
-        }
-        
-    }
-
-    // overload != operator
-    bool operator!=(const Variable &v) const
-    {
-        bool return_val = this->name != v.name || this->type != v.type || this->reference != v.reference || this->struct_name != v.struct_name;
+    Variable(std::string name, DataType type, int line_number = 0, int col_no = 0) : name(name), type(type), line_number(line_number), col_no(col_no) {}
+    
+    bool operator==(const Variable &v) const{
+        bool return_val = this->name == v.name && this->type == v.type;
         return return_val;
     }
-    bool typecheck(DataType parameter) const
-    {
-        
-        return similar_dtype(this->type,parameter.type)&&this->reference == parameter.reference;
+
+    bool operator!=(const Variable &v) const{
+        return !(*this == v);
     }
+
 };
 
-class Function
-{
+// Function Entry for the Symbol Table
+class Function{
 public:
     std::string name;
-    bool is_prototype = false;
-    dtypes return_type;
-    std::string return_struct_name;
+    DataType return_type;
     std::vector<Variable> param_list;
     int line_number;
     int col_no;
 
-    Function(std::string name, dtypes return_type,bool is_prototype, std::vector<Variable> param_list = {},std::string return_struct_name = "", int line_number = 0, int col_no = 0 ) : name(name),is_prototype(is_prototype), return_type(return_type), param_list(param_list), line_number(line_number), col_no(col_no), return_struct_name(return_struct_name) {}
+    Function(std::string name, DataType return_type, std::vector<Variable> param_list = {}, int line_number = 0, int col_no = 0) : name(name), return_type(return_type), param_list(param_list), line_number(line_number), col_no(col_no) {}
+
 };
 
-class Struct
-{
+class Struct{
 public:
     std::string name;
-    std::vector<Variable> member_data;
+    std::vector<Variable> members;
     int line_number;
     int col_no;
-    Struct(std::string name, std::vector<Variable> member_data = {}, int line_number = 0, int col_no = 0) : name(name), member_data(member_data), line_number(line_number), col_no(col_no) {}
-    //searches for a member data in the struct and returns its struct (copy)
-    Variable get_member(std::string name){
-        for(const auto& member: member_data){
-            if(member.name == name){
-                return member;
-            }
-        }
-    }
+
+    Struct(std::string name, std::vector<Variable> members = {}, int line_number = 0, int col_no = 0) : name(name), members(members), line_number(line_number), col_no(col_no) {}
+
+
 };
 
-class SymbolTableEntry
-{
+class SymbolTableEntry{
 public:
     entry_type type;
     std::string name;
@@ -95,33 +67,29 @@ public:
         table[entry.name] = entry;
     }
 
-    void addVariable(const std::string &name, const dtypes type, bool has_value = false, bool reference = false,
-                std::vector<int> dims = {}, std::string struct_name = "", int line_no = 0, int col_no = 0)
-    {
-        Variable *v = new Variable(name, type, dims, reference, has_value, struct_name, line_no, col_no);
-        SymbolTableEntry e(variable, name, (void *)v);
+    // add a variable to the symbol table
+    void addVariable(const std::string &name, const Variable *v){
+        SymbolTableEntry e(variable, name, (void*) v);
         this->addEntry(e);
-        std:: cout << "Added variable " << name << " of type " << dtype_strings[type] << std::endl;
     }
-    void addFunction(const std::string &name, const dtypes return_type,bool is_prototype,std::vector<Variable> param_list = {},std::string return_struct_name = "",  int line_no = 0, int col_no = 0 )
-    {
-        Function *f = new Function(name, return_type,is_prototype, param_list,return_struct_name, line_no, col_no );
+
+
+    // add a function to the symbol table
+    void addFunction(const std::string &name, const Function *f){
         SymbolTableEntry e(function, name, (void *)f);
         this->addEntry(e);
     }
 
-    void addStruct(std::string name, std::vector<Variable> members = {}, int line_no = 0, int col_no = 0){
-        Struct* new_struct = new Struct(name, members, line_no, col_no);
-        SymbolTableEntry e(_struct, name, (void*)new_struct);
-        this -> addEntry(e);
-        std::cout <<"Added new struct" << name << "with" << members.size() << "members\n";
+    // add a struct to the symbol table
+    void addStruct(const std::string &name, const Struct *s){
+        SymbolTableEntry e(_struct, name, (void *)s);
+        this->addEntry(e);
     }
     
 
     SymbolTableEntry *getEntry(const std::string &name){
         auto it = table.find(name);
-        if (it != table.end())
-        {
+        if (it != table.end()){
             return &(it->second);
         }
         return nullptr;
@@ -186,8 +154,7 @@ public:
 
 
 
-class TaskGroup
-{
+class TaskGroup{
 public:
     std::string name;
     int line_number;
