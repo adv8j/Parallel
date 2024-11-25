@@ -160,6 +160,7 @@ DataType retrieveType(ASTNode *node, SymbolTable *current, SymbolTable *global){
             }
             type.ndims.pop_back();
         }
+        node->type = type;
         return type;
     }
     else if (node->kind == variable_t){
@@ -180,6 +181,7 @@ DataType retrieveType(ASTNode *node, SymbolTable *current, SymbolTable *global){
         }
 
         Variable *var_entry = (Variable *)(e->ptr);
+        node->type = var_entry->type;
         return var_entry->type;
     }
     else if (node->kind == literal){
@@ -204,9 +206,9 @@ DataType retrieveType(ASTNode *node, SymbolTable *current, SymbolTable *global){
         }
         Function *func_entry = (Function *)(e->ptr);
         if (!check_valid_function_call(node, current, global, func_entry)){
-
             return error_type;
         }
+        node->type = func_entry->return_type;
         return func_entry->return_type;
     }
     else if (node->kind == identifier_chain){
@@ -229,7 +231,8 @@ DataType retrieveType(ASTNode *node, SymbolTable *current, SymbolTable *global){
         }
 
         do{
-            second = node->children[1];
+            first = chain_node->children[0];
+            second = chain_node->children[1];
             if (second->kind == identifier_chain) // basically the left one is definitely a variable
                 second = second->children[0];
 
@@ -245,7 +248,6 @@ DataType retrieveType(ASTNode *node, SymbolTable *current, SymbolTable *global){
             for(auto member: members){
                 if(member.name == second->name){
                     found = true;
-                    first = second;
                     break;
                 }
             }
@@ -255,12 +257,12 @@ DataType retrieveType(ASTNode *node, SymbolTable *current, SymbolTable *global){
                 return error_type;
             }
             chain_node = chain_node->children[1];
-            first = chain_node->children[0];
-            second = chain_node->children[1];
+            
 
         } while (chain_node->kind == identifier_chain);
 
-        return error_type;
+        node->type = second->type;
+        return second->type;
     }
     else if(node->kind == expr_stmt){
         resolve_expression(node, current, global);
@@ -394,20 +396,220 @@ DataType resolve_unary_operator(ASTNode* node, std::string op, SymbolTable* curr
     return type;
 }
 
-// Function to resolve the expression
-void resolve_expression(ASTNode* node, SymbolTable* current, SymbolTable* global){
-    if(node->kind != expr_stmt){
-        DataType type = retrieveType(node, current, global);
-        return;
+
+DataType resolve_binary_operator(ASTNode* left, ASTNode* right, std::string op, SymbolTable* current, SymbolTable* global){
+    if(left->type == error_type || right->type == error_type){
+        return error_type;
     }
 
+    dtypes left_type = left->type.type;
+    dtypes right_type = right->type.type;
+
+    
+
+    if(op == "="){
+        if(left->kind != variable_t && left->kind != array_element && left->kind != identifier_chain){
+            std::string message = "Left side of " + op + " must be a lvalue";
+            yy_sem_error(message);
+            return error_type;
+        }
+
+        if(left->kind== variable_t && !current->checkNameNested(left->name, variable)){ // declare the variable implicitly with type inferred from right
+            Variable* var_entry = new Variable(left->name, right->type);
+            current->addVariable(left->name, var_entry);
+        }
+        else if(left->kind == variable_t && (global->getEntry(left->name)->type != variable)){
+            std::string message = "Variable " + left->name + " already declared as a " + entry_type_strings[global->getEntry(left->name)->type];
+            yy_sem_error(message);
+            return error_type;
+        }
+
+        if(left->type == right->type)
+            return left->type;
+
+        goto assign_checks;
+    }
+
+    if(left->type.ndims.size() != 0 || right->type.ndims.size() != 0){
+        std::string message = "Arrays not allowed in binary expressions except assignments";
+        yy_sem_error(message);
+        return error_type;    
+    }
+
+    if(left->type.type == struct_t || right->type.type == struct_t){
+        std::string message = "Structs not allowed in binary expressions except assignments";
+        yy_sem_error(message);
+        return error_type;
+    }
+    if(op == "+=" | op == "-=" | op == "*=" | op == "/=" | op == "%="){
+        if(left->kind != variable_t && left->kind != array_element && left->kind != identifier_chain){
+            std::string message = "Left side of " + op + " must be a lvalue";
+            yy_sem_error(message);
+            return error_type;
+        }
+
+        assign_checks:
+        if(left_type == int_t && right_type == int_t) // handling numerical cases
+            return left_type;
+        else if(left_type == float_t && right_type == float_t)
+            return left_type;
+        else if(left_type == long_t && right_type == long_t)
+            return left_type;
+        else if(left_type == float_t && right_type == int_t)
+            return left_type;
+        else if(left_type == int_t && right_type == float_t)
+            return left_type;
+        else if(left_type == long_t && right_type == int_t)
+            return left_type;
+        else if(left_type == int_t && right_type == long_t)
+            return left_type;
+        else if(left_type == long_t && right_type == float_t)
+            return left_type;
+        else if(left_type == float_t && right_type == long_t)
+            return left_type;
+
+        if(left_type == bool_t && right_type == bool_t) // handling boolean cases
+            return left_type;
+        else if(left_type == bool_t && right_type == int_t)
+            return left_type;
+        else if(left_type == int_t && right_type == bool_t)
+            return left_type;
+        else if(left_type == bool_t && right_type == float_t)
+            return left_type;
+        else if(left_type == float_t && right_type == bool_t)
+            return left_type;
+        else if(left_type == bool_t && right_type == long_t)
+            return left_type;
+        else if(left_type == long_t && right_type == bool_t)
+            return left_type;
+        
+        // handling string/char
+        if(left_type== string_t && right_type == string_t && (op == "+=" ))
+            return left_type;
+        if(left_type == string_t && right_type == char_t && (op == "+=" || op == "="))
+            return left_type;
+
+        if(left_type == string_t && right_type == int_t && (op == "+=" || op == "=")) // basically I can do things as worse as Javascript :()
+            return left_type;
+
+
+    }
+    if(op == "+" || op == "-" || op == "*" || op == "/" || op == "%"){
+
+    arith_check:
+        if(left_type == int_t && right_type == int_t) // handling numerical cases
+            return int_t;
+        else if(left_type == float_t && right_type == float_t)
+            return float_t;
+        else if(left_type == long_t && right_type == long_t)
+            return long_t;
+        else if(left_type == float_t && right_type == int_t)
+            return float_t;
+        else if(left_type == int_t && right_type == float_t)
+            return float_t;
+        else if(left_type == long_t && right_type == int_t)
+            return long_t;
+        else if(left_type == int_t && right_type == long_t)
+            return long_t;
+        else if(left_type == long_t && right_type == float_t)
+            return float_t;
+        else if(left_type == float_t && right_type == long_t)
+            return float_t;
+
+        if(left_type == bool_t && right_type == bool_t) // handling boolean cases
+            return int_t;
+        else if(left_type == bool_t && right_type == int_t)
+            return int_t;
+        else if(left_type == int_t && right_type == bool_t)
+            return int_t;
+        else if(left_type == bool_t && right_type == float_t)
+            return float_t;
+        else if(left_type == float_t && right_type == bool_t)
+            return float_t;
+        else if(left_type == bool_t && right_type == long_t)
+            return long_t;
+        else if(left_type == long_t && right_type == bool_t)
+            return long_t;
+        
+        // handling string/char
+        if(left_type== string_t && right_type == string_t && (op == "+" ))
+            return string_t;
+        if(left_type == string_t && right_type == char_t && (op == "+" ))
+            return string_t;
+
+        if(left_type == char_t && right_type == string_t && op == "+")
+            return string_t;
+
+        if(left_type == char_t && right_type == char_t && op == "+")
+            return string_t;
+
+        if(left_type == string_t && right_type == int_t && op == "+") // basically I can do things as worse as Javascript :()
+            return string_t;
+
+    }
+    else if(op == "==" || op == "!=" || op == "<" || op == ">" || op == "<=" || op == ">="){
+        if(!(left_type == int_t || left_type == float_t || left_type == long_t || left_type == bool_t))
+            return error_type;
+
+        if(!(right_type == int_t || right_type == float_t || right_type == long_t || right_type == bool_t))
+            return error_type;
+
+        return bool_t;
+    }
+    else if(op == "&&" || op == "||"){
+        if(!(left_type == int_t || left_type == long_t || left_type == float_t || left_type == bool_t)){
+            return error_type;
+        }
+
+        if(!(right_type == int_t || right_type == long_t || right_type == float_t || right_type == bool_t)){
+            return error_type;
+        }
+
+        return bool_t;
+    }
+
+    std::string message = "Type mismatch in operator " + op;
+    yy_sem_error(message);
+    return error_type;
+
+    
+
+
+}   
+        
+
+//TODO: annotate retrieve types and complete binary operator resolutoin
+// Function to resolve the expression
+void resolve_expression(ASTNode* node, SymbolTable* current, SymbolTable* global){
+    if(node->name == "="){
+
+        if(node->kind == expr_stmt || node->kind == literal){
+            std::string message = "Assignment requires a lvalue";
+            yy_sem_error(message);
+            node->type = error_type;
+            return;
+        }
+        if(node->kind == variable_t)
+            goto expr;
+        
+    }
+
+    if(node->kind != expr_stmt){
+        DataType type = retrieveType(node, current, global);
+        node->type = type;
+        return;
+    }
+    
 
     resolve_expression(node->children[0], current, global);
+    if(node->children.size() < 2){ // Handling Unary Operators
+        node->type = resolve_unary_operator(node->children[0], node->name, current, global);
+        return;
+    }
+    expr: // label to jump to
 
     resolve_expression(node->children[1], current, global);
-
-
-
+    resolve_binary_operator(node->children[0], node->children[1], node->name, current, global);
 }
 
 // // useful for checking if the current node is a variable
