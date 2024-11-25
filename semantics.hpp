@@ -1,5 +1,5 @@
-#ifndef SEMANTIcs_HPP
-#define SEMANTIcs_HPP
+#ifndef SEMANTICS_HPP
+#define SEMANTICS_HPP
 
 
 #include "headers.hpp"
@@ -17,10 +17,10 @@ DataType retrieveType(ASTNode *node, SymbolTable *current, SymbolTable *global);
 
 bool match_list_init(ASTNode *node, DataType type, SymbolTable *current, SymbolTable *global);
 
-bool match_list_init_struct(ASTNode *node, Struct *struct_info);
+bool match_list_init_struct(ASTNode *node, Struct *struct_info, SymbolTable *current, SymbolTable *global);
 bool match_list_init_array(ASTNode *node, DataType type, std::vector<int> &dims, int dim_number, SymbolTable *current, SymbolTable *global);
 
-bool resolve_expression(ASTNode* curNode, SymbolTable* current, SymbolTable* global);
+void resolve_expression(ASTNode* curNode, SymbolTable* current, SymbolTable* global);
 
-#endif // SEMANTIcs_HPP
+#endif // SEMANTICS_HPP
 
