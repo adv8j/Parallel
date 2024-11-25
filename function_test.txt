@@ -6,7 +6,10 @@ func ready int(int x, int y){
 func ready int(int z, int k){
     return l;
 }
-
+int x = 5;
+int u = y;
+int z = a[5];
+int k = a.b.c;
 
 u = z + 5 - 7 * 5*(--5);
 int x;

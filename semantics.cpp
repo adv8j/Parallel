@@ -418,7 +418,7 @@ DataType resolve_binary_operator(ASTNode* left, ASTNode* right, std::string op, 
             Variable* var_entry = new Variable(left->name, right->type);
             current->addVariable(left->name, var_entry);
         }
-        else if(left->kind == variable_t && (global->getEntry(left->name)->type != variable)){
+        else if(left->kind == variable_t && (global->getEntry(left->name) != nullptr && global->getEntry(left->name)->type != variable)){
             std::string message = "Variable " + left->name + " already declared as a " + entry_type_strings[global->getEntry(left->name)->type];
             yy_sem_error(message);
             return error_type;
@@ -611,243 +611,6 @@ void resolve_expression(ASTNode* node, SymbolTable* current, SymbolTable* global
     resolve_expression(node->children[1], current, global);
     resolve_binary_operator(node->children[0], node->children[1], node->name, current, global);
 }
-
-// // useful for checking if the current node is a variable
-// bool checkVariable(ASTNode* current){
-//     return current->kind == variable_t;
-// }
-
-// struct type_info{
-//     dtypes type;
-//     int ndim;
-//     std::string name;   //used in case of struct
-// };
-
-// // type_info create_info_struct(ASTNode* node, SymbolTable* global, SymbolTable* current){
-// //     if(node -> kind == expr_stmt){
-// //         return {(node -> type).type, 0,  ""};
-// //     }
-// //     else if(node -> kind == function_call_stmt){
-// //         SymbolTableEntry* e = global -> getEntry(node -> name);
-// //         Function* func_entry = (Function*)(e -> ptr);
-// //         return {func_entry -> return_type, 0,  func_entry -> name};
-
-// //     }
-// //     else if(node -> kind == literal){
-// //         return {(node -> type).type, 0, ""};
-// //     }
-// //     else if(node -> kind == array_element){
-// //         SymbolTableEntry* e = current -> getEntryNested(node -> name);
-// //         Variable* var_entry = (Variable*)  (e -> ptr);
-// //         ASTNode* dims_node = node -> children[0];
-// //         int count = 0;
-// //         while(dims_node){
-// //             count++;
-// //             dims_node = dims_node -> next;
-// //         }
-// //         int dimension = (var_entry -> dims).size() - count;
-// //         return {var_entry -> type, dimension, var_entry -> struct_name};
-// //     }
-// //     else if(variable_t){
-// //         SymbolTableEntry* e = current -> getEntryNested(node -> name);
-// //         Variable* var_entry = (Variable*)(e -> ptr);
-// //         int dimension = (var_entry -> dims).size();
-// //         return {var_entry -> type, dimension, var_entry -> struct_name};
-// //     }
-// //     // others dont have a data type
-// // }
-// //TODO: this function should return the type, dimension and the name of the struct, check RHS only for struct(happens in resolve_operator)
-// // Function to check variable types and operator compatibility
-// dtypes coerceTypesOverOperator(ASTNode* left, ASTNode* right, std::string op, SymbolTable* global, SymbolTable* current){
-//     type_info left_info = create_info_struct(left, global, current);
-//     type_info right_info = create_info_struct(right, global, current);
-
-//     dtypes left_type = left_info.type;
-//     dtypes right_type = right_info.type;
-//     kind_t left_kind = left -> kind;
-//     kind_t right_kind = right -> kind;
-
-//     if(op == "."){  //TODO: left to do
-//         if(right -> kind == expr_stmt && right -> name == "."){     //right kid is a dot operator
-//             return right_type;
-//         }
-//         else if(right -> kind == variable_t);
-//     }
-
-//     //In assignment statement, if the left is not a variable or an array element or a struct element, then it is an error
-//     if(op == "="){
-//         if(left_kind != variable_t && left_kind != array_element && left -> name != ".")
-//             return error_type;
-
-//         goto arith_check; // to avoid code duplication
-//     }
-//     else if(op == "+" || op == "-" || op == "*" || op == "/" || op == "%"){
-
-// arith_check:
-//         if(left_type == int_t && right_type == int_t) // handling numerical cases
-//             return int_t;
-//         else if(left_type == float_t && right_type == float_t)
-//             return float_t;
-//         else if(left_type == long_t && right_type == long_t)
-//             return long_t;
-//         else if(left_type == float_t && right_type == int_t)
-//             return float_t;
-//         else if(left_type == int_t && right_type == float_t)
-//             return float_t;
-//         else if(left_type == long_t && right_type == int_t)
-//             return long_t;
-//         else if(left_type == int_t && right_type == long_t)
-//             return long_t;
-//         else if(left_type == long_t && right_type == float_t)
-//             return float_t;
-//         else if(left_type == float_t && right_type == long_t)
-//             return float_t;
-
-//         if(left_type == bool_t && right_type == bool_t) // handling boolean cases
-//             return int_t;
-//         else if(left_type == bool_t && right_type == int_t)
-//             return int_t;
-//         else if(left_type == int_t && right_type == bool_t)
-//             return int_t;
-//         else if(left_type == bool_t && right_type == float_t)
-//             return float_t;
-//         else if(left_type == float_t && right_type == bool_t)
-//             return float_t;
-//         else if(left_type == bool_t && right_type == long_t)
-//             return long_t;
-//         else if(left_type == long_t && right_type == bool_t)
-//             return long_t;
-
-//         // handling string/char
-//         if(left_type== string_t && right_type == string_t && (op == "+" || op == "+="))
-//             return string_t;
-//         if(left_type == string_t && right_type == char_t && (op == "+" || op == "+="))
-//             return string_t;
-
-//         if(left_type == char_t && right_type == string_t && op == "+")
-//             return string_t;
-
-//         if(left_type == char_t && right_type == char_t && op == "+")
-//             return string_t;
-
-//         if(left_type == string_t && right_type == int_t && op == "+") // basically I can things like as worse as Javascript :()
-//             return string_t;
-
-//         if(op == "=" && left_type == right_type && (left -> type).name == (right -> type).name)
-//             return left_type;
-
-//         return error_type;
-
-//     }
-//     else if(op == "==" || op == "!=" || op == "<" || op == ">" || op == "<=" || op == ">="){
-//         if(!(left_type == int_t || left_type == float_t || left_type == long_t || left_type == bool_t))
-//             return error_type;
-
-//         if(!(right_type == int_t || right_type == float_t || right_type == long_t || right_type == bool_t))
-//             return error_type;
-
-//         return bool_t;
-//     }
-//     else if(op == "&&" || op == "||"){
-//         if(!(left_type == int_t || left_type == long_t || left_type == float_t || left_type == bool_t)){
-//             return error_type;
-//         }
-
-//         if(!(right_type == int_t || right_type == long_t || right_type == float_t || right_type == bool_t)){
-//             return error_type;
-//         }
-
-//         return bool_t;
-//     }
-//     else if(op == "+=" || op == "-=" || op == "*=" || op == "/=" || op == "%="){
-//         if(left_kind != variable_t) // If the left is not a variable, then it is an error
-//             return error_type;
-
-//         goto arith_check; // to avoid code duplication
-//     }
-//     else return error_type;
-// }
-
-// // Check if variable is declared, but nested check
-// bool checkVariableDeclared(ASTNode* current, SymbolTable* current_table){
-//     // std:: cout << current << std::endl;
-//     if(!current_table->checkNameNested(current->name)){
-//         std::string message = "Variable " + current->name + " not declared";
-//         yy_sem_error(message);
-//         return false;
-//     }
-//     if(! current_table->checkNameNested(current->name, variable)){
-//         std::string message = "Variable " + current->name + " already declared as a " + entry_type_strings[current_table->getEntry(current->name)->type];
-//         yy_sem_error(message);
-//         return false;
-//     }
-//     return true;
-// }
-
-// // Resolve the operator: Check if the variables are declared, check if the types are correct, check if the operators are correct
-// bool resolve_operator(ASTNode* curNode, SymbolTable* current, SymbolTable* global){
-//     if(curNode->getType() == error_type) // if this is the case, then some error must have occured below this level. Abort
-//         return false;
-
-//     std::string op = curNode->name;
-
-//     ASTNode* left = curNode->children[0];
-
-//     if(curNode->children.size() < 2){ // Handling Unary Operators
-//         if(op != "-" && op != "!"){ // Check if the operator is unary
-//             std::string message = "Operator " + op + " requires two operands";
-//             yy_sem_error(message);
-//             return false;
-//         }
-
-//         if(checkVariable(curNode) && !checkVariableDeclared(left, current)) // If the node is variable, check if it is declared
-//             return false;
-
-//         if(op == "-"){ // Checking valid types for unary operator
-//             dtypes type = left->type.type;
-//             if(type != int_t && type != float_t && type != long_t){
-//                 std::string message = "Type mismatch in operator " + op;
-//                 yy_sem_error(message);
-//                 return false;
-//             }
-//             curNode->type = left->type;
-//         }else{
-//             curNode->type.type = bool_t;
-//         }
-//         return true;
-//     }
-//     ASTNode* right = curNode->children[1];
-//     kind_t left_kind = left->kind, right_kind = right->kind;
-
-//     if(checkVariable(right) && !checkVariableDeclared(right, current)) // Check if the right variable is declared
-//         return false;
-//     if(right_kind == variable_t) // annotating the type of the variable
-//         right->type.type = ((Variable*)current->getEntryNested(right->name)->ptr)->type;
-//     if(checkVariable(left) &&  !current->checkNameNested(left->name)){ // Check if the left variable is declared
-//         if(op == "=" && right->type.type != error_type) // If the operator is assignment, then declare the variable implicitly
-//             current->addVariable(left->name, (right->type).type, true);
-//         else if(!(right->type.type != unknown_t)){ // Else throw an error
-//             std::string message = "Variable " + left->name + " not declared";
-//             yy_sem_error(message);
-//             return false;
-//         }
-//     }
-//     if(checkVariable(left) && !checkVariableDeclared(left, current)) // Check if the left variable is declared
-//         return false;
-
-//     if(left_kind == variable_t) // annotating the type of the variable
-//         left->type.type = ((Variable*)current->getEntryNested(left->name)->ptr)->type;
-
-//     curNode->type.type = coerceTypesOverOperator(left,right, op, global, current);
-
-//     if(curNode->type.type == error_type){
-//         std::string message = "Type mismatch in operator " + op + " between " + dtype_strings[left->type.type] + " and " + dtype_strings[right->type.type];
-//         yy_sem_error(message);
-//     }
-
-//     return curNode->type.type != error_type;
-
-// }
 
 
 
@@ -1712,8 +1475,44 @@ void second_pass(ASTNode *node, SymbolTable *current, SymbolTable *global){
     switch (node->kind){
 
     case expr_stmt:{
+        resolve_expression(node, current, global);
+        break;
+    }
+    case decl_stmt:{
+        DataType type = node->type;
 
-        // resolve_expression(node, current, global);
+        for(auto child: node->children){ // all declarations of this type
+            if(current->checkNameNested(child->name)){
+                std::string message = "Variable " + child->name + " already declared";
+                yy_sem_error(message);
+                continue;
+            }
+            if(global->getEntry(child->name) != nullptr && global->getEntry(child->name)->type != variable){ // if the entry is not a variable
+                std::string message = "Variable " + child->name + " already declared as a " + entry_type_strings[global->getEntry(child->name)->type];
+                yy_sem_error(message);
+                continue;
+            }
+
+            Variable *v = new Variable(child->name, type, child->line_number, child->col_number);
+            current->addVariable(child->name, v);
+            child->type = type;
+            if(child->childExists()){
+                // handle expressions
+                if(child->children[0]->kind != list_init){
+                    resolve_expression(child->children[0], current, global);
+                    if(child->type != child->children[0]->type){
+                        std::string message = "Type mismatch in variable Declaration" + child->name;
+                        yy_sem_error(message);
+                    }
+                }
+                else{
+                    if(!match_list_init(child->children[0], type, global, current)){
+                        std::string message = "Type mismatch in variable Declaration" + child->name;
+                        yy_sem_error(message);
+                    }
+                }
+            }
+        }
         break;
     }
     }
