@@ -113,7 +113,11 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 		else
 			os << ": " << node->name << " -> ";
 
-		os<< dtype_strings[(node->type).type] << "\n";
+		os<< dtype_strings[(node->type).type] << " " << node->type.name ;
+		for(int i : (node->type).ndims)
+			os<<"["<<i<<"]";
+
+		os << "\n";
 		break;
 	case task_stmt:
 	case taskgroup_stmt:
@@ -171,13 +175,13 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 		break;
 
 	case shared_rule:
-		os << ": " << dtype_strings[node->type.type] << std::endl;
+		os << ": " << node->type<< std::endl;
 		break;
 	case shared_node:
 		os << std::endl;
 		break;
 	case mem_rule:
-		os << ": " << dtype_strings[node->type.type] << std::endl;
+		os << ": " << node->type<< std::endl;
 		break;
 
 	case mem_node:
@@ -190,7 +194,7 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 		break;
 	case expr_stmt:
 		os << ": ";
-		os << node->name << " : " << dtype_strings[node->type.type] << "\n";
+		os << node->name << " : " << node->type << "\n";
 		break;
 	case cond_stmt:
 		os << ": ";
@@ -200,7 +204,7 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 		os << "\n";
 		break;
 	case array_element:
-		os << ": "<< node->name <<" -> "<< dtype_strings[node->type.type]  << "\n";
+		os << ": "<< node->name <<" -> "<< node->type  << "\n";
 		break;
 	case struct_decl:
 		os << ": " << node -> name << "\n";
@@ -209,16 +213,16 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 		os << ": " << node->name << std::endl;
 		break;
 	case function_decl_stmt:
-		os<<": "<<node->name<< " : " << dtype_strings[node->type.type]<<std::endl;
+		os<<": "<<node->name<< " : " << node->type<<std::endl;
 		
 		
 		break;
 	case prototype_stmt:
-		os<<": "<<node->name<< " : " << dtype_strings[node->type.type]<<std::endl;
+		os<<": "<<node->name<< " : " << node->type<<std::endl;
 		
 		break;
 	case list_init:
-		os << ": \n";
+		os << ": " << node->type << std::endl;
 		break;
 
 	case join_stmt:

@@ -31,15 +31,13 @@ bool match_list_init_struct(ASTNode *node, Struct *struct_info, SymbolTable* cur
         if (node->children[i]->kind != list_init){
             resolve_expression(node->children[i], current, global);
         }
-        else{
-            if (!match_list_init(node->children[i], struct_info->members[i].type, current, global)){
+        else if (!match_list_init(node->children[i], struct_info->members[i].type, current, global)){
                 return false;
-            }
         }
         DataType child_type = node->children[i]->type;
         
-        if (member_type.type != child_type.type){
-            std::string message = "Struct " + struct_info->name + " expects member " + std::to_string(i) + " of type " + dtype_strings[member_type.type] + " but got " + dtype_strings[child_type.type];
+        if (member_type.type != struct_t && member_type != child_type){
+            std::string message = "Struct " + struct_info->name + " expects member " + std::to_string(i) + " of type " + member_type.to_string() + " but got " + child_type.to_string();
             yy_sem_error(message);
             return false;
         }
@@ -48,20 +46,9 @@ bool match_list_init_struct(ASTNode *node, Struct *struct_info, SymbolTable* cur
             yy_sem_error(message);
             return false;
         }
-        if (member_type.ndims.size() != child_type.ndims.size()){
-            std::string message = "Struct " + struct_info->name + " expects member " + std::to_string(i) + " with " + std::to_string(member_type.ndims.size()) + " dimensions but got " + std::to_string(child_type.ndims.size());
-            yy_sem_error(message);
-            return false;
-        }
-        for (int j = 0; j < member_type.ndims.size(); j++){
-            if (member_type.ndims[j] != child_type.ndims[j]){
-                std::string message = "Struct " + struct_info->name + " expects member " + std::to_string(i) + " with " + std::to_string(member_type.ndims[j]) + " dimensions but got " + std::to_string(child_type.ndims[j]);
-                yy_sem_error(message);
-                return false;
-            }
-        }
-        
     }
+
+    node->type = DataType(struct_t, struct_info->name);
 
     return true;
 }
@@ -134,6 +121,7 @@ DataType retrieveType(ASTNode *node, SymbolTable *current, SymbolTable *global){
             return error_type;
         }
 
+
         if (e->type != variable){
 
             std::string message = "Variable " + node->name + " already declared as a " + entry_type_strings[e->type];
@@ -143,20 +131,28 @@ DataType retrieveType(ASTNode *node, SymbolTable *current, SymbolTable *global){
 
         DataType type = ((Variable *)(e->ptr))->type;
 
-        if (type.ndims.size() < node->children.size()){
- // if the number of dimensions is less than the number of children
-            std::string message = "Array dimension mismatch: Expected " + std::to_string(type.ndims.size()) + " but got " + std::to_string(node->children.size());
-            yy_sem_error(message);
-            return error_type;
-        }
+//         if (type.ndims.size() < node->children.size()){
+//  // if the number of dimensions is less than the number of children
+//             std::string message = "Array dimension mismatch: Expected " + std::to_string(type.ndims.size()) + " but got " + std::to_string(node->children.size());
+//             yy_sem_error(message);
+//             return error_type;
+//         }
 
         for (auto child : node->children){
 
             if (child->kind == literal && (stoi(child->name) >= type.ndims.back() || stoi(child->name) < 0)){
-
                 std::string message = "Array index out of bounds";
                 yy_sem_error(message);
                 return error_type;
+            }
+
+            if(child->kind != literal){
+                resolve_expression(child, current, global);
+                if(child->type != DataType(int_t)){
+                    std::string message = "Array index must be an integer";
+                    yy_sem_error(message);
+                    return error_type;
+                }
             }
             type.ndims.pop_back();
         }
@@ -219,40 +215,81 @@ DataType retrieveType(ASTNode *node, SymbolTable *current, SymbolTable *global){
         ASTNode *second;
         SymbolTableEntry *e = current->getEntryNested(first->name);
         if (e == NULL){
-            std::string message = "Variable " + node->name + " not declared";
+            std::string message = "Variable " + first->name + " not declared";
             yy_sem_error(message);
             return error_type;
         }
 
         if (e->type != variable){
-            std::string message = "Variable " + node->name + " already declared as a " + entry_type_strings[e->type];
+            std::string message = "Variable " + first->name + " already declared as a " + entry_type_strings[e->type];
             yy_sem_error(message);
             return error_type;
         }
 
+        DataType t =  ((Variable*)(e->ptr))->type ;
+        if(((Variable*)(e->ptr))->type != DataType(struct_t, t.name)){
+            std::string message = "Variable " + first->name + " is not a struct";
+            yy_sem_error(message);
+            return error_type;
+        }
+
+        Struct* struct_info = (Struct*)global->getEntry(((Variable*)(e->ptr))->type.name)->ptr;
+        first->type = ((Variable*)(e->ptr))->type;
         do{
             first = chain_node->children[0];
             second = chain_node->children[1];
+            bool hap = false;
+            
             if (second->kind == identifier_chain) // basically the left one is definitely a variable
-                second = second->children[0];
+                second = second->children[0], hap = true;
 
-            if(first->type.type != struct_t){
-                std::string message = "Variable " + first->name + " is not a struct";
+
+
+            std::vector<Variable> members = struct_info->members;
+            Variable *member_info = NULL;
+            for(auto member: members){
+                if(member.name == second->name){
+                    member_info = &member;
+                    break;
+                }
+            }
+            if(member_info == NULL){
+                std::string message = "Struct " + first->name + " does not have a member " + second->name;
                 yy_sem_error(message);
                 return error_type;
             }
 
-            Struct *struct_info = (Struct *)global->getEntry(first->type.name)->ptr;
-            std::vector<Variable> members = struct_info->members;
-            bool found = false;
-            for(auto member: members){
-                if(member.name == second->name){
-                    found = true;
-                    break;
+            second->type = member_info->type;
+
+            if(second->kind == array_element){
+                for(auto child: second->children){
+                    resolve_expression(child, current, global);
+                    if(child->type != DataType(int_t)){
+                        std::string message = "Array index must be an integer";
+                        yy_sem_error(message);
+                        return error_type;
+                    }
+
+                    if(child->kind == literal && (stoi(child->name) >= second->type.ndims.back() || stoi(child->name) < 0)){
+                        std::string message = "Array index out of bounds";
+                        yy_sem_error(message);
+                        return error_type;
+                    }
+                    second->type.ndims.pop_back();
                 }
             }
-            if(!found){
-                std::string message = "Struct " + first->name + " does not have a member " + second->name;
+            
+
+            if(second->type == DataType(struct_t, second->type.name)){
+                struct_info = (Struct*)global->getEntry(second->type.name)->ptr;
+                if(struct_info == NULL){
+                    std::string message = "Struct " + member_info->type.name + " not declared";
+                    yy_sem_error(message);
+                    return error_type;
+                }
+            }
+            else if(hap){
+                std::string message = "Member " + second->name + " is not a struct";
                 yy_sem_error(message);
                 return error_type;
             }
@@ -274,9 +311,7 @@ DataType retrieveType(ASTNode *node, SymbolTable *current, SymbolTable *global){
 // Here dims is dimensions of the array in reverse(useful for popping)
 // type in core type of the array
 bool match_list_init_array(ASTNode *node, DataType type, std::vector<int> &dims, int dim_number, SymbolTable *current, SymbolTable *global){
-
     int x = dims.back();
-    dims.pop_back();
     // if not enough children
     if (node->children.size() != x){
 
@@ -286,6 +321,8 @@ bool match_list_init_array(ASTNode *node, DataType type, std::vector<int> &dims,
     }
 
     for (auto child : node->children){
+        dims.pop_back();
+        type.ndims.pop_back();
         if (dims.size() == 0){
             if (type.type == struct_t && child->kind == list_init){ // structs must be handled separately
                 Struct *struct_info = (Struct *)global->getEntry(type.name)->ptr;
@@ -300,8 +337,18 @@ bool match_list_init_array(ASTNode *node, DataType type, std::vector<int> &dims,
             }
             else{  // can be identifier chain, array_element, literal, first call resolve expression
                 resolve_expression(child, current, global);
-                if (child->type.type != type.type || child->type.name != type.name){
+                // if (child->type.type != type.type || child->type.name != type.name){
+                
+                // }
+
+                if(type.type != struct_t && child->type != type){
                     std::string message = "Type mismatch in array initialisation: Expected " + dtype_strings[type.type] + " but got " + dtype_strings[child->type.type];
+                    yy_sem_error(message);
+                    return false;
+                }
+
+                if(type.type == struct_t && child->type.name != type.name){
+                    std::string message = "Type mismatch in array initialisation: Expected struct " + type.name + " but got " + child->type.name;
                     yy_sem_error(message);
                     return false;
                 }
@@ -309,7 +356,7 @@ bool match_list_init_array(ASTNode *node, DataType type, std::vector<int> &dims,
         }
         else if (child->kind != list_init){ // if the type is not struct, then it is other form of expression
             resolve_expression(child, current, global);
-            if (child->type.type != type.type){
+            if(child->type != type){
                 std::string message = "Type mismatch in array initialisation: Expected " + dtype_strings[type.type] + " but got " + dtype_strings[child->type.type];
                 yy_sem_error(message);
                 return false;
@@ -335,8 +382,12 @@ bool match_list_init_array(ASTNode *node, DataType type, std::vector<int> &dims,
             if (!match_list_init_array(child, type, dims, dim_number + 1, current, global)){
                 return false;
             }
+
         }
+        dims.push_back(x);
+        type.ndims.push_back(x);
     }
+    node->type = type;
 
     return true;
 }
@@ -344,7 +395,7 @@ bool match_list_init_array(ASTNode *node, DataType type, std::vector<int> &dims,
 // Function to check if the node of type initialiser_list is valid
 bool match_list_init(ASTNode *node, DataType type, SymbolTable *current, SymbolTable *global){
     
-        if (type.type == struct_t){
+        if (type.type == struct_t && type.ndims.size() == 0){
             Struct *struct_info = (Struct *)global->getEntry(type.name)->ptr;
             return match_list_init_struct(node, struct_info, current, global);
         }
@@ -427,8 +478,8 @@ DataType resolve_binary_operator(ASTNode* left, ASTNode* right, std::string op, 
         if(left->type == right->type)
             return left->type;
 
-        goto assign_checks;
     }
+    
 
     if(left->type.ndims.size() != 0 || right->type.ndims.size() != 0){
         std::string message = "Arrays not allowed in binary expressions except assignments";
@@ -441,7 +492,13 @@ DataType resolve_binary_operator(ASTNode* left, ASTNode* right, std::string op, 
         yy_sem_error(message);
         return error_type;
     }
-    if(op == "+=" | op == "-=" | op == "*=" | op == "/=" | op == "%="){
+
+    if((op == "==") | (op == "!=")){
+        if(left->type == right->type)
+            return bool_t;
+        
+    }
+    else if(op == "+=" | op == "-=" | op == "*=" | op == "/=" | op == "%="){
         if(left->kind != variable_t && left->kind != array_element && left->kind != identifier_chain){
             std::string message = "Left side of " + op + " must be a lvalue";
             yy_sem_error(message);
@@ -486,10 +543,10 @@ DataType resolve_binary_operator(ASTNode* left, ASTNode* right, std::string op, 
         // handling string/char
         if(left_type== string_t && right_type == string_t && (op == "+=" ))
             return left_type;
-        if(left_type == string_t && right_type == char_t && (op == "+=" || op == "="))
+        if(left_type == string_t && right_type == char_t && (op == "+=" ))
             return left_type;
 
-        if(left_type == string_t && right_type == int_t && (op == "+=" || op == "=")) // basically I can do things as worse as Javascript :()
+        if(left_type == string_t && right_type == int_t && (op == "+=" )) // basically I can do things as worse as Javascript :()
             return left_type;
 
 
@@ -547,7 +604,7 @@ DataType resolve_binary_operator(ASTNode* left, ASTNode* right, std::string op, 
             return string_t;
 
     }
-    else if(op == "==" || op == "!=" || op == "<" || op == ">" || op == "<=" || op == ">="){
+    else if( op == "<" || op == ">" || op == "<=" || op == ">="){
         if(!(left_type == int_t || left_type == float_t || left_type == long_t || left_type == bool_t))
             return error_type;
 
@@ -583,7 +640,7 @@ DataType resolve_binary_operator(ASTNode* left, ASTNode* right, std::string op, 
 void resolve_expression(ASTNode* node, SymbolTable* current, SymbolTable* global){
     if(node->name == "="){
 
-        if(node->kind == expr_stmt || node->kind == literal){
+        if(node->children[0]->kind == expr_stmt || node->children[0]->kind == literal){
             std::string message = "Assignment requires a lvalue";
             yy_sem_error(message);
             node->type = error_type;
@@ -609,7 +666,7 @@ void resolve_expression(ASTNode* node, SymbolTable* current, SymbolTable* global
     expr: // label to jump to
 
     resolve_expression(node->children[1], current, global);
-    resolve_binary_operator(node->children[0], node->children[1], node->name, current, global);
+    node->type = resolve_binary_operator(node->children[0], node->children[1], node->name, current, global);
 }
 
 
@@ -1395,7 +1452,6 @@ void first_pass(ASTNode *node, SymbolTable *global){
         std::unordered_set<std::string> param_names;
         std::vector<Variable> params;
         for (auto param_node : node->children[0]->children){
-
             // Handles Previously declared in list
             if (param_names.find(param_node->name) != param_names.end()){
 
@@ -1421,7 +1477,6 @@ void first_pass(ASTNode *node, SymbolTable *global){
     }
     case struct_decl:{
 
-        // Check if the function is already declared
         if (global->checkName(node->name)){
 
             std::string message = "Struct " + node->name + " already declared as a " + entry_type_strings[global->getEntry(node->name)->type];
@@ -1431,26 +1486,33 @@ void first_pass(ASTNode *node, SymbolTable *global){
 
         std::unordered_set<std::string> param_names;
         std::vector<Variable> params;
-        for (auto param_node : node->children[0]->children){
+        for(int i = 0; i < node->children.size(); i++){
+        for (auto param_node : node->children[i]->children){
+                std::cout << "Handling struct parameter named: " << param_node->name << std::endl;
+                // Handles Previously declared in list
+                if (param_names.find(param_node->name) != param_names.end()){
 
-            // Handles Previously declared in list
-            if (param_names.find(param_node->name) != param_names.end()){
+                    std::string message = "Variable" + node->name + " previously used in Struct: " + node->name;
+                    // param_node->type = error_type;
+                    yy_sem_error(message);
+                    continue;
+                }
+                SymbolTableEntry* x;
+                // Handles previously declared variable as some differnt type
+                if ((( x = global->getEntry(param_node->name))!= nullptr) && (x->type!=variable) ){
 
-                std::string message = "Variable" + node->name + " previously used in Struct: " + node->name;
-                yy_sem_error(message);
-                continue;
+                    std::string message = "Variable" + node->name + " previously declared as a " + entry_type_strings[global->getEntry(node->name)->type];
+                    // param_node->type = error_type;
+                    yy_sem_error(message);
+                    continue;
+                }
+
+                Variable *v = new Variable(param_node->name, node->children[i]->type, param_node->line_number, param_node->col_number);
+                // param_node->type = error_type;
+                param_node->type = node->children[i]->type;
+
+                params.push_back(*v);
             }
-
-            // Handles previously declared variable as some differnt type
-            if (global->checkName(param_node->name)){
-
-                std::string message = "Variable" + node->name + " previously declared as a " + entry_type_strings[global->getEntry(node->name)->type];
-                yy_sem_error(message);
-                continue;
-            }
-
-            Variable *v = new Variable(param_node->name, param_node->type, param_node->line_number, param_node->col_number);
-            params.push_back(*v);
         }
 
         global->addStruct(node->name, new Struct(node->name, params, node->line_number, node->col_number));
@@ -1480,7 +1542,15 @@ void second_pass(ASTNode *node, SymbolTable *current, SymbolTable *global){
     }
     case decl_stmt:{
         DataType type = node->type;
+        std:: cout << "Declaring a statement" << std::endl;
 
+        if(node->type.type == struct_t){
+            if(global->getEntry(node->type.name) == nullptr){
+                std::string message = "Struct " + node->type.name + " not declared";
+                yy_sem_error(message);
+                break;
+            }
+        }
         for(auto child: node->children){ // all declarations of this type
             if(current->checkNameNested(child->name)){
                 std::string message = "Variable " + child->name + " already declared";
@@ -1493,6 +1563,8 @@ void second_pass(ASTNode *node, SymbolTable *current, SymbolTable *global){
                 continue;
             }
 
+            
+
             Variable *v = new Variable(child->name, type, child->line_number, child->col_number);
             current->addVariable(child->name, v);
             child->type = type;
@@ -1500,14 +1572,15 @@ void second_pass(ASTNode *node, SymbolTable *current, SymbolTable *global){
                 // handle expressions
                 if(child->children[0]->kind != list_init){
                     resolve_expression(child->children[0], current, global);
-                    if(child->type != child->children[0]->type){
-                        std::string message = "Type mismatch in variable Declaration" + child->name;
+
+                    if(resolve_binary_operator(child, child->children[0], "=", current, global) == error_type){
+                        std::string message = "Type mismatch in variable Declaration " + child->name;
                         yy_sem_error(message);
                     }
                 }
                 else{
                     if(!match_list_init(child->children[0], type, global, current)){
-                        std::string message = "Type mismatch in variable Declaration" + child->name;
+                        std::string message = "Type mismatch in variable Declaration in list initializer of " + child->name;
                         yy_sem_error(message);
                     }
                 }
@@ -1518,5 +1591,5 @@ void second_pass(ASTNode *node, SymbolTable *current, SymbolTable *global){
     }
     // Recursively call the function for the next node
     if (node->next != NULL)
-        first_pass(node->next, global);
+        second_pass(node->next, current, global);
 }

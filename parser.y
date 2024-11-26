@@ -626,7 +626,6 @@ selection_statement: IF selection_condition compound_statement if_chain_statemen
 
 selection_condition: LPAREN expression RPAREN{
         $$= $2;
-        $$->kind=cond_stmt;
     }
     | error RPAREN  {$$ = new ASTNode(syntax_error_stmt);yyerrok;}
     | LPAREN error RPAREN {$$ = new ASTNode(syntax_error_stmt);yyerrok;}
@@ -1261,6 +1260,7 @@ int main(int argc, char** argv) {
     SymbolTable* st = new SymbolTable();
     /* sem_test(root, st, st); */
     first_pass(root, st);
+    second_pass(root, st, st);
     traverse(root);
     return num_errs;
 }

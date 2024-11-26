@@ -1,0 +1,39 @@
+int x = 5;
+char u = 'u';
+string t = "x" + 'a';
+long y = 67 + 0.5;
+float sdf=0.3;
+
+struct hello{
+    int y;
+    int z;
+    char t;
+};
+
+struct hello[5][2] sfsdfs;
+int[5][4,6] array;
+struct hello hola = {1, 23.0, 'u'};
+
+bool hola_true = true;
+bool[2][4] name= {{hola_true, hola_true, hola_true, hola_true}, {hola_true, hola_true, hola_true, hola_true}};
+
+struct hello[5] crazy_check = {hola, hola, hola, {1, 5.61, 'u'}, {1e5, 2342, 't'}};
+
+
+
+struct second{
+    int[5][6] hapy;
+    struct hello[5] test;
+};
+
+int[6] woof = {1,2,3,4,5,6};
+struct second named = {{woof, woof, {3, 2, 5,6,1, 0}, {0 + 5, 9 + 8, 7 + 5.0, 23, 2e5, 6}, woof}, crazy_check};
+
+array[2][3] = 1.0;
+
+hola.y += array[3][3];
+
+named.hapy[x][2] += 43;
+
+named.test[2].y = array[2][1];
+

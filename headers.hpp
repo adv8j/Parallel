@@ -215,18 +215,65 @@ struct DataType
         : type(type), ndims({}), reference(ref), name(name)
     {
     }
-
+    // resolve binary expression uses differnt type of ==, this is for checking passed points.
     bool operator==(const DataType &parameter) const{
-        bool x1 = this->type == parameter.type;
+        bool x1 = true;
 
         if(this->type == struct_t)
             x1 &= this->name == parameter.name;
-        
+        else{
+            dtypes left_type = this->type;
+            dtypes right_type = parameter.type;
+            if(left_type == int_t && right_type == int_t) // handling numerical cases
+                ;
+            else if(left_type == float_t && right_type == float_t)
+                ;
+            else if(left_type == long_t && right_type == long_t)
+                ;
+            else if(left_type == float_t && right_type == int_t)
+                ;
+            else if(left_type == int_t && right_type == float_t)
+                ;
+            else if(left_type == long_t && right_type == int_t)
+                ;
+            else if(left_type == int_t && right_type == long_t)
+                ;
+            else if(left_type == long_t && right_type == float_t)
+                ;
+            else if(left_type == float_t && right_type == long_t)
+                ;
 
+            else if(left_type == bool_t && right_type == bool_t) // handling boolean cases
+                ;
+            else if(left_type == bool_t && right_type == int_t)
+                ;
+            else if(left_type == int_t && right_type == bool_t)
+                ;
+            else if(left_type == bool_t && right_type == float_t)
+                ;
+            else if(left_type == float_t && right_type == bool_t)
+                ;
+            else if(left_type == bool_t && right_type == long_t)
+                ;
+            else if(left_type == long_t && right_type == bool_t)
+                ;
+            
+            // handling string/char
+            else if(left_type== string_t && right_type == string_t)
+                ;
+            
+            else if(left_type == string_t && right_type == char_t )
+                ;
+            else if(left_type == string_t && right_type == int_t ) // basically I can do things as worse as Javascript :()
+                ;
+            else if(left_type == right_type)
+                ;
+            else return false;
+        }
+        
         if(this->ndims.size() != parameter.ndims.size())
             return false;
         
-
         for(int i = 0; i < this->ndims.size(); i++)
             x1 &= this->ndims[i] == parameter.ndims[i];
         
@@ -236,7 +283,28 @@ struct DataType
     bool operator!=(const DataType &parameter) const{
         return !(*this == parameter);
     }
+
+    std::string to_string(){
+        std::string str = dtype_strings[type] + " " + name;
+        for(int i : ndims)
+            str += "[" + std::to_string(i) + "]";
+        if(reference)
+            str += "&";
+        return str;
+    }
 };
+
+std::ostream &operator<<(std::ostream &os, const DataType &type){
+    os  <<dtype_strings[type.type] << " " << type.name;
+    for(int i : type.ndims)
+        os << "[" << i << "]";
+    if(type.reference)
+        os << "&";
+    return os;
+}
+
+
+
 
 int kind = 0; // Change this to test different values
 
