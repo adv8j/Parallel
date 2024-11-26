@@ -3,9 +3,7 @@ func ready int(int x, int y){
 }
 
 
-func ready int(int z, int k){
-    return l;
-}
+
 
 if(x > 5){
     x += 5;

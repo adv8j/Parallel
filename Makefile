@@ -4,10 +4,10 @@ build: parser.y parallel_lex.l AST.cpp symbol_table.cpp semantics.cpp
 	g++ -g y.tab.c -o parser.out
 	
 all: lex
-	./parser.out
+	./parser.out --ast
 
 run: build
-	@./parser.out $(debug) < $(input); \
+	@./parser.out $(debug) --ast< $(input); \
 	exit 0;
 
 

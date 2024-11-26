@@ -37,3 +37,12 @@ named.hapy[x][2] += 43;
 
 named.test[2].y = array[2][1];
 
+func ready int(int[6] z, int k){
+    return l;
+}
+
+t = t + ready({1,2,3,4,5,6}, 0);
+
+ready(woof, 1) += 2;
+
+hapy = named.hapy[x];

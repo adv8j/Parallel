@@ -268,6 +268,7 @@ function_call: IDENTIFIER LPAREN function_call_tail {
         if($3){
             $$ -> add_child($3);
         }
+        else $$->add_child(new ASTNode(arg_list));
         delete $1;
     }
     | IDENTIFIER LPAREN error RPAREN {  $$ = new ASTNode(syntax_error_stmt);yyerrok; }
@@ -1252,8 +1253,16 @@ identifier_list: identifier_list COMMA IDENTIFIER
 
 %%
 int main(int argc, char** argv) {
+    int ast = 0;
     if(argc > 1) {
-        yydebug = 1;
+        
+        for(int i = 1; i < argc; i++) {
+            std::string query = argv[i];
+            if(query == "--debug")
+                yydebug = 1;
+            if(query == "--ast")
+                ast = 1;
+        }
     }
     root = new ASTNode();
 	yyparse();
@@ -1261,7 +1270,11 @@ int main(int argc, char** argv) {
     /* sem_test(root, st, st); */
     first_pass(root, st);
     second_pass(root, st, st);
-    traverse(root);
+    if(ast)
+        traverse(root);
+
+    
+
     return num_errs;
 }
 

@@ -80,28 +80,10 @@ bool check_valid_function_call(ASTNode *node, SymbolTable *current, SymbolTable 
         }
         DataType arg_type = node->children[i]->type;
         
-        // TODO : GIve better error messages
-        if (param_type.type != arg_type.type){
-            std::string message = "Function " + node->name + " expects argument " + std::to_string(i) + " of type " + dtype_strings[param_type.type] + " but got " + dtype_strings[arg_type.type];
+        if(param_type != arg_type){
+            std::string message = "Function " + node->name + " expects argument " + std::to_string(i) + " of type " + param_type.to_string() + " but got " + arg_type.to_string();
             yy_sem_error(message);
             return false;
-        }
-        if(param_type.type == struct_t && param_type.name != arg_type.name){
-            std::string message = "Function " + node->name + " expects argument " + std::to_string(i) + " of type " + param_type.name + " but got " + arg_type.name;
-            yy_sem_error(message);
-            return false;
-        }
-        if (param_type.ndims.size() != arg_type.ndims.size()){
-            std::string message = "Function " + node->name + " expects argument " + std::to_string(i) + " with " + std::to_string(param_type.ndims.size()) + " dimensions but got " + std::to_string(arg_type.ndims.size());
-            yy_sem_error(message);
-            return false;
-        }
-        for (int j = 0; j < param_type.ndims.size(); j++){
-            if (param_type.ndims[j] != arg_type.ndims[j]){
-                std::string message = "Function " + node->name + " expects argument " + std::to_string(i) + " with " + std::to_string(param_type.ndims[j]) + " dimensions but got " + std::to_string(arg_type.ndims[j]);
-                yy_sem_error(message);
-                return false;
-            }
         }
         
     }
@@ -130,13 +112,6 @@ DataType retrieveType(ASTNode *node, SymbolTable *current, SymbolTable *global){
         }
 
         DataType type = ((Variable *)(e->ptr))->type;
-
-//         if (type.ndims.size() < node->children.size()){
-//  // if the number of dimensions is less than the number of children
-//             std::string message = "Array dimension mismatch: Expected " + std::to_string(type.ndims.size()) + " but got " + std::to_string(node->children.size());
-//             yy_sem_error(message);
-//             return error_type;
-//         }
 
         for (auto child : node->children){
 
@@ -185,12 +160,13 @@ DataType retrieveType(ASTNode *node, SymbolTable *current, SymbolTable *global){
     }
     else if (node->kind == function_call_stmt){
 
-        SymbolTableEntry *e = global->getEntryNested(node->name);
+        SymbolTableEntry *e = global->getEntry(node->name);
 
         if (e == NULL){
 
             std::string message = "Function " + node->name + " not declared";
             yy_sem_error(message);
+            node->type = error_type;
             return error_type;
         }
 
@@ -198,10 +174,12 @@ DataType retrieveType(ASTNode *node, SymbolTable *current, SymbolTable *global){
 
             std::string message = "Function " + node->name + " already declared as a " + entry_type_strings[e->type];
             yy_sem_error(message);
+            node->type = error_type;
             return error_type;
         }
         Function *func_entry = (Function *)(e->ptr);
-        if (!check_valid_function_call(node, current, global, func_entry)){
+        if (!check_valid_function_call(node->children[0], current, global, func_entry)){
+            node->type = error_type;
             return error_type;
         }
         node->type = func_entry->return_type;
@@ -253,7 +231,7 @@ DataType retrieveType(ASTNode *node, SymbolTable *current, SymbolTable *global){
                     break;
                 }
             }
-            if(member_info == NULL){
+            if(member_info == NULL){ // check if a relevant member exists
                 std::string message = "Struct " + first->name + " does not have a member " + second->name;
                 yy_sem_error(message);
                 return error_type;
@@ -261,6 +239,7 @@ DataType retrieveType(ASTNode *node, SymbolTable *current, SymbolTable *global){
 
             second->type = member_info->type;
 
+            // handle the case where it is an array element, resolve its type(can't go to symbol table here.)
             if(second->kind == array_element){
                 for(auto child: second->children){
                     resolve_expression(child, current, global);
@@ -279,7 +258,7 @@ DataType retrieveType(ASTNode *node, SymbolTable *current, SymbolTable *global){
                 }
             }
             
-
+            // Checks if the second one is a valid struct name
             if(second->type == DataType(struct_t, second->type.name)){
                 struct_info = (Struct*)global->getEntry(second->type.name)->ptr;
                 if(struct_info == NULL){
@@ -468,6 +447,7 @@ DataType resolve_binary_operator(ASTNode* left, ASTNode* right, std::string op, 
         if(left->kind== variable_t && !current->checkNameNested(left->name, variable)){ // declare the variable implicitly with type inferred from right
             Variable* var_entry = new Variable(left->name, right->type);
             current->addVariable(left->name, var_entry);
+            left->type = right->type;
         }
         else if(left->kind == variable_t && (global->getEntry(left->name) != nullptr && global->getEntry(left->name)->type != variable)){
             std::string message = "Variable " + left->name + " already declared as a " + entry_type_strings[global->getEntry(left->name)->type];
@@ -646,7 +626,7 @@ void resolve_expression(ASTNode* node, SymbolTable* current, SymbolTable* global
             node->type = error_type;
             return;
         }
-        if(node->kind == variable_t)
+        if(node->children[0]->kind == variable_t)
             goto expr;
         
     }
@@ -1444,7 +1424,6 @@ void first_pass(ASTNode *node, SymbolTable *global){
 
         // Check if the function is already declared
         if (global->checkName(node->name)){
-
             std::string message = "Function " + node->name + " already declared as a " + entry_type_strings[global->getEntry(node->name)->type];
             yy_sem_error(message);
         }
@@ -1506,11 +1485,10 @@ void first_pass(ASTNode *node, SymbolTable *global){
                     yy_sem_error(message);
                     continue;
                 }
-
+                
                 Variable *v = new Variable(param_node->name, node->children[i]->type, param_node->line_number, param_node->col_number);
                 // param_node->type = error_type;
                 param_node->type = node->children[i]->type;
-
                 params.push_back(*v);
             }
         }
@@ -1536,7 +1514,12 @@ void second_pass(ASTNode *node, SymbolTable *current, SymbolTable *global){
 
     switch (node->kind){
 
-    case expr_stmt:{
+    case expr_stmt:
+    case literal:
+    case variable_t:
+    case function_call_stmt:
+    case identifier_chain:
+    case array_element:{
         resolve_expression(node, current, global);
         break;
     }
