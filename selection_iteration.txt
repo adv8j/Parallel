@@ -1,0 +1,11 @@
+int x = 5;
+if(x > 2){
+
+}
+else if(x > 24){
+    int y = 2;
+    int g = 5;
+}
+else{
+
+}

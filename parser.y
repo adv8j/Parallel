@@ -637,9 +637,8 @@ if_chain_statement: ELSE else_case{$$=$2;}
     |   {$$     = NULL;}
     ;
     // if else-if else-if else
-else_case: selection_statement{$$=$1;$$->kind=elseif_stmt;}
-    | compound_statement{$$=$1;$$->kind=else_stmt;}
-
+else_case: selection_statement{$$=$1;}
+    | compound_statement{$$ = new ASTNode(else_stmt); $$->children.push_back($1);}
     ;
 
 function_declaration: FUNC IDENTIFIER func_dtype params  compound_statement

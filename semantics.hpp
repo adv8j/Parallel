@@ -22,5 +22,6 @@ bool match_list_init_array(ASTNode *node, DataType type, std::vector<int> &dims,
 
 void resolve_expression(ASTNode* curNode, SymbolTable* current, SymbolTable* global);
 
+
 #endif // SEMANTICS_HPP
 

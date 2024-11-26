@@ -1523,6 +1523,7 @@ void second_pass(ASTNode *node, SymbolTable *current, SymbolTable *global){
         resolve_expression(node, current, global);
         break;
     }
+
     case decl_stmt:{
         DataType type = node->type;
         std:: cout << "Declaring a statement" << std::endl;
@@ -1571,7 +1572,33 @@ void second_pass(ASTNode *node, SymbolTable *current, SymbolTable *global){
         }
         break;
     }
+    case selection_stmt:{
+        for(auto child: node->children){
+            ASTNode* compound = child->children[0];
+            if(child->kind == if_stmt){
+                resolve_expression(child->children[0], current, global);
+                if(child->children[0]->type.type != bool_t){
+                    std::string message = "If condition is not a boolean expression";
+                    yy_sem_error(message);
+                }
+
+                compound = child->children[1];
+            }
+            if(compound->childExists()){
+                SymbolTable* new_table = new SymbolTable();
+                new_table->next = current;
+                second_pass(compound->children[0], new_table, global);
+                new_table->next = nullptr;
+                delete new_table;
+            }
+        }
+        break;
     }
+    case iterative_stmt:{
+        break;
+    }
+    }
+    
     // Recursively call the function for the next node
     if (node->next != NULL)
         second_pass(node->next, current, global);

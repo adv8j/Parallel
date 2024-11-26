@@ -50,17 +50,17 @@ int num_errs = 0;
 	
 }
 
-\+=                { process_text(yytext); return ADD_ASSIGN; }
+\+=                { process_text(yytext); $$ = new ASTNode(operator, "+=", yylineno, cur_char);return ADD_ASSIGN; }
 
-\-=                { process_text(yytext); return SUB_ASSIGN;}
+\-=                { process_text(yytext); $$ = new ASTNode(operator, "-=", yylineno, cur_char); return SUB_ASSIGN;}
 
-\*=                { process_text(yytext); return MUL_ASSIGN; }
+\*=                { process_text(yytext); $$ = new ASTNode(operator, "*=", yylineno, cur_char);return MUL_ASSIGN; }
 
-\/=                { process_text(yytext); return DIV_ASSIGN; }
+\/=                { process_text(yytext); $$ = new ASTNode(operator, "/=", yylineno, cur_char);return DIV_ASSIGN; }
 
-\%=                { process_text(yytext); return MOD_ASSIGN;}
+\%=                { process_text(yytext); $$ = new ASTNode(operator, "%=", yylineno, cur_char); return MOD_ASSIGN;}
 
-=                 { process_text(yytext); return ASSIGN; }
+=                 { process_text(yytext); $$ = new ASTNode(operator, "=", yylineno, cur_char); return ASSIGN; }
 
 \+                 { process_text(yytext); return PLUS;}
 
