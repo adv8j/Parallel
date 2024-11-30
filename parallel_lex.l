@@ -50,45 +50,45 @@ int num_errs = 0;
 	
 }
 
-\+=                { process_text(yytext); $$ = new ASTNode(operator, "+=", yylineno, cur_char);return ADD_ASSIGN; }
+\+=                { process_text(yytext); yylval = new ASTNode(operator_t, "+=", yylineno, cur_char);return ADD_ASSIGN; }
 
-\-=                { process_text(yytext); $$ = new ASTNode(operator, "-=", yylineno, cur_char); return SUB_ASSIGN;}
+\-=                { process_text(yytext); yylval = new ASTNode(operator_t, "-=", yylineno, cur_char); return SUB_ASSIGN;}
 
-\*=                { process_text(yytext); $$ = new ASTNode(operator, "*=", yylineno, cur_char);return MUL_ASSIGN; }
+\*=                { process_text(yytext); yylval = new ASTNode(operator_t, "*=", yylineno, cur_char);return MUL_ASSIGN; }
 
-\/=                { process_text(yytext); $$ = new ASTNode(operator, "/=", yylineno, cur_char);return DIV_ASSIGN; }
+\/=                { process_text(yytext); yylval = new ASTNode(operator_t, "/=", yylineno, cur_char);return DIV_ASSIGN; }
 
-\%=                { process_text(yytext); $$ = new ASTNode(operator, "%=", yylineno, cur_char); return MOD_ASSIGN;}
+\%=                { process_text(yytext); yylval = new ASTNode(operator_t, "%=", yylineno, cur_char); return MOD_ASSIGN;}
 
-=                 { process_text(yytext); $$ = new ASTNode(operator, "=", yylineno, cur_char); return ASSIGN; }
+=                 { process_text(yytext); yylval = new ASTNode(operator_t, "=", yylineno, cur_char); return ASSIGN; }
 
-\+                 { process_text(yytext); return PLUS;}
+\+                 { process_text(yytext); yylval = new ASTNode(operator_t, "+", yylineno, cur_char);return PLUS;}
 
-\-               { process_text(yytext); return MINUS;}
+\-               { process_text(yytext); yylval = new ASTNode(operator_t, "-", yylineno, cur_char);return MINUS;}
 
-\*                 { process_text(yytext); return MUL;}
+\*                 { process_text(yytext); yylval = new ASTNode(operator_t, "*", yylineno, cur_char);return MUL;}
 
-\/                 { process_text(yytext); return DIV;}
+\/                 { process_text(yytext); yylval = new ASTNode(operator_t, "/", yylineno, cur_char);return DIV;}
 
-\%                 { process_text(yytext); return MOD;}
+\%                 { process_text(yytext); yylval = new ASTNode(operator_t, "%", yylineno, cur_char);return MOD;}
 
-==                { process_text(yytext); return EQ;}
+==                { process_text(yytext); yylval = new ASTNode(operator_t, "==", yylineno, cur_char);return EQ;}
 
-!=                { process_text(yytext); return NEQ;}
+!=                { process_text(yytext);yylval = new ASTNode(operator_t, "!=", yylineno, cur_char); return NEQ;}
 
->                 { process_text(yytext); return GT;}
+>                 { process_text(yytext); yylval = new ASTNode(operator_t, ">", yylineno, cur_char);return GT;}
 
-\<                 { process_text(yytext); return LT;}
+\<                 { process_text(yytext);yylval = new ASTNode(operator_t, "<", yylineno, cur_char); return LT;}
 
->=                { process_text(yytext); return GTE;}
+>=                { process_text(yytext); yylval = new ASTNode(operator_t, ">=", yylineno, cur_char);return GTE;}
 
-\<=                { process_text(yytext); return LTE;}
+\<=                { process_text(yytext); yylval = new ASTNode(operator_t, "<=", yylineno, cur_char); return LTE;}
 
-&&               { process_text(yytext); return AND;}
+&&               { process_text(yytext); yylval = new ASTNode(operator_t, "&&", yylineno, cur_char); return AND;}
 
-\|\|               { process_text(yytext); return OR;}
+\|\|               { process_text(yytext); yylval = new ASTNode(operator_t, "||", yylineno, cur_char); return OR;}
 
-\!                { process_text(yytext); return NOT;}
+\!                { process_text(yytext); yylval = new ASTNode(operator_t, "!", yylineno, cur_char);return NOT;}
 
 ;                 { process_text(yytext); return SEMICOLON;}
 
@@ -102,7 +102,7 @@ int num_errs = 0;
 
 \]                 { process_text(yytext); return RBRACKET;}
 
-\{				{ process_text(yytext); return LBRACE;}
+\{				{ process_text(yytext); yylval = new ASTNode(operator_t, "", yylineno, cur_char);return LBRACE;}
 
 \}                 { process_text(yytext); return RBRACE;}
 
@@ -112,7 +112,7 @@ int num_errs = 0;
 
 \.\.=               { process_text(yytext); return RANGE_INCL;}
 
-&                { process_text(yytext); return REFERENCE;}
+&                { process_text(yytext); yylval = new ASTNode(operator_t, "&", yylineno, cur_char);return REFERENCE;}
 	
 @TaskGroup  { process_text(yytext); return TASKGROUP;}
 
@@ -167,37 +167,37 @@ static { process_text(yytext); return STATIC_SCHEDULE;}
 mut { process_text(yytext); return MUT;}
 
 
-int { process_text(yytext); return INT;}
+int { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, type_t, "", int_t); return INT;}
 
-char { process_text(yytext); return CHAR;}
+char { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, type_t, "", char_t);return CHAR;}
 
-long { process_text(yytext); return LONG;}
+long { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, type_t, "", long_t); return LONG;}
 
-bool { process_text(yytext); return BOOL;}
+bool { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, type_t, "", bool_t); return BOOL;}
 
-float { process_text(yytext); return FLOAT;}
+float { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, type_t, "", float_t); return FLOAT;}
 
-string { process_text(yytext); return STRING;}
+string { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, type_t, "", string_t); return STRING;}
 
 
-func { process_text(yytext); return FUNC;}
+func { process_text(yytext); yylval = new ASTNode(function_decl_stmt, "", yylineno, cur_char); return FUNC;}
 
 	
-return { process_text(yytext); return RETURN;}
+return { process_text(yytext); yylval = new ASTNode(return_stmt, "", yylineno, cur_char); return RETURN;}
 
-continue { process_text(yytext); return CONTINUE;}
+continue { process_text(yytext); yylval = new ASTNode(jump_stmt, "", yylineno, cur_char); return CONTINUE;}
 
-break { process_text(yytext); return BREAK;}
+break { process_text(yytext); yylval = new ASTNode(jump_stmt, "", yylineno, cur_char); return BREAK;}
 
-struct { process_text(yytext); return STRUCT;}
+struct { process_text(yytext); yylval = new ASTNode(keyword, "", yylineno, cur_char); return STRUCT;}
 
-if { process_text(yytext); return IF;}
+if { process_text(yytext); yylval = new ASTNode(keyword, "", yylineno, cur_char); return IF;}
 
-else { process_text(yytext); return ELSE;}
+else { process_text(yytext);  yylval = new ASTNode(keyword, "", yylineno, cur_char); return ELSE;}
 
-for { process_text(yytext); return FOR;}
+for { process_text(yytext);  yylval = new ASTNode(keyword, "", yylineno, cur_char);return FOR;}
 
-in { process_text(yytext); return IN;}
+in { process_text(yytext);  yylval = new ASTNode(keyword, "", yylineno, cur_char);return IN;}
 
 
 true { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, literal, std::string(yytext), bool_t); return TRUE;}

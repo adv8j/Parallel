@@ -55,14 +55,19 @@ statement_list: statement_list statement{
     | statement{root->next = $1;}
     ;
 // Data Types
-generic_dtypes: INT { $$ = new ASTNode(type_t, int_t);}
-    | LONG {$$ = new ASTNode(type_t, long_t);}
-    | FLOAT {$$ = new ASTNode(type_t, float_t);}
-    | STRING {$$ = new ASTNode(type_t, string_t);}
-    | BOOL {$$ = new ASTNode(type_t, bool_t);}
-    | CHAR {$$ = new ASTNode(type_t, char_t);}
+generic_dtypes: INT { $$ = $1; $1->kind = type_t; }
+    | LONG { $$ = $1; $1->kind = type_t;}
+    | FLOAT { $$ = $1; $1->kind = type_t;}
+    | STRING { $$ = $1; $1->kind = type_t;}
+    | BOOL { $$ = $1; $1->kind = type_t;}
+    | CHAR { $$ = $1; $1->kind = type_t;}
     | STRUCT IDENTIFIER  {
         $$ = new ASTNode(type_t, DataType(struct_t, $2->name));
+        $$->line_number = $2->line_number;
+        $$->col_number = $2->col_number;
+        delete $1;
+        delete $2;
+
     }
     ;
 
@@ -70,7 +75,8 @@ dtype: generic_dtypes { $$ = $1;}
     | array {$$ = $1;}
     ;
 
-func_dtype: generic_dtypes {$$ = $1;}
+func_dtype: dtype { $$ = $1;}
+    ;
         
 
 array: generic_dtypes fixed_dims initializer_dims{
@@ -131,7 +137,7 @@ statement: iterative_statement {$$ = $1;}
         $$ = new ASTNode(selection_stmt);
         $$->convert_to_children($1);
     }
-    | expression_statement
+    | expression_statement{$$ = $1;}
     | compound_statement{$$ = $1;}
     | function_declaration
     | taskgroup_statement{$$ = $1;}
@@ -139,12 +145,13 @@ statement: iterative_statement {$$ = $1;}
         $$ = $1;
     }
     | parallel_statement  
-    | struct_declaration   
+    | struct_declaration  {$$ = $1;} 
     | error SEMICOLON {  $$ = new ASTNode(syntax_error_stmt);yyerrok; }
     ;
     // specifies various types of statements(these are the ones which won't need context of being in a function/Task)
 inner_statement: iterative_statement    {$$ = $1;}
-    | selection_statement  
+    | selection_statement  {$$ = new ASTNode(selection_stmt);
+        $$->convert_to_children($1);}
     | expression_statement  {$$ = $1;} 
     | compound_statement    {$$ = $1;}
     | declaration_statement{$$ = $1;}
@@ -167,27 +174,29 @@ non_empty_inner_statement_list: non_empty_inner_statement_list inner_statement  
     // specifies various types of statements(these will be used in a function)
 
 return_statement: RETURN expression SEMICOLON{
-    $$ = new ASTNode(return_stmt);
-    $$ -> name = "return";
-    $$ -> add_child($1);
+    $$ = $1;
+    $1->name = "return";
+    $$ -> add_child($2);
 }
     |   RETURN SEMICOLON{
-        $$ = new ASTNode(return_stmt);
-        $$ -> name = "return";
+        $$ = $1;
+        $1->name = "return";
     }
     |   BREAK SEMICOLON{
-        $$ = new ASTNode(return_stmt);
-        $$ -> name = "break";
+        $$ = $1;
+        $1->name = "break";
     }
     |   CONTINUE SEMICOLON{
-        $$ = new ASTNode(return_stmt);
-        $$ -> name = "continue";
+        $$ = $1;
+        $1->name = "continue";
     }
     ;
 
 compound_statement: LBRACE inner_statement_list RBRACE{
     $$ = new ASTNode(compound_stmt);
     $$->add_child($2);
+    $$->line_number = $1->line_number;
+    $$->col_number = $1->col_number;
 }
     | error RBRACE { $$ = new ASTNode(syntax_error_stmt);yyerrok; }
     ;
@@ -195,7 +204,7 @@ compound_statement: LBRACE inner_statement_list RBRACE{
     // { inner_statement }
 
 struct_declaration: STRUCT IDENTIFIER struct_body SEMICOLON {
-    $$ = new ASTNode(struct_decl);
+    $$ = $1; $$->kind = struct_decl;
     $$ -> name = $2 -> name;
     $$ -> convert_to_children($3);
     for (const auto& member : $$ -> children){
@@ -265,6 +274,8 @@ expression: value{
 function_call: IDENTIFIER LPAREN function_call_tail {
         $$ = new ASTNode(function_call_stmt);
         $$->name=$1->name;
+        $$->line_number = $1->line_number;
+        $$->col_number = $1->col_number;
         if($3){
             $$ -> add_child($3);
         }
@@ -302,6 +313,9 @@ arithmetic_expression:
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "+";
+        $$->line_number = $2->line_number;
+        $$->col_number = $2->col_number;
+        delete $2;
 
     }
     | expression MINUS expression
@@ -311,6 +325,9 @@ arithmetic_expression:
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "-";
+        $$->line_number = $2->line_number;
+        $$->col_number = $2->col_number;
+        delete $2;
     }
     | expression MUL expression
     {
@@ -319,6 +336,9 @@ arithmetic_expression:
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "*";
+        $$->line_number = $2->line_number;
+        $$->col_number = $2->col_number;
+        delete $2;
     }
     | expression DIV expression
     {
@@ -327,6 +347,9 @@ arithmetic_expression:
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "/";
+        $$->line_number = $2->line_number;
+        $$->col_number = $2->col_number;
+        delete $2;
     }
     | expression MOD expression
     {
@@ -335,6 +358,9 @@ arithmetic_expression:
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "%";
+        $$->line_number = $2->line_number;
+        $$->col_number = $2->col_number;
+        delete $2;
     }
     ;
     // this non-terminal is for writing arithmetic expression
@@ -347,6 +373,9 @@ assignment_expression:
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "=";
+        $$->line_number = $2->line_number;
+        $$->col_number = $2->col_number;
+        delete $2;
     }
     | expression ADD_ASSIGN expression
     {
@@ -355,6 +384,9 @@ assignment_expression:
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "+=";
+        $$->line_number = $2->line_number;
+        $$->col_number = $2->col_number;
+        delete $2;
     }
     | expression SUB_ASSIGN expression
     {
@@ -363,6 +395,9 @@ assignment_expression:
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "-=";
+        $$->line_number = $2->line_number;
+        $$->col_number = $2->col_number;
+        delete $2;
     }
     | expression MUL_ASSIGN expression
     {
@@ -371,6 +406,9 @@ assignment_expression:
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "*=";
+        $$->line_number = $2->line_number;
+        $$->col_number = $2->col_number;
+        delete $2;
     }
     | expression DIV_ASSIGN expression
     {
@@ -379,6 +417,9 @@ assignment_expression:
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "/=";
+        $$->line_number = $2->line_number;
+        $$->col_number = $2->col_number;
+        delete $2;
     }
     | expression MOD_ASSIGN expression
     {
@@ -387,6 +428,9 @@ assignment_expression:
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "%=";
+        $$->line_number = $2->line_number;
+        $$->col_number = $2->col_number;
+        delete $2;
     }
     ;
     // this non-terminal is for writing assignment expression
@@ -399,12 +443,18 @@ unary_expression:
         $$=new ASTNode(expr_stmt);
         $$->name = "-";
         $$->add_child($2);
+        $$->line_number = $1->line_number;
+        $$->col_number = $1->col_number;
+        delete $1;
     }
     | NOT expression
     {
         $$=new ASTNode(expr_stmt);
         $$->name = "!";
         $$->add_child($2);
+        $$->line_number = $1->line_number;
+        $$->col_number = $1->col_number;
+        delete $1;
     }
     ;
     // this non-terminal is for writing unary expression
@@ -419,6 +469,9 @@ comparison_expression:
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "<";
+        $$->line_number = $2->line_number;
+        $$->col_number = $2->col_number;
+        delete $2;
 
     }
     | expression GT expression
@@ -428,6 +481,9 @@ comparison_expression:
         $$->add_child($1);
         $$->add_child($3);
         $$->name = ">";
+        $$->line_number = $2->line_number;
+        $$->col_number = $2->col_number;
+        delete $2;
     }
     | expression GTE expression
     {
@@ -436,6 +492,9 @@ comparison_expression:
         $$->add_child($1);
         $$->add_child($3);
         $$->name = ">=";
+        $$->line_number = $2->line_number;
+        $$->col_number = $2->col_number;
+        delete $2;
     }
     | expression LTE expression
     {
@@ -444,6 +503,9 @@ comparison_expression:
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "<=";
+        $$->line_number = $2->line_number;
+        $$->col_number = $2->col_number;
+        delete $2;
     }
     | expression EQ expression
     {
@@ -452,6 +514,9 @@ comparison_expression:
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "==";
+        $$->line_number = $2->line_number;
+        $$->col_number = $2->col_number;
+        delete $2;
     }
     | expression NEQ expression
     {
@@ -460,6 +525,9 @@ comparison_expression:
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "!=";
+        $$->line_number = $2->line_number;
+        $$->col_number = $2->col_number;
+        delete $2;
     }
     ;
     // this non-terminal is for writing comparison expression   
@@ -471,6 +539,9 @@ logical_expression: expression AND expression
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "&&";
+        $$->line_number = $2->line_number;
+        $$->col_number = $2->col_number;
+        delete $2;
     }
     | expression OR expression
     {
@@ -479,6 +550,9 @@ logical_expression: expression AND expression
         $$->add_child($1);
         $$->add_child($3);
         $$->name = "||";
+        $$->line_number = $2->line_number;
+        $$->col_number = $2->col_number;
+        delete $2;
     }
     ;
     // this non-terminal is for writing logical expression
@@ -487,10 +561,14 @@ logical_expression: expression AND expression
 declaration_statement: dtype declaration_list SEMICOLON{
         $$ = new ASTNode(decl_stmt, $1->type);
         $$->convert_to_children($2);
+        $$->line_number = $1->line_number;
+        $$->col_number = $1->col_number;
         delete $1;
     }
     | dtype REFERENCE declaration_list SEMICOLON{
         $$ = new ASTNode(decl_stmt, $1->type);
+        $$->line_number = $1->line_number;
+        $$->col_number = $1->col_number;
         ($$->type).reference = true;
         $$->convert_to_children($3);
         delete $1;
@@ -515,6 +593,9 @@ declaration: IDENTIFIER optional_value_assignment{
         if($2 != NULL){
             $$ -> add_child($2);
         }
+
+        $$->line_number = $1->line_number;
+        $$->col_number = $1->col_number;
     }
     ;
 
@@ -534,6 +615,8 @@ initializer : expression  {
 list_initialiser: LBRACE list_member initialiser_member_list_tail RBRACE{
     $$ = new ASTNode(list_init);
     $$ -> add_child($2);
+    $$->line_number = $1->line_number;
+    $$->col_number = $1->col_number;
     $$ -> convert_to_children($3);
 }
     | LBRACE error RBRACE {  $$ = new ASTNode(syntax_error_stmt);yyerrok; }
@@ -556,6 +639,9 @@ iterative_statement:  FOR  iteration_condition compound_statement{
     $$ = new ASTNode(iterative_stmt);
     $$ -> add_child($2);
     $$ -> add_child($3);
+
+    $$->line_number = $1->line_number;
+    $$->col_number = $1->col_number;
 }
     ;
 
@@ -617,6 +703,8 @@ selection_statement: IF selection_condition compound_statement if_chain_statemen
         $$ = new ASTNode(if_stmt);
         $$->add_child($2);
         $$->add_child($3);
+        $$->line_number = $1->line_number;
+        $$->col_number = $1->col_number;
         $$->next = $4;
     }
     /*
@@ -633,24 +721,23 @@ selection_condition: LPAREN expression RPAREN{
     | LPAREN expression error SEMICOLON {$$ = new ASTNode(syntax_error_stmt);yyerrok;}
     ;
 
-if_chain_statement: ELSE else_case{$$=$2;}
+if_chain_statement: ELSE else_case{$$=$2; }
     |   {$$     = NULL;}
     ;
     // if else-if else-if else
 else_case: selection_statement{$$=$1;}
-    | compound_statement{$$ = new ASTNode(else_stmt); $$->children.push_back($1);}
+    | compound_statement{$$ = new ASTNode(else_stmt, "", $1->line_number, $1->col_number); $$->children.push_back($1);}
     ;
 
 function_declaration: FUNC IDENTIFIER func_dtype params  compound_statement
     {
-        $$ = new ASTNode(function_decl_stmt);
+        $$ = $1;
         $$->name = $2->name;
         delete $2;
         $$->type=$3->type;
         delete $3;       
         $$->add_child($4);// first child is the parameters
         $$->add_child($5);// second child is the compound statement
-
     }
     | FUNC IDENTIFIER func_dtype params SEMICOLON //function prototype
     {
@@ -712,18 +799,22 @@ parameter_declaration: datatype_and_ref IDENTIFIER
         $$ = new ASTNode(params_t);
         $$->name = $2->name;
         $$->type = $1->type;
+        $$->line_number = $2->line_number;
+        $$->col_number = $2->col_number;
         delete $2;
         delete $1;
     }
-    | datatype_and_ref IDENTIFIER ASSIGN expression // for default arguments
+    /* | datatype_and_ref IDENTIFIER ASSIGN expression // for default arguments
     {
         $$ = new ASTNode(params_t);
         $$->name = $2->name;
         $$->type = $1->type;
+        $$->line_number = $2->line_number;
+        $$->col_number = $2->col_number;
         $$->add_child($4);// if params_t have any child its expression
         delete $2;
         delete $1;
-    }
+    } */
     ; 
 
 

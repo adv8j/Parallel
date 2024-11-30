@@ -113,7 +113,9 @@ enum kind_t
     arg_list,
     syntax_error_stmt,
     member_data_t,
-    identifier_chain
+    identifier_chain,
+    operator_t,
+    jump_stmt,
 };
 
 const std::string kind_t_strings[] = {
@@ -164,7 +166,9 @@ const std::string kind_t_strings[] = {
     "arg_list",
     "syntax_error_stmt",
     "member_data_t",
-    "identifier_chain"
+    "identifier_chain",
+    "operator_t",
+    "jump_stmt"
 };
 
 

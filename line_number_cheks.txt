@@ -1,0 +1,38 @@
+
+func hello int(int x, char y){
+    char ota = 'a';
+    return ota;
+}
+
+func hers int[5](){
+    int [5] arr;
+    return arr;
+}
+
+struct para{
+    int deep;
+};
+
+
+
+
+hello(1, '2');
+
+
+4 + 5;
+
+int u = 4;
+
+int[5] sf = {1,2,3,4,5};
+
+for(i = 0 ; i< 5;i+=1){
+    if(u > 2){
+        break;
+    }
+    else {continue;}
+}
+
+for i in sf{
+    x =  5;
+}
+

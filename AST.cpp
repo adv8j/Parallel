@@ -104,7 +104,7 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 	}
 	kind_t kind = node->kind;
 
-	os << CYAN_COLOR << kind_t_strings[kind] << RESET_COLOR;
+	os << CYAN_COLOR << kind_t_strings[kind] << " : " << YELLOW_COLOR << node->line_number << ":" << node->col_number << RESET_COLOR << " ";
 	switch (kind)
 	{
 	case variable_t:
@@ -235,6 +235,7 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 		os << ": " << node->name << std::endl;
 		break;
 	case return_stmt:
+	case jump_stmt:
 		os << ": " << node->name << std::endl;
 		break;
 	case compound_stmt:
@@ -246,7 +247,7 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 	case itr_type:
 	{
 		if(node->name=="type1")
-			os << ": for"  << "\n";
+			os << ": for expressions"  << "\n";
 		else
 			os << ": for range" << "\n";
 		break;

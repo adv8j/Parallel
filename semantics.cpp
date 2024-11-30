@@ -590,7 +590,6 @@ DataType resolve_binary_operator(ASTNode* left, ASTNode* right, std::string op, 
 
         if(!(right_type == int_t || right_type == float_t || right_type == long_t || right_type == bool_t))
             return error_type;
-
         return bool_t;
     }
     else if(op == "&&" || op == "||"){
@@ -637,7 +636,6 @@ void resolve_expression(ASTNode* node, SymbolTable* current, SymbolTable* global
         return;
     }
     
-
     resolve_expression(node->children[0], current, global);
     if(node->children.size() < 2){ // Handling Unary Operators
         node->type = resolve_unary_operator(node->children[0], node->name, current, global);
@@ -945,138 +943,7 @@ void resolve_expression(ASTNode* node, SymbolTable* current, SymbolTable* global
 //     }
 // }
 
-// // Returns true if initialisation is correct. Else returns false
-// bool is_correct_init(std::vector<int>& dims, dtypes type, std::string name, ASTNode* init_node, SymbolTable* global, SymbolTable* current){
-//     if(init_node == NULL)   return true;    //no init
 
-//     //handling array literal
-//     if(type == int_t && dims.size() == 1 && init_node -> kind == literal && (init_node -> name == "range" || init_node -> name == "range_incl")){
-//         int range_start = stoi((init_node -> children[0]) -> name);
-//         int range_end = stoi((init_node -> children[1]) -> name);
-//         int range_length = range_end - range_start;
-//         if(init_node -> name == "range_incl")   range_length++;
-//         if(range_length != dims[0]){
-//             std::string message = "Array literal is of length: " +std::to_string(range_length)+". Expected length: "+std::to_string(dims[0])+".\n";
-//         }
-//     }
-
-//     if(name == "" && dims.size() == 0){     //neither array, nor a struct
-//         if(init_node -> kind == list_init){
-//             std::string message = "Expected "+ dtype_strings[type] + " "+name + ". Received a list.\n";
-//             yy_sem_error(message);
-//             return false;
-//         }
-//         sem_test(init_node, current, global);
-//         if(init_node -> type.type == error_type){      // if there is an issue in the init semantics
-//             return false;
-//         }
-//         type_info rhs_type_info = create_info_struct(init_node, global, current);
-//         if(rhs_type_info.ndim != 0 || rhs_type_info.type != type || rhs_type_info.name != name){    // TODO: there is an issue, if I do float x = 1; The current approach will give an error
-//             std::string message = "Incorrect type, in initialisation\n";
-//         }
-//         return true;
-//     }
-
-//     else if(name != "" && dims.size() == 0){     // LHS is a struct
-//         SymbolTableEntry* e = global -> getEntry(name);     // get the entry for the struct declaration from symbol table
-//         Struct* struct_entry = (Struct*) (e -> ptr);
-
-//         //init_node should be a list or a struct type of variable
-//         if(init_node -> kind != list_init && init_node -> kind != variable_t){
-//             std::string message = "Struct is not instantiated properly.\n";
-//             yy_sem_error(message);
-//             return false;
-//         }
-
-//         // if struct is initialised with another struct (using variable)
-//         if(init_node -> kind == variable_t){
-//             if(current -> checkNameNested(init_node -> name) == false){
-//                 std::string message = init_node -> name +" not declared\n";
-//                 yy_sem_error(message);
-//                 return false;
-//             }
-//             type_info rhs_type_info = create_info_struct(init_node, global, current);
-//             if(rhs_type_info.type != type || rhs_type_info.name != name){
-//                 std::string message = init_node -> name + " is not if the expected type: " +dtype_strings[type] +" " +name+"\n";
-//                 yy_sem_error(message);
-//                 return false;
-//             }
-//             return true;
-//         }
-
-//         // now initialisation is done using list
-//         // check if: no. of members in init list == no. of member data in struct
-//         if((init_node -> children).size() != (struct_entry -> member_data).size()){
-//             std::string message;
-//             if((init_node -> children).size() > (struct_entry -> member_data).size()){
-//                 message = "Too many initialisers for struct "+ name + ".\n";
-//             }
-//             else {
-//                 message = "Too few initialisers for struct "+name + ".\n";
-//             }
-//             yy_sem_error(message);
-//             return false;
-//         }
-//         // now check if each entry is of the expected type
-//         for(int i = 0; i < (struct_entry -> member_data).size(); i++){
-//             Variable member_data_entry = (struct_entry -> member_data)[i];
-//             sem_test((init_node -> children)[i] , current, global);
-//             if((init_node -> children)[i] -> type.type == error_type){
-//                 return false;
-//             }
-//             if(is_correct_init(member_data_entry.dims, member_data_entry.type, member_data_entry.struct_name, (init_node -> children)[i] , global, current) == false){
-//                 return false;
-//             }
-//         }
-//         return true;
-//     }
-
-//     // LHS is array
-//     else{
-//         if(init_node -> kind != list_init && init_node -> kind != variable_t){
-//             std::string message = "Array instantiation not correct!\n";
-//             yy_sem_error(message);
-//             return false;
-//         }
-
-//         //if init_node is a variable
-//         if(init_node -> kind == variable_t){
-//             if(current -> checkNameNested(init_node -> name) == false){
-//                 std::string message = init_node -> name +" not declared\n";
-//                 yy_sem_error(message);
-//                 return false;
-//             }
-//             type_info rhs_type_info = create_info_struct(init_node, global, current);
-//             if(rhs_type_info.type != type || rhs_type_info.name != name){
-//                 std::string message = init_node -> name + " is not if the expected type: " +dtype_strings[type] +" " +name+"\n";
-//                 yy_sem_error(message);
-//                 return false;
-//             }
-//             return true;
-//         }
-
-//         //now instantiation is done using list
-//         //check if the number of members in the list is correct
-//         if(dims[0] != (init_node -> children).size()){
-//             std::string message = "Incorrect number of members in the list instatiation.\n";
-//             yy_sem_error(message);
-//             return false;
-//         }
-
-//         // now check if each entry is of the expected type
-//         for(int i = 0; i < dims[0] ; i++){
-//             sem_test((init_node -> children)[i] , current, global);
-//             if((init_node -> children)[i] -> type.type == error_type){
-//                 return false;
-//             }
-//             std::vector<int> kid_dims(dims.begin() + 1, dims.end());
-//             if(is_correct_init(kid_dims, type, name, (init_node -> children)[i] , global, current) == false){
-//                 return false;
-//             }
-
-//         }
-//         return true;
-//     }
 
 // }
 // //TODO: give types to all the variable_t
@@ -1467,7 +1334,6 @@ void first_pass(ASTNode *node, SymbolTable *global){
         std::vector<Variable> params;
         for(int i = 0; i < node->children.size(); i++){
         for (auto param_node : node->children[i]->children){
-                std::cout << "Handling struct parameter named: " << param_node->name << std::endl;
                 // Handles Previously declared in list
                 if (param_names.find(param_node->name) != param_names.end()){
 
@@ -1507,11 +1373,8 @@ void first_pass(ASTNode *node, SymbolTable *global){
         first_pass(node->next, global);
 }
 
-void second_pass(ASTNode *node, SymbolTable *current, SymbolTable *global){
 
-    if (node == nullptr)
-        return;
-
+void handle_statement(ASTNode* node, SymbolTable* current, SymbolTable* global){
     switch (node->kind){
 
     case expr_stmt:
@@ -1526,7 +1389,6 @@ void second_pass(ASTNode *node, SymbolTable *current, SymbolTable *global){
 
     case decl_stmt:{
         DataType type = node->type;
-        std:: cout << "Declaring a statement" << std::endl;
 
         if(node->type.type == struct_t){
             if(global->getEntry(node->type.name) == nullptr){
@@ -1553,7 +1415,7 @@ void second_pass(ASTNode *node, SymbolTable *current, SymbolTable *global){
             current->addVariable(child->name, v);
             child->type = type;
             if(child->childExists()){
-                // handle expressions
+                // handle 
                 if(child->children[0]->kind != list_init){
                     resolve_expression(child->children[0], current, global);
 
@@ -1577,8 +1439,8 @@ void second_pass(ASTNode *node, SymbolTable *current, SymbolTable *global){
             ASTNode* compound = child->children[0];
             if(child->kind == if_stmt){
                 resolve_expression(child->children[0], current, global);
-                if(child->children[0]->type.type != bool_t){
-                    std::string message = "If condition is not a boolean expression";
+                if(child->children[0]->type.type != bool_t && child->children[0]->type.type != int_t &&child->children[0]->type.type != float_t && child->children[0]->type.type != long_t){
+                    std::string message = "Conditional statement can't be resolved into boolean expression";
                     yy_sem_error(message);
                 }
 
@@ -1594,11 +1456,126 @@ void second_pass(ASTNode *node, SymbolTable *current, SymbolTable *global){
         }
         break;
     }
-    case iterative_stmt:{
+    case jump_stmt:{
+        if(node->name == "break" || node->name == "continue"){
+            if(num_loops == 0){
+                std::string message = "Can't use Control sequences outside of a loop";
+                yy_sem_error(message);
+            }
+        }
         break;
     }
+    case iterative_stmt:{
+        SymbolTable* new_table = new SymbolTable();
+                new_table->next = current;
+                num_loops++;
+                ASTNode* first_child = node->children[0];
+                if(first_child -> name == "type1"){
+                    for(auto child_node : first_child->children){
+                        if(child_node != nullptr)
+                            resolve_expression(child_node, new_table, global);
+                    }
+                }else{ // this one declares variable in new scope
+                    ASTNode* container = first_child->children[1];
+                    resolve_expression(container, current, global);
+                    if(container->type == error_type){
+                        std::string message = "Iteration not possible on Error Type";
+                        yy_sem_error(message);
+                        goto inside_of_the_loop;
+                    }
+
+                    if(container->type.ndims.size() == 0){
+                        std::string message = "The expression doesn't result in an array";
+                        yy_sem_error(message);
+                        goto inside_of_the_loop;
+                    }
+                    inside_of_the_loop:
+                     // declare new data type in new table
+                    DataType new_type = container->type;
+                    if(new_type.ndims.size() != 0)
+                        new_type.ndims.pop_back();
+                    first_child->children[0]->type = new_type;
+                    new_type.reference = first_child->children[0]->type.reference;
+                    new_table->addVariable(first_child->children[0]->name, new Variable(first_child->children[0]->name, new_type, first_child->children[0]->line_number, first_child->children[0]->col_number));
+                }
+
+                if(node->children[1]->childExists()){
+                    second_pass(node->children[1]->children[0], new_table, global);
+                }
+                new_table->next = nullptr;
+                num_loops--;
+                delete new_table;
+        break;
     }
+    case compound_stmt:{
+        SymbolTable* new_table = new SymbolTable();
+        new_table->next = current;
+        if(node->childExists()){
+            second_pass(node->children[0], new_table, global);
+        }
+        new_table->next = nullptr;
+        delete new_table;
+        break;
+    }
+    case function_decl_stmt:{
+        std::string name = node->name;
+        if(! global->checkName(name, function)){
+            break;
+        }
+        Function* func = (Function*)global->getEntry(name)->ptr;
+
+        SymbolTable* new_table = new SymbolTable();
+
+        new_table->next = current;
+
+        for(Variable var: func->param_list)
+            new_table->addVariable(var.name, &var);
+
+        DataType return_type = func->return_type;
+        ASTNode* stmts = node->children[1];
+
+        bool last = false;
+        if(stmts->childExists()){
+            ASTNode* child = stmts->children[0];
+            while(child != nullptr){
+                if(child->kind != return_stmt)
+                    handle_statement(child, new_table, global);
+                // special handling for matching datatype
+                else {
+                    if(child->childExists()){
+                        resolve_expression(child->children[0], new_table, global);
+                        if(child->children[0]->type != return_type){
+                            std::string message = "Return type mismatch in function " + name;
+                            yy_sem_error(message);
+                        }
+                        last = true;
+                    }
+                    else{
+                        if(return_type.type != void_t){
+                            std::string message = "Return type mismatch in function " + name;
+                            yy_sem_error(message);
+                        }
+                    }
+                }
+                child = child->next;
+            }
+        }
+
+        if(!last && return_type.type != void_t){
+            std::string message = "Function reaches end without returning a value";
+            yy_sem_error(message);
+        }
+        new_table->next = nullptr;
+        delete new_table;
+    }
+    }
+}
+void second_pass(ASTNode *node, SymbolTable *current, SymbolTable *global){
+
+    if (node == nullptr)
+        return;
     
+    handle_statement(node, current, global);
     // Recursively call the function for the next node
     if (node->next != NULL)
         second_pass(node->next, current, global);
