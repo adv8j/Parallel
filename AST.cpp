@@ -380,7 +380,7 @@ llvm::Type* var_decl_type_codegen(ASTNode* node){
     }
 	return array_type;
 }
-//TODO: when there is a new scope, add another map in NamedValues and when the scope ends remove the map.
+
 llvm::Value* var_decl_codegen(ASTNode* node, const std::string& function_name = "main",std::vector<std::map<std::string, llvm::Value*>> NamedValues = MainNamedValues){
 	if(NamedValues.size() == 0) NamedValues.push_back({});
     llvm::Type* var_type = var_decl_type_codegen(node);
@@ -405,14 +405,15 @@ llvm::Value* var_decl_codegen(ASTNode* node, const std::string& function_name = 
 }
 
 
+//TODO: left to do -> += -= .....   == , != , = and dot operator left
 llvm::Value* expr_code_gen(ASTNode* node, const std::string& function_name, std::vector<std::map<std::string, llvm::Value*>> NamedValues = MainNamedValues){
 	llvm::Value* L = (node -> children)[0] -> codegen(function_name, NamedValues);
 	llvm::Value* R = (node -> children)[1] -> codegen(function_name, NamedValues);
-
+	llvm::Value* result = nullptr;
 	
-
+	//operators +, -, /, *  (except strings)
 	if(((node -> type).type != string_t) && ((node -> name == "+") ||(node -> name == "-")  || (node -> name == "*")  || (node -> name == "/")  || (node -> name == "%") )){
-		llvm::Value* result = nullptr;
+		
 
 		// Handle integer arithmetic
         if ((node->type).type == int_t) {
@@ -456,6 +457,116 @@ llvm::Value* expr_code_gen(ASTNode* node, const std::string& function_name, std:
         }
 		return result;
 	}
+	//handle + for strings
+	if((node -> name) == "+" && (node -> type).type == string_t){
+		dtypes left_type = node -> children[0] -> type.type;
+		dtypes right_type = node -> children[1] -> type.type;
+
+		llvm::Function* stringConcatFunc = TheModule -> getFunction("cancat_strings");
+		llvm::Function* stringCharConcatFunc = TheModule -> getFunction("concat_string_char");
+		llvm::Function* stringIntConcatFunc = TheModule -> getFunction("concat_string_int");
+
+		if(left_type == string_t && right_type== string_t){
+			result = Builder->CreateCall(stringConcatFunc, {L,R}, "str_concat");
+		}
+		else if (left_type == string_t && right_type == char_t) {
+			// string + char
+			result = Builder->CreateCall(stringCharConcatFunc, {L, R}, "str_char_concat");
+		} else if (left_type == char_t && right_type == string_t) {
+			// char + string
+			result = Builder->CreateCall(stringCharConcatFunc, {R, L}, "char_str_concat");
+		} else if (left_type == string_t && right_type == int_t) {
+			// string + int
+			result = Builder->CreateCall(stringIntConcatFunc, {L, R}, "str_int_concat");
+		}
+		return result;
+	}
+
+	//Handle comparison operators >, <, <=, >=
+	if(node -> name == ">" || node -> name == ">=" || node -> name == "<" || node -> name == "<="){
+		dtypes left_type = node -> children[0] -> type.type;
+		if (left_type == int_t || left_type == bool_t || left_type == long_t) {
+				// Integer, Boolean, or Long comparisons (treated as integers)
+				llvm::CmpInst::Predicate predicate;
+
+				if (node->name == "<")
+					predicate = llvm::CmpInst::ICMP_SLT;
+				else if (node->name == ">")
+					predicate = llvm::CmpInst::ICMP_SGT;
+				else if (node->name == "<=")
+					predicate = llvm::CmpInst::ICMP_SLE;
+				else if (node->name == ">=")
+					predicate = llvm::CmpInst::ICMP_SGE;
+				else {
+					std::cerr << "Error: Unsupported comparison operator.\n";
+					return nullptr;
+				}
+
+				result = Builder->CreateICmp(predicate, L, R, "cmpint");
+				return result;
+
+			} else if (left_type == float_type) {
+				// Float comparisons
+				llvm::CmpInst::Predicate predicate;
+
+				if (node->name == "<")
+					predicate = llvm::CmpInst::FCMP_OLT;
+				else if (node->name == ">")
+					predicate = llvm::CmpInst::FCMP_OGT;
+				else if (node->name == "<=")
+					predicate = llvm::CmpInst::FCMP_OLE;
+				else if (node->name == ">=")
+					predicate = llvm::CmpInst::FCMP_OGE;
+				else {
+					std::cerr << "Error: Unsupported comparison operator.\n";
+					return nullptr;
+				}
+
+				result = Builder->CreateFCmp(predicate, L, R, "cmpfloat");
+				return result;
+			}
+		}
+
+		//Handle && and ||
+		if(node -> name == "&&" || node -> name == "||"){
+			dtypes left_type = node -> children[0] -> type.type;
+			dtypes right_type = node -> children[1] -> type.type;
+			llvm::Value* left_converted_to_bool = nullptr;
+			llvm::Value* right_converted_to_bool = nullptr;
+
+			if(left_type == bool_t){
+				left_converted_to_bool = L;
+			}
+			else if(left_type == int_t || left_type == long_t){
+				left_converted_to_bool = Builder -> CreateICmpNE(L, llvm::ConstantInt::get(L -> getType(), 0), "convToBool");
+			}
+			else if(left_type == float_type){
+				left_converted_to_bool = Builder -> CreateFCmpUNE(L, llvm::ConstantFP::get(L->getType(), 0.0), "convToBool");
+			}
+			
+			if (right_type == bool_t) {
+				right_converted_to_bool = R; // Already i1
+			} else if (right_type == int_t || right_type == long_t) {
+				right_converted_to_bool = Builder->CreateICmpNE(R, llvm::ConstantInt::get(R->getType(), 0), "convToBool");
+			} else if (right_type == float_type) {
+				right_converted_to_bool = Builder->CreateFCmpUNE(R, llvm::ConstantFP::get(R->getType(), 0.0), "convToBool");
+			} 
+
+			llvm::Value* result = nullptr;
+			if (node->name == "&&") {
+				result = Builder->CreateAnd(left_converted_to_bool, right_converted_to_bool, "logicalAnd");
+			} else if (node->name == "||") {
+				result = Builder->CreateOr(left_converted_to_bool, right_converted_to_bool, "logicalOr");
+			} else {
+				std::cerr << "Error: Unsupported logical operator.\n";
+				return nullptr;
+			}
+		}
+
+
+
+
+
 }
 
 // TODO: array literals are left
@@ -625,6 +736,14 @@ void addMainFunction(ASTNode* node) {
     }
 }
 
+// llvm::Value* function_call_codegen(ASTNode* node, const std::string& function_name = "main",std::vector<std::map<std::string, llvm::Value*>> NamedValues = MainNamedValues ){
+// 	std::string called_func_name = node -> name;
+// 	llvm::Function* called_func = FunctionMap[called_func_name];
+
+// 	std::vector<llvm::Value*> args;
+// 	for(auto& argNode: node -> children)
+// }
+
 llvm::Value* ASTNode::codegen(const std::string& function_name = "main", std::vector<std::map<std::string, llvm::Value*>> NamedValues = MainNamedValues) {
 
     switch(this -> kind){
@@ -658,6 +777,12 @@ llvm::Value* ASTNode::codegen(const std::string& function_name = "main", std::ve
 		case compound_stmt:
 			compound_stmt_codegen(this, function_name, NamedValues);
 			break;
+		// case function_call_stmt:
+		// 	function_call_codegen(this, function_name, NamedValues);
+		// 	break;
+
+		
+		
         default:
             break;
     }
