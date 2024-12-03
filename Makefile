@@ -1,13 +1,21 @@
-build: parser.y parallel_lex.l AST.cpp symbol_table.cpp semantics.cpp
-	yacc -dtv parser.y 
+# Compiler and LLVM configuration
+CXX = g++
+CXXFLAGS = -g -Wall
+LLVM_FLAGS = `llvm-config --cxxflags --ldflags --system-libs --libs core support passes`
+
+TARGET = parser.out
+
+# Build parser and lexer
+build: parser.y parallel_lex.l AST.cpp symbol_table.cpp semantics.cpp 
+	yacc -dtv parser.y
 	lex $(LEXFLAGS) parallel_lex.l
-	g++ -g y.tab.c -o parser.out
-	
-all: lex
+	$(CXX) $(CXXFLAGS) y.tab.c $(LLVM_FLAGS) -o $(TARGET)
+
+all: build
 	./parser.out --ast
 
 run: build
-	@./parser.out $(debug) --ast< $(input); \
+	@./parser.out $(debug) --ast< $(input);
 	exit 0;
 
 

@@ -1,6 +1,26 @@
 #include "headers.hpp"
 
 
+static std::unique_ptr<llvm::LLVMContext> TheContext;
+static std::unique_ptr<llvm::Module> TheModule;
+static std::unique_ptr<llvm::IRBuilder<>> Builder;
+static std::vector<std::map<std::string, llvm::Value*>> MainNamedValues;
+
+static void InitializeModule() {
+  // Open a new context and module.
+  TheContext = std::make_unique<llvm::LLVMContext>();
+  TheModule = std::make_unique<llvm::Module>("my cool jit", *TheContext);
+
+  // Create a new builder for the module.
+  Builder = std::make_unique<llvm::IRBuilder<>>(*TheContext);
+}
+
+
+
+llvm::Value *LogErrorV(const char *Str) {
+    std::cerr << "Error: " << Str << std::endl;  // Print the error message to standard error
+    return nullptr;                              // Return nullptr to indicate failure
+}
 
 class ASTNode{
 public:
@@ -13,16 +33,15 @@ public:
 	ASTNode *next;
 	std::vector<std::string> metadata;
 	ASTNode()
-		: kind(root_t), line_number(0), col_number(0), next(NULL)
+		: line_number(0), col_number(0), kind(root_t),name(""), next(NULL)
 	{
 	}
 	ASTNode(kind_t kind, DataType type, std::string name = "", int line_no = 0, int col_no = 0)
-		: kind(kind), line_number(line_no), name(name), col_number(col_no), type(type), next(NULL)
+		: line_number(line_no), col_number(col_no), kind(kind), name(name), type(type), next(NULL)
 	{
-		// std::cout << "Creating node of type " << kind_t_strings[kind] << std::endl;
 	}
 	ASTNode(kind_t kind, std::string name = "", int line_no = 0, int col_no = 0)
-		: kind(kind), line_number(line_no), col_number(col_no), name(name), next(NULL)
+		: line_number(line_no), col_number(col_no), kind(kind), name(name), next(NULL)
 	{
 	}
 	ASTNode(int line_no, int col_no, kind_t kind, std::string name, DataType type)
@@ -68,7 +87,6 @@ public:
 		ASTNode *temp = this;
 		while (temp != NULL)
 		{
-			std::cout << temp;
 			temp = temp->next;
 		}
 	}
@@ -92,6 +110,8 @@ public:
 	dtypes getType(){
 		return this->type.type;
 	}
+
+	llvm::Value* codegen(const std::string& func_name, std::vector<std::map<std::string, llvm::Value*>> NamedValues);
 };
 
 // Output colored text
@@ -129,9 +149,6 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 		if ((node->type).reference)
 			os << "&";
 		os << dtype_strings[node->type.type] << " " << node->type.name;
-		for (int i :((node->type).ndims))
-			std::cout <<"[" <<i << "]";
-		std::cout << "\n";
 		break;
 	case channel_stmt:
 		os << ": " << node->name << std::endl;
@@ -283,6 +300,8 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 	case member_data_t:
 		os << " : "<<node -> name << "\n";
 		break;
+	default:
+		break;
 	}
 	return os;
 }
@@ -290,15 +309,12 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 void traverse(ASTNode *node, int tab = 0)
 {
 	for (int i = 0; i < tab; i++){
-		std::cout << "\t";
 	}
 
 	if ((node == NULL) || (node == nullptr)){
-		std::cout << node << " , tabs = " << tab;
 		return;
 	}
-	kind_t kind = node->kind;
-	std::cout << node;
+	//kind_t kind = node->kind;
 	for (auto child : node->children){
 		traverse(child, tab + 1);
 	}
@@ -306,4 +322,345 @@ void traverse(ASTNode *node, int tab = 0)
 	if (node->next != NULL){
 		traverse(node->next, tab);
 	}
+}
+
+
+
+// Global map to store defined struct types
+std::map<std::string, llvm::StructType*> DefinedStructs;
+std::map<std::string, llvm::Function*> FunctionMap;
+
+
+//returns the llvm::type for one dimension variables //includes basic datatypes and struct
+llvm::Type* get_type_dim_0(dtypes type, std::string struct_name = ""){
+    if(struct_name == ""){       // Handle basic types
+        if (type == int_t)       return llvm::Type::getInt32Ty(*TheContext); // 32-bit integer
+        if (type == float_type)  return llvm::Type::getFloatTy(*TheContext); // 32-bit float
+        if (type == long_t)      return llvm::Type::getInt64Ty(*TheContext); // 64-bit integer
+        if (type == bool_t)      return llvm::Type::getInt1Ty(*TheContext);  // 1-bit boolean
+        if (type == char_t)      return llvm::Type::getInt8Ty(*TheContext);  // 8-bit character
+        if (type == string_t)    return llvm::Type::getInt8PtrTy(*TheContext); // Pointer to 8-bit integer for strings
+    }
+
+    else{       //handle struct types
+        auto it = DefinedStructs.find(struct_name);
+        return it->second;
+    }
+	return NULL;
+}
+
+// returns the llvm::type for struct member data
+llvm::Type* struct_member_decl(ASTNode* node){
+
+    llvm::Type* array_type = get_type_dim_0((node -> type).type, (node -> type).name);
+
+    for(int i = (node -> type).ndims.size() - 1 ; i >= 0 ; i-- ){
+        array_type = llvm::ArrayType::get(array_type, (node -> type).ndims[i]);
+    }
+	return array_type;
+}
+
+//code gen for struct declaration
+llvm::StructType* struct_decl_codegen(ASTNode* node){
+    const std::string& name = node -> name;
+    std::vector<llvm::Type*> fieldTypes;
+    for(int i = 0; (long unsigned int)i < (node -> children).size() ; i++){
+        fieldTypes.push_back(struct_member_decl((node -> children[i])));
+    }
+    llvm::StructType* struct_type = llvm::StructType::create(*TheContext, fieldTypes, name);
+    DefinedStructs[name] = struct_type;
+    return struct_type;
+}
+
+//TODO: must identify references also (used for variable declaration and function (return type and parameters))
+llvm::Type* var_decl_type_codegen(ASTNode* node){
+	llvm::Type* array_type = get_type_dim_0((node -> type).type, (node -> type).name);
+	for(int i = (node -> type).ndims.size() - 1 ; i >= 0 ; i-- ){
+        array_type = llvm::ArrayType::get(array_type, (node -> type).ndims[i]);
+    }
+	return array_type;
+}
+//TODO: when there is a new scope, add another map in NamedValues and when the scope ends remove the map.
+llvm::Value* var_decl_codegen(ASTNode* node, const std::string& function_name = "main",std::vector<std::map<std::string, llvm::Value*>> NamedValues = MainNamedValues){
+	if(NamedValues.size() == 0) NamedValues.push_back({});
+    llvm::Type* var_type = var_decl_type_codegen(node);
+
+	llvm::Function*  current_function = FunctionMap[function_name];
+	
+	if (!current_function) {
+		std::cerr << "Error: No valid function context available for variable declaration.\n";
+		return nullptr;
+	}
+
+    for (auto itr : node->children) {
+
+        // Use the Builder's current insertion point
+        llvm::AllocaInst* alloca_inst = Builder -> CreateAlloca(var_type, nullptr, itr->name);
+
+        // Store the variable in NamedValues for later use
+        NamedValues.back()[itr->name] = alloca_inst;
+    }
+
+    return nullptr;
+}
+
+
+llvm::Value* expr_code_gen(ASTNode* node, const std::string& function_name, std::vector<std::map<std::string, llvm::Value*>> NamedValues = MainNamedValues){
+	llvm::Value* L = (node -> children)[0] -> codegen(function_name, NamedValues);
+	llvm::Value* R = (node -> children)[1] -> codegen(function_name, NamedValues);
+
+	
+
+	if(((node -> type).type != string_t) && ((node -> name == "+") ||(node -> name == "-")  || (node -> name == "*")  || (node -> name == "/")  || (node -> name == "%") )){
+		llvm::Value* result = nullptr;
+
+		// Handle integer arithmetic
+        if ((node->type).type == int_t) {
+            if (node->name == "+") {
+                result = Builder->CreateAdd(L, R, "addtmp");
+            } else if (node->name == "-") {
+                result = Builder->CreateSub(L, R, "subtmp");
+            } else if (node->name == "*") {
+                result = Builder->CreateMul(L, R, "multmp");
+            } else if (node->name == "/") {
+                result = Builder->CreateSDiv(L, R, "divtmp");  // Signed division
+            } else if (node->name == "%") {
+                result = Builder->CreateSRem(L, R, "modtmp"); // Signed remainder
+            }
+        }
+        // Handle float arithmetic
+        else if ((node->type).type == float_type) {
+            if (node->name == "+") {
+                result = Builder->CreateFAdd(L, R, "faddtmp");
+            } else if (node->name == "-") {
+                result = Builder->CreateFSub(L, R, "fsubtmp");
+            } else if (node->name == "*") {
+                result = Builder->CreateFMul(L, R, "fmultmp");
+            } else if (node->name == "/") {
+                result = Builder->CreateFDiv(L, R, "fdivtmp");
+            }
+        }
+        // Handle long arithmetic (treated as 64-bit integers)
+        else if ((node->type).type == long_t) {
+            if (node->name == "+") {
+                result = Builder->CreateAdd(L, R, "addtmp");
+            } else if (node->name == "-") {
+                result = Builder->CreateSub(L, R, "subtmp");
+            } else if (node->name == "*") {
+                result = Builder->CreateMul(L, R, "multmp");
+            } else if (node->name == "/") {
+                result = Builder->CreateSDiv(L, R, "divtmp");
+            } else if (node->name == "%") {
+                result = Builder->CreateSRem(L, R, "modtmp");
+            }
+        }
+		return result;
+	}
+}
+
+// TODO: array literals are left
+llvm::Value* literal_codegen(ASTNode* node) {
+    dtypes type = node->type.type;
+    const std::string& value = node->name; // Assuming the literal value is stored in `node->name`.
+
+    llvm::Value* result = nullptr;
+
+    switch (type) {
+        case int_t: {
+            // Integer literal
+            int intValue = std::stoi(value);
+            result = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*TheContext), intValue);
+            break;
+        }
+        case float_type: {
+            // Float literal
+            float floatValue = std::stof(value);
+            result = llvm::ConstantFP::get(llvm::Type::getFloatTy(*TheContext), floatValue);
+            break;
+        }
+        case long_t: {
+            // Long literal
+            long longValue = std::stol(value);
+            result = llvm::ConstantInt::get(llvm::Type::getInt64Ty(*TheContext), longValue);
+            break;
+        }
+        case string_t: {
+            // String literal
+            result = Builder->CreateGlobalStringPtr(value, "strtmp");
+            break;
+        }
+        case bool_t: {
+            // Boolean literal
+            bool boolValue = (value == "true");
+            result = llvm::ConstantInt::get(llvm::Type::getInt1Ty(*TheContext), boolValue);
+            break;
+        }
+        case char_t: {
+            // Character literal
+            char charValue = value[0]; // Assuming the value is a single character.
+            result = llvm::ConstantInt::get(llvm::Type::getInt8Ty(*TheContext), charValue);
+            break;
+        }
+        default:
+            std::cerr << "Error: Unsupported literal type.\n";
+            return nullptr;
+    }
+
+    return result;
+}
+
+
+llvm::Function* function_prototype_codegen(ASTNode* node){
+	std::string function_name = node -> name;
+	llvm::Type* return_type = var_decl_type_codegen(node);
+	std::vector<llvm::Type*> parameter_type;
+	for(int i = 0; (unsigned long int)i < (node -> children[0]) -> children.size(); i++){
+		parameter_type.push_back((var_decl_type_codegen(((node -> children[0]) -> children)[i])));
+	}
+	llvm::FunctionType* func_type = llvm::FunctionType::get(return_type, parameter_type, false);
+	
+	llvm::Function* function = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, node -> name, *(TheModule));
+	//Assign names to parameters
+	size_t indx = 0;
+	for(auto& arg: function-> args()){
+		arg.setName((node -> children[0] -> children[indx++]) -> name);
+	}
+	FunctionMap[node -> name] = function;
+	return function;
+}
+
+llvm::BasicBlock* compound_stmt_codegen(ASTNode* node, const std::string& function_name = "main",  std::vector<std::map<std::string, llvm::Value*>> NamedValues = MainNamedValues){
+	llvm::Function* parent_function = FunctionMap[function_name];
+	if (!parent_function) {
+        std::cerr << "Error: Parent function is null.\n";
+        return nullptr;
+    }
+
+	// Create a new basic block for the compound statement
+    llvm::BasicBlock* compoundBlock = llvm::BasicBlock::Create(*TheContext, "compound", parent_function);
+
+    // Get the current insertion block
+    llvm::BasicBlock* currentBlock = Builder->GetInsertBlock();
+
+    // If there is a valid insertion block, branch to the new compound block
+    if (currentBlock && !currentBlock->getTerminator()) {
+        Builder->CreateBr(compoundBlock);
+    }
+
+    // Set the builder's insertion point to the new compound block
+    Builder->SetInsertPoint(compoundBlock);
+
+    // Push a new scope for the compound statement
+    NamedValues.push_back({});
+
+	ASTNode* curr_stmt = node -> children[0];
+	while(curr_stmt){
+		curr_stmt -> codegen(function_name, NamedValues);
+		curr_stmt = curr_stmt -> next;
+	}
+	// Pop the scope after processing the compound statement
+    NamedValues.pop_back();
+
+    // Return the created basic block
+    return compoundBlock;
+}
+
+llvm::Function* function_declaration_codegen(ASTNode* node){
+	llvm::Function* function;
+	if(FunctionMap.find(node -> name) == FunctionMap.end()){
+		function= function_prototype_codegen(node);
+	}
+	else{
+		function = FunctionMap[node -> name];
+	}
+	if (!function) {
+        std::cerr << "Error: Could not create function prototype.\n";
+        return nullptr;
+    }
+	// Create the entry basic block
+    llvm::BasicBlock* entry = llvm::BasicBlock::Create(*TheContext, "entry", function);
+	// Set the IRBuilder's insertion point to the entry block
+    Builder->SetInsertPoint(entry);
+
+	std::vector<std::map<std::string, llvm::Value*>> NamedValues;
+
+	compound_stmt_codegen(node->children[1], node -> name, NamedValues);
+
+
+    return function;
+
+}
+
+void addMainFunction(ASTNode* node) {
+    // Define the function type for `void main()`
+    llvm::FunctionType* funcType = llvm::FunctionType::get(
+        llvm::Type::getVoidTy(*TheContext), // Return type: void
+        false                          // No parameters
+    );
+
+    // Create the function and add it to the module
+    llvm::Function* mainFunction = llvm::Function::Create(
+        funcType,
+        llvm::Function::ExternalLinkage, // Linkage type
+        "main",                          // Function name
+        *TheModule                           // Module to add the function to
+    );
+	FunctionMap["main"] = mainFunction;
+    // Create the entry block for the function
+    llvm::BasicBlock* entry = llvm::BasicBlock::Create(*TheContext, "entry", mainFunction);
+
+    // Set the builder's insertion point to the entry block
+    Builder->SetInsertPoint(entry);
+	
+	ASTNode* curr_stmt = node -> next;
+	while(curr_stmt){
+		curr_stmt -> codegen("main", MainNamedValues);
+		curr_stmt = curr_stmt -> next;
+	}
+
+	// Check if the entry block already has a terminator
+    if (!entry->getTerminator()) {
+        // If not, add a return void instruction at the end of the function
+        Builder->CreateRetVoid();
+    }
+}
+
+llvm::Value* ASTNode::codegen(const std::string& function_name = "main", std::vector<std::map<std::string, llvm::Value*>> NamedValues = MainNamedValues) {
+
+    switch(this -> kind){
+		ASTNode* curr;
+        case root_t:
+			curr = this -> next;
+			while(curr){
+				curr -> codegen(function_name);
+				curr = curr -> next;
+			}
+            break;
+
+        case struct_decl:
+            struct_decl_codegen(this);
+            break;
+
+		case decl_stmt:
+			return var_decl_codegen(this, function_name, NamedValues);
+		
+		case expr_stmt:
+			return expr_code_gen(this, function_name, NamedValues);
+
+		case literal:
+			return literal_codegen(this);
+		case prototype_stmt:
+			function_prototype_codegen(this);
+			break;
+		case function_decl_stmt:
+			function_declaration_codegen(this);
+			break;
+		case compound_stmt:
+			compound_stmt_codegen(this, function_name, NamedValues);
+			break;
+        default:
+            break;
+    }
+
+    return nullptr;
 }

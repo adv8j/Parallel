@@ -20,7 +20,7 @@ bool match_list_init_struct(ASTNode *node, Struct *struct_info, SymbolTable* cur
         return false;
     }
 
-    for (int i = 0; i < node->children.size(); i++){
+    for (int i = 0; (long unsigned int)i < node->children.size(); i++){
         DataType member_type = struct_info->members[i].type;
         if(member_type.reference && node->children[i]->kind == list_init){
             std::string message = "Struct " + struct_info->name + " expects member " + std::to_string(i) + " to be a reference";
@@ -63,7 +63,7 @@ bool check_valid_function_call(ASTNode *node, SymbolTable *current, SymbolTable 
         return false;
     }
 
-    for (int i = 0; i < node->children.size(); i++){
+    for (int i = 0; (long unsigned int)i < node->children.size(); i++){
         DataType param_type = func->param_list[i].type;
         if(param_type.reference && node->children[i]->kind == list_init){
             std::string message = "Function " + node->name + " expects argument " + std::to_string(i) + " to be a reference";
@@ -292,7 +292,7 @@ DataType retrieveType(ASTNode *node, SymbolTable *current, SymbolTable *global){
 bool match_list_init_array(ASTNode *node, DataType type, std::vector<int> &dims, int dim_number, SymbolTable *current, SymbolTable *global){
     int x = dims.back();
     // if not enough children
-    if (node->children.size() != x){
+    if (node->children.size() != (long unsigned int)x){
 
         std::string message = "Array dimension mismatch: Expected " + std::to_string(x) + " but got " + std::to_string(node->children.size());
         yy_sem_error(message);
@@ -348,7 +348,7 @@ bool match_list_init_array(ASTNode *node, DataType type, std::vector<int> &dims,
                 return false;
             } 
 
-            for(int i = 0; i < dims.size(); i++){
+            for(int i = 0; (long unsigned int)i < dims.size(); i++){
                 if(dims[i] != child->type.ndims[i]){
                     std::string message = "Array dimension mismatch: Expected " + std::to_string(dim_number) + " dimensions but got more";
                     yy_sem_error(message);
@@ -409,7 +409,7 @@ DataType resolve_unary_operator(ASTNode* node, std::string op, SymbolTable* curr
     }
 
     if(op == "-"){ // Checking valid types for unary operator
-        if(type.type != int_t && type.type != float_t && type.type != long_t){
+        if(type.type != int_t && type.type != float_type && type.type != long_t){
             std::string message = "Type mismatch in operator " + op;
             yy_sem_error(message);
             return error_type;
@@ -418,7 +418,7 @@ DataType resolve_unary_operator(ASTNode* node, std::string op, SymbolTable* curr
     }
 
     // handling not operator here
-    if(type.type != int_t && type.type != float_t && type.type != long_t && type.type != bool_t){
+    if(type.type != int_t && type.type != float_type && type.type != long_t && type.type != bool_t){
             std::string message = "Type mismatch in operator " + op;
             yy_sem_error(message);
             return error_type;
@@ -478,31 +478,31 @@ DataType resolve_binary_operator(ASTNode* left, ASTNode* right, std::string op, 
             return bool_t;
         
     }
-    else if(op == "+=" | op == "-=" | op == "*=" | op == "/=" | op == "%="){
+    else if((op == "+=") | (op == "-=") | (op == "*=") | (op == "/=") | (op == "%=")){
         if(left->kind != variable_t && left->kind != array_element && left->kind != identifier_chain){
             std::string message = "Left side of " + op + " must be a lvalue";
             yy_sem_error(message);
             return error_type;
         }
 
-        assign_checks:
+       // assign_checks:
         if(left_type == int_t && right_type == int_t) // handling numerical cases
             return left_type;
-        else if(left_type == float_t && right_type == float_t)
+        else if(left_type == float_type && right_type == float_type)
             return left_type;
         else if(left_type == long_t && right_type == long_t)
             return left_type;
-        else if(left_type == float_t && right_type == int_t)
+        else if(left_type == float_type && right_type == int_t)
             return left_type;
-        else if(left_type == int_t && right_type == float_t)
+        else if(left_type == int_t && right_type == float_type)
             return left_type;
         else if(left_type == long_t && right_type == int_t)
             return left_type;
         else if(left_type == int_t && right_type == long_t)
             return left_type;
-        else if(left_type == long_t && right_type == float_t)
+        else if(left_type == long_t && right_type == float_type)
             return left_type;
-        else if(left_type == float_t && right_type == long_t)
+        else if(left_type == float_type && right_type == long_t)
             return left_type;
 
         if(left_type == bool_t && right_type == bool_t) // handling boolean cases
@@ -511,9 +511,9 @@ DataType resolve_binary_operator(ASTNode* left, ASTNode* right, std::string op, 
             return left_type;
         else if(left_type == int_t && right_type == bool_t)
             return left_type;
-        else if(left_type == bool_t && right_type == float_t)
+        else if(left_type == bool_t && right_type == float_type)
             return left_type;
-        else if(left_type == float_t && right_type == bool_t)
+        else if(left_type == float_type && right_type == bool_t)
             return left_type;
         else if(left_type == bool_t && right_type == long_t)
             return left_type;
@@ -533,25 +533,25 @@ DataType resolve_binary_operator(ASTNode* left, ASTNode* right, std::string op, 
     }
     if(op == "+" || op == "-" || op == "*" || op == "/" || op == "%"){
 
-    arith_check:
+    //arith_check:
         if(left_type == int_t && right_type == int_t) // handling numerical cases
             return int_t;
-        else if(left_type == float_t && right_type == float_t)
-            return float_t;
+        else if(left_type == float_type && right_type == float_type)
+            return float_type;
         else if(left_type == long_t && right_type == long_t)
             return long_t;
-        else if(left_type == float_t && right_type == int_t)
-            return float_t;
-        else if(left_type == int_t && right_type == float_t)
-            return float_t;
+        else if(left_type == float_type && right_type == int_t)
+            return float_type;
+        else if(left_type == int_t && right_type == float_type)
+            return float_type;
         else if(left_type == long_t && right_type == int_t)
             return long_t;
         else if(left_type == int_t && right_type == long_t)
             return long_t;
-        else if(left_type == long_t && right_type == float_t)
-            return float_t;
-        else if(left_type == float_t && right_type == long_t)
-            return float_t;
+        else if(left_type == long_t && right_type == float_type)
+            return float_type;
+        else if(left_type == float_type && right_type == long_t)
+            return float_type;
 
         if(left_type == bool_t && right_type == bool_t) // handling boolean cases
             return int_t;
@@ -559,10 +559,10 @@ DataType resolve_binary_operator(ASTNode* left, ASTNode* right, std::string op, 
             return int_t;
         else if(left_type == int_t && right_type == bool_t)
             return int_t;
-        else if(left_type == bool_t && right_type == float_t)
-            return float_t;
-        else if(left_type == float_t && right_type == bool_t)
-            return float_t;
+        else if(left_type == bool_t && right_type == float_type)
+            return float_type;
+        else if(left_type == float_type && right_type == bool_t)
+            return float_type;
         else if(left_type == bool_t && right_type == long_t)
             return long_t;
         else if(left_type == long_t && right_type == bool_t)
@@ -585,19 +585,19 @@ DataType resolve_binary_operator(ASTNode* left, ASTNode* right, std::string op, 
 
     }
     else if( op == "<" || op == ">" || op == "<=" || op == ">="){
-        if(!(left_type == int_t || left_type == float_t || left_type == long_t || left_type == bool_t))
+        if(!(left_type == int_t || left_type == float_type || left_type == long_t || left_type == bool_t))
             return error_type;
 
-        if(!(right_type == int_t || right_type == float_t || right_type == long_t || right_type == bool_t))
+        if(!(right_type == int_t || right_type == float_type || right_type == long_t || right_type == bool_t))
             return error_type;
         return bool_t;
     }
     else if(op == "&&" || op == "||"){
-        if(!(left_type == int_t || left_type == long_t || left_type == float_t || left_type == bool_t)){
+        if(!(left_type == int_t || left_type == long_t || left_type == float_type || left_type == bool_t)){
             return error_type;
         }
 
-        if(!(right_type == int_t || right_type == long_t || right_type == float_t || right_type == bool_t)){
+        if(!(right_type == int_t || right_type == long_t || right_type == float_type || right_type == bool_t)){
             return error_type;
         }
 
@@ -1332,7 +1332,7 @@ void first_pass(ASTNode *node, SymbolTable *global){
 
         std::unordered_set<std::string> param_names;
         std::vector<Variable> params;
-        for(int i = 0; i < node->children.size(); i++){
+        for(int i = 0; (long unsigned int)i < node->children.size(); i++){
         for (auto param_node : node->children[i]->children){
                 // Handles Previously declared in list
                 if (param_names.find(param_node->name) != param_names.end()){
@@ -1366,6 +1366,8 @@ void first_pass(ASTNode *node, SymbolTable *global){
 
         break;
     }
+    default:
+        break;
     }
 
     // Recursively call the function for the next node
@@ -1439,7 +1441,7 @@ void handle_statement(ASTNode* node, SymbolTable* current, SymbolTable* global){
             ASTNode* compound = child->children[0];
             if(child->kind == if_stmt){
                 resolve_expression(child->children[0], current, global);
-                if(child->children[0]->type.type != bool_t && child->children[0]->type.type != int_t &&child->children[0]->type.type != float_t && child->children[0]->type.type != long_t){
+                if(child->children[0]->type.type != bool_t && child->children[0]->type.type != int_t &&child->children[0]->type.type != float_type && child->children[0]->type.type != long_t){
                     std::string message = "Conditional statement can't be resolved into boolean expression";
                     yy_sem_error(message);
                 }
@@ -1568,6 +1570,8 @@ void handle_statement(ASTNode* node, SymbolTable* current, SymbolTable* global){
         new_table->next = nullptr;
         delete new_table;
     }
+    default:
+        break;
     }
 }
 void second_pass(ASTNode *node, SymbolTable *current, SymbolTable *global){

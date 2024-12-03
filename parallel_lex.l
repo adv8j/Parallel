@@ -175,7 +175,7 @@ long { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, type_t, ""
 
 bool { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, type_t, "", bool_t); return BOOL;}
 
-float { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, type_t, "", float_t); return FLOAT;}
+float { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, type_t, "", float_type); return FLOAT;}
 
 string { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, type_t, "", string_t); return STRING;}
 
@@ -210,9 +210,9 @@ false { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, literal, 
 
 ([1-9][0-9]*)|0   { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, literal, std::string(yytext), int_t); return INT_LITERAL;}
  
-[0-9]+\.[^\.][0-9]*   { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, literal, std::string(yytext), float_t); return FLOAT_LITERAL;}
+[0-9]+\.[^\.][0-9]*   { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, literal, std::string(yytext), float_type); return FLOAT_LITERAL;}
 
-(([1-9][0-9]*)|0)e(([1-9][0-9]*)|0) { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, literal, std::string(yytext), float_t); return FLOAT_LITERAL;}
+(([1-9][0-9]*)|0)e(([1-9][0-9]*)|0) { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, literal, std::string(yytext), float_type); return FLOAT_LITERAL;}
 
 
 \"([^\"\n]|(\\\"))*\"        { process_text(yytext); yylval = new ASTNode(yylineno, cur_char, literal, std::string(yytext), string_t); return STRING_LITERAL;}

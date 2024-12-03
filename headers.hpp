@@ -8,6 +8,19 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <algorithm>
+#include<map>
+#include "llvm/ADT/APFloat.h"
+#include "llvm/ADT/STLExtras.h"
+#include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/Type.h"
+#include "llvm/IR/Verifier.h"
+
 
 
 int yy_sem_error(const std::string);
@@ -40,7 +53,7 @@ const std::string entry_type_strings[] = {
 enum dtypes
 {
     int_t,
-    float_t,
+    float_type,
     long_t,
     bool_t,
     char_t,
@@ -168,7 +181,7 @@ const std::string kind_t_strings[] = {
     "member_data_t",
     "identifier_chain",
     "operator_t",
-    "jump_stmt"
+    "jump_stmt",
 };
 
 
@@ -230,21 +243,21 @@ struct DataType
             dtypes right_type = parameter.type;
             if(left_type == int_t && right_type == int_t) // handling numerical cases
                 ;
-            else if(left_type == float_t && right_type == float_t)
+            else if(left_type == float_type && right_type == float_type)
                 ;
             else if(left_type == long_t && right_type == long_t)
                 ;
-            else if(left_type == float_t && right_type == int_t)
+            else if(left_type == float_type && right_type == int_t)
                 ;
-            else if(left_type == int_t && right_type == float_t)
+            else if(left_type == int_t && right_type == float_type)
                 ;
             else if(left_type == long_t && right_type == int_t)
                 ;
             else if(left_type == int_t && right_type == long_t)
                 ;
-            else if(left_type == long_t && right_type == float_t)
+            else if(left_type == long_t && right_type == float_type)
                 ;
-            else if(left_type == float_t && right_type == long_t)
+            else if(left_type == float_type && right_type == long_t)
                 ;
 
             else if(left_type == bool_t && right_type == bool_t) // handling boolean cases
@@ -253,9 +266,9 @@ struct DataType
                 ;
             else if(left_type == int_t && right_type == bool_t)
                 ;
-            else if(left_type == bool_t && right_type == float_t)
+            else if(left_type == bool_t && right_type == float_type)
                 ;
-            else if(left_type == float_t && right_type == bool_t)
+            else if(left_type == float_type && right_type == bool_t)
                 ;
             else if(left_type == bool_t && right_type == long_t)
                 ;
@@ -278,7 +291,7 @@ struct DataType
         if(this->ndims.size() != parameter.ndims.size())
             return false;
         
-        for(int i = 0; i < this->ndims.size(); i++)
+        for(int i = 0; (long unsigned int)i < this->ndims.size(); i++)
             x1 &= this->ndims[i] == parameter.ndims[i];
         
         return x1;

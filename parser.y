@@ -67,7 +67,6 @@ generic_dtypes: INT { $$ = $1; $1->kind = type_t; }
         $$->col_number = $2->col_number;
         delete $1;
         delete $2;
-
     }
     ;
 
@@ -1363,8 +1362,12 @@ int main(int argc, char** argv) {
     if(ast)
         traverse(root);
 
-    
+    InitializeModule();
+    addMainFunction(root);
 
+
+    TheModule->print(llvm::outs(), nullptr);
+    //outputIR("codegen_output.txt");
     return num_errs;
 }
 

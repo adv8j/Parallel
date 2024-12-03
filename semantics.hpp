@@ -5,7 +5,6 @@
 #include "headers.hpp"
 #include "AST.cpp"
 #include "symbol_table.cpp"
-
 // Global Variables to check for current scope: for scope dependent expressions:
 
 int num_loops = 0;
