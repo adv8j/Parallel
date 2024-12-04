@@ -724,7 +724,7 @@ if_chain_statement: ELSE else_case{$$=$2; }
     |   {$$     = NULL;}
     ;
     // if else-if else-if else
-else_case: selection_statement{$$=$1;}
+else_case: selection_statement{$$ = new ASTNode(else_stmt, "", $1->line_number, $1->col_number); $$->children.push_back($1);}
     | compound_statement{$$ = new ASTNode(else_stmt, "", $1->line_number, $1->col_number); $$->children.push_back($1);}
     ;
 
@@ -1363,7 +1363,8 @@ int main(int argc, char** argv) {
         traverse(root);
 
     InitializeModule();
-    addMainFunction(root);
+    static std::vector<std::map<std::string, llvm::Value*>> MainNamedValues;
+    addMainFunction(root, MainNamedValues);
 
 
     TheModule->print(llvm::outs(), nullptr);

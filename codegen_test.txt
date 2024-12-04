@@ -27,8 +27,19 @@ func my_func int (float x, int y, float w);
 
 func my_funccc2 float (float x, int y, float m){
     string g;
+    return 0.2;
 }
 
 {
     string k;
 }
+
+if( 6 + 2){
+    int xxx = 0;
+
+}
+else{
+    int kkkk;
+}
+
+arr;
