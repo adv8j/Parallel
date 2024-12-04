@@ -422,13 +422,117 @@ llvm::Value* var_decl_codegen(ASTNode* node, std::vector<std::map<std::string, l
 
         // Store the variable in NamedValues for later use
         NamedValues.back()[itr->name] = alloca_inst;
+
+		if (!itr->children.empty() && itr->children[0]->kind != list_init) {
+            llvm::Value* initValue = itr->children[0]->codegen(NamedValues, function_name);
+
+            if (!initValue) {
+                std::cerr << "Error: Failed to generate initialization value for " << itr->name << ".\n";
+                continue;
+            }
+
+            // Store the initialization value into the allocated memory
+            if (initValue->getType()->isPointerTy()) {
+                initValue = Builder->CreateLoad(initValue->getType()->getPointerElementType(), initValue);
+            }
+            Builder->CreateStore(initValue, alloca_inst);
+        }
+
     }
 
     return nullptr;
 }
 
+llvm::Value* equality_codegen_element(llvm::Value* L, llvm::Value* R, llvm::Type* type, bool isEquality);
+llvm::Value* compareComplexTypes(llvm::Value* L, llvm::Value* R, llvm::Type* type, bool isEquality);
+llvm::Value* compareStructs(llvm::Value* L, llvm::Value* R, llvm::StructType* structType, bool isEquality);
 
-//TODO: left to do -> += -= .....   == , != , = and dot operator left
+llvm::Value* compareArrays(llvm::Value* L, llvm::Value* R, llvm::Type* arrayType, bool isEquality) {
+    llvm::Type* elementType = arrayType->getArrayElementType();
+    unsigned numElements = arrayType->getArrayNumElements();
+
+    llvm::Value* result = llvm::ConstantInt::get(llvm::Type::getInt1Ty(*TheContext), 1); // Start with true
+
+    for (unsigned i = 0; i < numElements; ++i) {
+        llvm::Value* idx = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*TheContext), i);
+
+        llvm::Value* lhsElement = Builder->CreateExtractValue(L, {i}, "lhsElement");
+        llvm::Value* rhsElement = Builder->CreateExtractValue(R, {i}, "rhsElement");
+
+        llvm::Value* elementComparison = nullptr;
+        if (elementType->isIntegerTy() || elementType->isFloatingPointTy()) {
+            elementComparison = equality_codegen_element(lhsElement, rhsElement, elementType, isEquality);
+        } else if (elementType->isArrayTy() || elementType->isStructTy()) {
+            elementComparison = compareComplexTypes(lhsElement, rhsElement, elementType, isEquality);
+        } else {
+            std::cerr << "Error: Unsupported array element type.\n";
+            return nullptr;
+        }
+
+        if (isEquality) {
+            result = Builder->CreateAnd(result, elementComparison, "arrayEq");
+        } else {
+            result = Builder->CreateOr(result, Builder->CreateNot(elementComparison, "arrayNeq"), "arrayNeq");
+        }
+    }
+
+    return result;
+}
+
+llvm::Value* compareComplexTypes(llvm::Value* L, llvm::Value* R, llvm::Type* type, bool isEquality) {
+    if (type->isArrayTy()) {
+        return compareArrays(L, R, type, isEquality);
+    } else if (type->isStructTy()) {
+        return compareStructs(L, R, llvm::cast<llvm::StructType>(type), isEquality);
+    }
+
+    std::cerr << "Error: Unsupported complex type for comparison.\n";
+    return nullptr;
+}
+
+llvm::Value* compareStructs(llvm::Value* L, llvm::Value* R, llvm::StructType* structType, bool isEquality) {
+    unsigned numElements = structType->getNumElements();
+
+    llvm::Value* result = llvm::ConstantInt::get(llvm::Type::getInt1Ty(*TheContext), 1); // Start with true
+
+    for (unsigned i = 0; i < numElements; ++i) {
+        llvm::Value* lhsMember = Builder->CreateExtractValue(L, {i}, "lhsMember");
+        llvm::Value* rhsMember = Builder->CreateExtractValue(R, {i}, "rhsMember");
+
+        llvm::Value* memberComparison = nullptr;
+        llvm::Type* memberType = structType->getElementType(i);
+
+        if (memberType->isIntegerTy() || memberType->isFloatingPointTy()) {
+            memberComparison = equality_codegen_element(lhsMember, rhsMember, memberType, isEquality);
+        } else if (memberType->isArrayTy() || memberType->isStructTy()) {
+            memberComparison = compareComplexTypes(lhsMember, rhsMember, memberType, isEquality);
+        } else {
+            std::cerr << "Error: Unsupported struct member type.\n";
+            return nullptr;
+        }
+
+        if (isEquality) {
+            result = Builder->CreateAnd(result, memberComparison, "structEq");
+        } else {
+            result = Builder->CreateOr(result, Builder->CreateNot(memberComparison, "structNeq"), "structNeq");
+        }
+    }
+
+    return result;
+}
+
+llvm::Value* equality_codegen_element(llvm::Value* L, llvm::Value* R, llvm::Type* type, bool isEquality) {
+    llvm::Value* result = nullptr;
+    if (type->isIntegerTy()) {
+        result = isEquality ? Builder->CreateICmpEQ(L, R, "eqint") : Builder->CreateICmpNE(L, R, "neqint");
+    } else if (type->isFloatingPointTy()) {
+        llvm::CmpInst::Predicate predicate = isEquality ? llvm::CmpInst::FCMP_OEQ : llvm::CmpInst::FCMP_ONE;
+        result = Builder->CreateFCmp(predicate, L, R, "eqfloat");
+    }
+    return result;
+}
+
+
 llvm::Value* expr_code_gen(ASTNode* node,std::vector<std::map<std::string, llvm::Value*>>& NamedValues, const std::string& function_name){
 	llvm::Value* L = (node -> children)[0] -> codegen(NamedValues, function_name);
 	llvm::Value* R = (node -> children)[1] -> codegen(NamedValues, function_name);
@@ -586,9 +690,78 @@ llvm::Value* expr_code_gen(ASTNode* node,std::vector<std::map<std::string, llvm:
 			}
 		}
 
+		if(node -> name == "="){
+			result = Builder->CreateStore(R, L);
+        	return result;
+		}
 
+		if(node -> name == "+=" || node -> name == "-=" || node -> name == "*=" || node -> name == "/=" || node -> name == "%="){
+			llvm::Value* LValue= Builder->CreateLoad(L->getType()->getPointerElementType(), L, "loadtmp");
+			llvm::Type* lhsType = L->getType();
+    		llvm::Type* rhsType = R->getType();
 
+			// Handle compound assignment operators
+			if (node->name == "+=") {
+				result = Builder->CreateAdd(LValue, R, "addtmp");
+			} else if (node->name == "-=") {
+				result = Builder->CreateSub(LValue, R, "subtmp");
+			} else if (node->name == "*=") {
+				result = Builder->CreateMul(LValue, R, "multmp");
+			} else if (node->name == "/=") {
+				if (lhsType->isFloatingPointTy()) {
+					result = Builder->CreateFDiv(LValue, R, "fdivtmp");
+				} else {
+					result = Builder->CreateSDiv(LValue, R, "divtmp");
+				}
+			} else if (node->name == "%=") {
+				if (lhsType->isIntegerTy()) {
+					result = Builder->CreateSRem(LValue, R, "modtmp");
+				} else {
+					std::cerr << "Error: Modulus operator is not supported for floating-point types.\n";
+					return nullptr;
+				}
+			}
+			Builder->CreateStore(result, L);
 
+    		return result;
+		}
+
+		if(node -> name == "==" || node -> name == "!="){
+			llvm::Type* lhsType = L->getType();
+    		llvm::Type* rhsType = R->getType();
+			if (lhsType->isIntegerTy()) {
+				if (node->name == "==") {
+					result = Builder->CreateICmpEQ(L, R, "eqint");
+				} else if (node->name == "!=") {
+					result = Builder->CreateICmpNE(L, R, "neqint");
+				}
+			} else if (lhsType->isFloatingPointTy()) {
+				llvm::CmpInst::Predicate predicate = (node->name == "==") ? llvm::CmpInst::FCMP_OEQ : llvm::CmpInst::FCMP_ONE;
+				result = Builder->CreateFCmp(predicate, L, R, "eqfloat");
+			} else if (lhsType->isPointerTy() && lhsType->getPointerElementType()->isIntegerTy(8)) {
+				// Handle strings (pointers to i8)
+				llvm::Function* strcmpFunc = TheModule->getFunction("strcmp");
+				if (!strcmpFunc) {
+					std::cerr << "Error: strcmp function not found.\n";
+					return nullptr;
+				}
+				llvm::Value* strcmpCall = Builder->CreateCall(strcmpFunc, {L, R}, "strcmpCall");
+				if (node->name == "==") {
+					result = Builder->CreateICmpEQ(strcmpCall, llvm::ConstantInt::get(llvm::Type::getInt32Ty(*TheContext), 0), "eqstr");
+				} else if (node->name == "!=") {
+					result = Builder->CreateICmpNE(strcmpCall, llvm::ConstantInt::get(llvm::Type::getInt32Ty(*TheContext), 0), "neqstr");
+				}
+			} else if (lhsType->isPointerTy()) {
+				// Handle arrays and structs
+				result = compareComplexTypes(L, R, lhsType, node->name == "==");
+			} else {
+				std::cerr << "Error: Unsupported type for equality/inequality comparison.\n";
+				return nullptr;
+			}
+
+			return result;
+		}
+		return nullptr;
 
 }
 
