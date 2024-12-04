@@ -694,17 +694,17 @@ llvm::Value* expr_code_gen(ASTNode* node,std::vector<std::map<std::string, llvm:
 		if (node->name == "=") {
 			// Ensure L is a pointer
 			llvm::Type* lhsType = L->getType();
-			if (!lhsType->isPointerTy()) {
-				std::cerr << "Error: Left-hand side of assignment must be a pointer.\n";
-				return nullptr;
-			}
+			// if (!lhsType->isPointerTy()) {
+			// 	std::cerr << "Error: Left-hand side of assignment must be a pointer.\n";
+			// 	return nullptr;
+			// }
 
 			// Ensure R matches the expected type
 			llvm::Type* rhsType = R->getType();
-			if (lhsType->getPointerElementType() != rhsType) {
-				std::cerr << "Error: Type mismatch in assignment.\n";
-				return nullptr;
-			}
+			// if (lhsType->getPointerElementType() != rhsType) {
+			// 	std::cerr << "Error: Type mismatch in assignment.\n";
+			// 	return nullptr;
+			// }
 
 			// Perform the store
 			result = Builder->CreateStore(R, L);
@@ -714,38 +714,43 @@ llvm::Value* expr_code_gen(ASTNode* node,std::vector<std::map<std::string, llvm:
 
 		if (node->name == "+=" || node->name == "-=" || node->name == "*=" || node->name == "/=" || node->name == "%=") {
 			// Ensure L is a pointer and load its current value
-			llvm::Value* LValue = Builder->CreateLoad(L->getType()->getPointerElementType(), L, "loadtmp");
-			llvm::Type* lhsType = L->getType()->getPointerElementType();
-			llvm::Type* rhsType = R->getType();
-			// Check for type compatibility
-			if (lhsType != rhsType) {
-				std::cerr << "Error: Type mismatch in compound assignment.\n";
-				return nullptr;
-			}
+			// std::cout <<"step 1\n";
+			// L -> getType();
+			// std::cout <<"step 2\n";
+			// llvm::Value* LValue = Builder->CreateLoad(L->getType()->getPointerElementType(), L, "loadtmp");
+			
+			// llvm::Type* lhsType = L->getType()->getPointerElementType();
+			// std::cout <<"step 3\n";
+			// llvm::Type* rhsType = R->getType();
+			// // Check for type compatibility
+			// if (lhsType != rhsType) {
+			// 	std::cerr << "Error: Type mismatch in compound assignment.\n";
+			// 	return nullptr;
+			// }
 
 			// Perform the arithmetic operation
 			if (node->name == "+=") {
-				result = Builder->CreateAdd(LValue, R, "addtmp");
+				result = Builder->CreateAdd(L, R, "addtmp");
 			} else if (node->name == "-=") {
-				result = Builder->CreateSub(LValue, R, "subtmp");
+				result = Builder->CreateSub(L, R, "subtmp");
 			} else if (node->name == "*=") {
-				result = Builder->CreateMul(LValue, R, "multmp");
+				result = Builder->CreateMul(L, R, "multmp");
 			} else if (node->name == "/=") {
-				if (lhsType->isFloatingPointTy()) {
-					result = Builder->CreateFDiv(LValue, R, "fdivtmp");
-				} else {
-					result = Builder->CreateSDiv(LValue, R, "divtmp");
-				}
+				//if (lhsType->isFloatingPointTy()) {
+					result = Builder->CreateFDiv(L, R, "fdivtmp");
+				//} else {
+				//	result = Builder->CreateSDiv(L, R, "divtmp");
+				//}
 			} else if (node->name == "%=") {
-				if (lhsType->isIntegerTy()) {
-					result = Builder->CreateSRem(LValue, R, "modtmp");
-				} else {
-					std::cerr << "Error: Modulus operator is not supported for floating-point types.\n";
-					return nullptr;
-				}
+				//if (lhsType->isIntegerTy()) {
+					result = Builder->CreateSRem(L, R, "modtmp");
+				//} else {
+				//	std::cerr << "Error: Modulus operator is not supported for floating-point types.\n";
+				//	return nullptr;
+				//}
 			}
 			// Store the result back to L
-			Builder->CreateStore(result, L);
+			result = Builder->CreateStore(result, L);
 			return result;
 		}
 
@@ -860,46 +865,81 @@ llvm::Function* function_prototype_codegen(ASTNode* node){
 	return function;
 }
 
-llvm::BasicBlock* compound_stmt_codegen(ASTNode* node, std::vector<std::map<std::string, llvm::Value*>>& NamedValues, const std::string& function_name = "main"){
-	llvm::Function* parent_function = FunctionMap[function_name];
-	if (!parent_function) {
+
+llvm::BasicBlock* compound_stmt_codegen(ASTNode* node, std::vector<std::map<std::string, llvm::Value*>>& NamedValues, const std::string& function_name = "main") {
+    llvm::Function* parent_function = FunctionMap[function_name];
+    if (!parent_function) {
         std::cerr << "Error: Parent function is null.\n";
         return nullptr;
     }
 
-	// Create a new basic block for the compound statement
+    // Create a new basic block for the compound statement
     llvm::BasicBlock* compoundBlock = llvm::BasicBlock::Create(*TheContext, "compound", parent_function);
 
-    // Get the current insertion block
-    llvm::BasicBlock* currentBlock = Builder->GetInsertBlock();
-
     // If there is a valid insertion block, branch to the new compound block
+    llvm::BasicBlock* currentBlock = Builder->GetInsertBlock();
     if (currentBlock && !currentBlock->getTerminator()) {
+        Builder->SetInsertPoint(currentBlock);
         Builder->CreateBr(compoundBlock);
     }
 
-    // Set the builder's insertion point to the new compound block
+    // Set the builder's insertion point to the compound block
     Builder->SetInsertPoint(compoundBlock);
 
     // Push a new scope for the compound statement
     NamedValues.push_back({});
 
-	ASTNode* curr_stmt = node -> children[0];
-	while(curr_stmt){
-		curr_stmt -> codegen(NamedValues, function_name);
-		curr_stmt = curr_stmt -> next;
-	}
-	// Pop the scope after processing the compound statement
+    ASTNode* curr_stmt = node->children[0];
+    while (curr_stmt) {
+        if (curr_stmt->kind == compound_stmt) {
+            // Generate nested compound statements
+            llvm::BasicBlock* nestedCompound = compound_stmt_codegen(curr_stmt, NamedValues, function_name);
+        } else {
+            // Generate code for individual statements
+            curr_stmt->codegen(NamedValues, function_name);
+        }
+        curr_stmt = curr_stmt->next;
+    }
+
+    // Pop the scope after processing the compound statement
     NamedValues.pop_back();
 
-    // Return the created basic block
+    llvm::BasicBlock* post_compound = llvm::BasicBlock::Create(*TheContext, "compound", parent_function);
+	Builder -> CreateBr(post_compound);
+	Builder -> SetInsertPoint(post_compound);
+	
+
     return compoundBlock;
 }
+
+
+
+
+
+void function_body_codegen(ASTNode* node, std::vector<std::map<std::string, llvm::Value*>>& NamedValues, const std::string& function_name = "main") {
+    llvm::Function* parent_function = FunctionMap[function_name];
+    if (!parent_function) {
+        std::cerr << "Error: Parent function is null.\n";
+    }
+
+    // Push a new scope for the compound statement
+    NamedValues.push_back({});
+
+    ASTNode* curr_stmt = node->children[0];
+    while (curr_stmt) {
+        curr_stmt->codegen(NamedValues, function_name);
+        curr_stmt = curr_stmt->next;
+    }
+
+    // Pop the scope after processing the compound statement
+    NamedValues.pop_back();
+}
+
 
 llvm::Function* function_declaration_codegen(ASTNode* node){
 	llvm::Function* function;
 	if(FunctionMap.find(node -> name) == FunctionMap.end()){
-		function= function_prototype_codegen(node);
+		function = function_prototype_codegen(node);
 	}
 	else{
 		function = FunctionMap[node -> name];
@@ -908,15 +948,19 @@ llvm::Function* function_declaration_codegen(ASTNode* node){
         std::cerr << "Error: Could not create function prototype.\n";
         return nullptr;
     }
+	// Save the current builder insertion point
+    llvm::IRBuilder<>::InsertPoint savedInsertionPoint = Builder->saveIP();
 	// Create the entry basic block
     llvm::BasicBlock* entry = llvm::BasicBlock::Create(*TheContext, "entry", function);
-	// Set the IRBuilder's insertion point to the entry block
     Builder->SetInsertPoint(entry);
 
-	std::vector<std::map<std::string, llvm::Value*>> NamedValues;
+    std::vector<std::map<std::string, llvm::Value*>> NamedValues;
 
-	compound_stmt_codegen(node->children[1], NamedValues, node -> name);
+    // Generate code for the function's compound statement
+    function_body_codegen(node->children[1], NamedValues, node->name);
 
+	// Restore the saved insertion point
+    Builder->restoreIP(savedInsertionPoint);
     return function;
 
 }
@@ -963,13 +1007,39 @@ void addMainFunction(ASTNode* node, std::vector<std::map<std::string, llvm::Valu
 // 	for(auto& argNode: node -> children)
 // }
 
+llvm::BasicBlock* selective_body_codegen(ASTNode* node, std::vector<std::map<std::string, llvm::Value*>>& NamedValues, const std::string& function_name = "main") {
+    llvm::Function* parent_function = FunctionMap[function_name];
+    if (!parent_function) {
+        std::cerr << "Error: Parent function is null.\n";
+        return nullptr;
+    }
+
+    // Push a new scope for the compound statement
+    NamedValues.push_back({});
+
+    ASTNode* curr_stmt = node->children[0];
+    while (curr_stmt) {
+        if (curr_stmt->kind == compound_stmt) {
+            // Generate nested compound statements
+            llvm::BasicBlock* nestedCompound = compound_stmt_codegen(curr_stmt, NamedValues, function_name);
+        } else {
+            // Generate code for individual statements
+            curr_stmt->codegen(NamedValues, function_name);
+        }
+        curr_stmt = curr_stmt->next;
+    }
+
+    // Pop the scope after processing the compound statement
+    NamedValues.pop_back();
+
+	
+
+}
+
 llvm::Value* selective_stmt_codegen(ASTNode* node, std::vector<std::map<std::string, llvm::Value*>>& NamedValues, const std::string& function_name = "main"){
 	
 	llvm::Function* parent_function = FunctionMap[function_name];
 
-	llvm::BasicBlock* ifBlock = llvm::BasicBlock::Create(*TheContext, "if", parent_function);
-	llvm::BasicBlock* elseBlock = llvm::BasicBlock::Create(*TheContext, "else", parent_function);
-	llvm::BasicBlock* endBlock = llvm::BasicBlock::Create(*TheContext, "end if", parent_function);
 	ASTNode* selection_node = node;
 	ASTNode* if_node = node -> children[0];
 	ASTNode* else_node;
@@ -982,17 +1052,21 @@ llvm::Value* selective_stmt_codegen(ASTNode* node, std::vector<std::map<std::str
     } else if (condition->getType()->isIntegerTy()) {
         condition = Builder->CreateICmpNE(condition, llvm::ConstantInt::get(condition->getType(), 0), "ifcond");
     }
+	llvm::BasicBlock* ifBlock = llvm::BasicBlock::Create(*TheContext, "if", parent_function);
+	llvm::BasicBlock* elseBlock = llvm::BasicBlock::Create(*TheContext, "else", parent_function);
 
 	Builder -> CreateCondBr(condition, ifBlock, elseBlock);
-
+	llvm::BasicBlock* endBlock = llvm::BasicBlock::Create(*TheContext, "end if", parent_function);
 	Builder -> SetInsertPoint(ifBlock);
-	if_node->children[1]->codegen(NamedValues, function_name);
+	selective_body_codegen(if_node -> children[1], NamedValues, function_name);
 	Builder->CreateBr(endBlock);
 	Builder -> SetInsertPoint(elseBlock);
 	if(else_node){
-		else_node ->children[0]  -> codegen(NamedValues, function_name);
+		selective_body_codegen(else_node -> children[0], NamedValues, function_name);
+		Builder-> CreateBr(endBlock);
 	}
-	Builder-> CreateBr(endBlock);
+	
+	
 	Builder->SetInsertPoint(endBlock);
 	return nullptr;
 }
@@ -1004,6 +1078,7 @@ llvm::Value* iterative_stmt_codegen(ASTNode* node, std::vector<std::map<std::str
         std::cerr << "Error: Parent function is null.\n";
         return nullptr;
     }
+	
 
     // Create blocks for the loop
     llvm::BasicBlock* initBlock = llvm::BasicBlock::Create(*TheContext, "for.init", parent_function);
@@ -1128,6 +1203,17 @@ llvm::Value* accessStructMember(ASTNode* node, std::vector<std::map<std::string,
     return Builder->CreateLoad(memberPtr->getType()->getPointerElementType(), memberPtr, memberName);
 }
 
+llvm::Value*function_call_codegen(ASTNode* node, std::vector<std::map<std::string, llvm::Value*>>& NamedValues, const std::string& function_name = "main"){
+	std::string called_func_name = node -> name;
+	llvm::Function* called_func = TheModule -> getFunction(called_func_name);
+	std::vector<llvm::Value*>args;
+	for(ASTNode* arg_node: node -> children[0] -> children){
+		llvm::Value* arg = arg_node-> codegen(NamedValues, function_name);
+		args.push_back(arg);
+	}
+	return Builder -> CreateCall(called_func ,args, "calltmp");
+	
+}
 
 llvm::Value* ASTNode::codegen(std::vector<std::map<std::string, llvm::Value*>>& NamedValues, const std::string& function_name = "main") {
     switch(this -> kind){
@@ -1175,7 +1261,9 @@ llvm::Value* ASTNode::codegen(std::vector<std::map<std::string, llvm::Value*>>& 
 		case iterative_stmt:
 			iterative_stmt_codegen(this, NamedValues, function_name);
 			break;
-
+		case function_call_stmt:	
+			function_call_codegen(this, NamedValues, function_name);
+			break;
 		
 		
         default:

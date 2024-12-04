@@ -1,0 +1,6 @@
+func xx int (){
+    int x;
+    return 1;
+}
+
+xx();
