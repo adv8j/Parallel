@@ -1,2 +1,0 @@
-are we allowing default args in funcs 
-and are we allowing default args for struct
