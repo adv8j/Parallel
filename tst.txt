@@ -62,15 +62,11 @@ else{
 
     @Properties{
         @Order{
-            all -> t1 ;
+            all -> t1 ->t2;
         }
         @Shared{
             x,y, z, sdfi: int -> t2,t3, t4;
             sf: char -> t4,t5, t6;
         }
-        @Mem{
-            x,y,z -> t2, t3 mut;
-        }
-
     }
 };

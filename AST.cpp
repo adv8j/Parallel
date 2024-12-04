@@ -146,7 +146,8 @@ std::ostream &operator<<(std::ostream &os, const ASTNode *node)
 		os << ": ";
 		if ((node->type).reference)
 			os << "&";
-		os << dtype_strings[node->type.type] << " " << node->type.name;
+		os << node->type << std::endl;
+
 		break;
 	case channel_stmt:
 		os << ": " << node->name << std::endl;

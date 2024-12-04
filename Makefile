@@ -16,7 +16,7 @@ all: build
 
 run: build
 	@./parser.out $(debug) --ast< $(input);
-	exit 0;
+	@exit 0;
 
 
 build_lex_tests:

@@ -9,7 +9,9 @@
 
 int num_loops = 0;
 std::string scope_name = "";
-int yy_sem_error(const std::string msg);
+std::unordered_set<std::string> forbidden_names;
+std::vector<std::string> code_lines;
+int yy_sem_error(const std::string msg, int row_num , int col_num );
 
 int yy_sem_warning(const std::string msg);
 

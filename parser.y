@@ -983,6 +983,8 @@ wait_statement: CHANNEL_WAIT LBRACE IDENTIFIER COMMA expression RBRACE
 taskgroup_statement: TASKGROUP IDENTIFIER taskgroup_declaration_list LBRACE taskgroup_definition RBRACE SEMICOLON{
         $$ = $5;
         $$->name = $2->name;
+        $$->line_number = $1->line_number;
+        $$->col_number = $1->col_number;
     }
 	;  // this non-terminal is for @TaskGroup t1{ taskgroup_definition}
 
@@ -1020,12 +1022,16 @@ task_declaration_list: task_declaration_list task_declaration{
 task_declaration: TASK IDENTIFIER task_argument LBRACE task_statement_list RBRACE{
         $$ = new ASTNode(task_stmt);
         $$->name = $2->name;
+        $$->line_number = $1->line_number;
+        $$->col_number = $1->col_number;
         $$->add_child($5);
     }
     | SUPERVISOR IDENTIFIER LBRACE supervisor_statement_list RBRACE{
 
         $$ = new ASTNode(supervisor_stmt);
         $$->name = $2->name;
+        $$->line_number = $1->line_number;
+        $$->col_number = $1->col_number;
         $$->add_child($4);
     }
     | error RPAREN { $$ = new ASTNode(syntax_error_stmt);yyerrok;}
@@ -1105,6 +1111,8 @@ taskgroup_property : order_block {$$ = $1;}
 
 order_block: ORDER LBRACE order_rule_list RBRACE{
         $$ = new ASTNode(properties_stmt, "order");
+        $$->line_number = $1->line_number;
+        $$->col_number = $1->col_number;
         $$->convert_to_children($3);
     }
     | error SEMICOLON {  $$ = new ASTNode(syntax_error_stmt);yyerrok; }
@@ -1123,7 +1131,14 @@ order_rule: order_rule_start order_rule_mid order_rule_end {
         $$ = new ASTNode(order_rule);
         if($1 != NULL){
             $$->add_child($1);
+            $$->line_number = $1->line_number;
+            $$->col_number = $1->col_number;
         }
+        else{
+            $$->line_number = $2->line_number;
+            $$->col_number = $2->col_number;
+        }
+        
 
         $$->convert_to_children($2);
 
@@ -1136,6 +1151,8 @@ order_rule: order_rule_start order_rule_mid order_rule_end {
 order_rule_start: ALL ARROW{
         $$ = new ASTNode(order_node);
         ASTNode* x = new ASTNode(task_t, "all");
+        $$->line_number = $1->line_number;
+        $$->col_number = $1->col_number;
         $$->add_child(x);
     }
     |{ $$ = NULL;}
@@ -1143,7 +1160,7 @@ order_rule_start: ALL ARROW{
     // ALL ->m
 
 order_rule_mid: order_rule_mid ARROW non_struct_identifier_list {
-        $$ = $1;   
+        $$ = $1;  
         ASTNode* x = new ASTNode(order_node);
         x->convert_to_children($3);
         for(ASTNode* child: x->children){
@@ -1153,6 +1170,8 @@ order_rule_mid: order_rule_mid ARROW non_struct_identifier_list {
     }
     | non_struct_identifier_list {
         $$ = new ASTNode(order_node);
+        $$->line_number = $1->line_number;
+        $$->col_number = $1->col_number;
         $$->convert_to_children($1);
         for(ASTNode* child: $$->children){
             child->kind = task_t;
@@ -1173,6 +1192,8 @@ non_struct_identifier_list: non_struct_identifier_list COMMA IDENTIFIER{
 
 order_rule_end: ARROW ALL SEMICOLON  {
         $$ = new ASTNode(order_node);
+        $$->line_number = $2->line_number;
+        $$->col_number = $2->col_number;
         ASTNode* x = new ASTNode(task_t, "all");
         $$->add_child(x);
     }
@@ -1180,6 +1201,8 @@ order_rule_end: ARROW ALL SEMICOLON  {
     ;
 
 shared_block: SHARED_DIRECTIVE LBRACE shared_rule_list RBRACE{
+        $$->line_number = $1->line_number;
+        $$->col_number = $1->col_number;
         $$ = new ASTNode(properties_stmt, "shared");
         $$->convert_to_children($3);
     }
@@ -1198,7 +1221,11 @@ shared_rule_list: shared_rule_list shared_rule {
 shared_rule: non_struct_identifier_list COLON dtype ARROW non_struct_identifier_list SEMICOLON    {
         $$ = new ASTNode(shared_rule, $3->type);
         ASTNode* left = new ASTNode(shared_node);
+        left->line_number = $1->line_number;
+        left->col_number = $1->col_number;
         ASTNode* right = new ASTNode(shared_node);
+        right->line_number = $1->line_number;
+        right->col_number = $1->col_number;
         left->convert_to_children($1);
         for(ASTNode* child: left->children){
             child->kind = variable_t;
@@ -1207,6 +1234,8 @@ shared_rule: non_struct_identifier_list COLON dtype ARROW non_struct_identifier_
         for(ASTNode* child: right->children){
             child->kind = task_t;
         }
+        $$->line_number = $1->line_number;
+        $$->col_number = $1->col_number;
         $$->add_child(left);
         $$->add_child(right);
     }
@@ -1216,10 +1245,14 @@ shared_rule: non_struct_identifier_list COLON dtype ARROW non_struct_identifier_
     // IDENTIFIER : dtype -> IDENTIFIER
 
 mem_block: MEM LBRACE mem_statement_list RBRACE{
+    $$->line_number = $1->line_number;
+        $$->col_number = $1->col_number;
         $$ = new ASTNode(properties_stmt, "mem");
         $$->convert_to_children($3);
     }
     |	MEM UNSAFE LBRACE mem_statement_list RBRACE{
+        $$->line_number = $1->line_number;
+        $$->col_number = $1->col_number;
         $$ = new ASTNode(properties_stmt, "mem");
         $$->metadata.push_back("unsafe");
         $$->convert_to_children($4);
@@ -1354,6 +1387,7 @@ int main(int argc, char** argv) {
         }
     }
     root = new ASTNode();
+    
 	yyparse();
     SymbolTable* st = new SymbolTable();
     /* sem_test(root, st, st); */
@@ -1362,12 +1396,12 @@ int main(int argc, char** argv) {
     if(ast)
         traverse(root);
 
-    InitializeModule();
+    /* InitializeModule();
     static std::vector<std::map<std::string, llvm::Value*>> MainNamedValues;
     addMainFunction(root, MainNamedValues);
 
 
-    TheModule->print(llvm::outs(), nullptr);
+    TheModule->print(llvm::outs(), nullptr); */
     //outputIR("codegen_output.txt");
     return num_errs;
 }

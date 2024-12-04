@@ -22,8 +22,6 @@
 #include "llvm/IR/Verifier.h"
 
 
-int yy_sem_error(const std::string);
-int yy_sem_warning(const std::string);
 
 enum entry_type
 {

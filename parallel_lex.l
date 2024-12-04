@@ -114,27 +114,27 @@ int num_errs = 0;
 
 &                { process_text(yytext); yylval = new ASTNode(operator_t, "&", yylineno, cur_char);return REFERENCE;}
 	
-@TaskGroup  { process_text(yytext); return TASKGROUP;}
+@TaskGroup  { process_text(yytext); yylval = new ASTNode(keyword, "", yylineno, cur_char);return TASKGROUP;}
 
-@Task      { process_text(yytext); return TASK;}
+@Task      { process_text(yytext); yylval = new ASTNode(keyword, "", yylineno, cur_char); return TASK;}
 
-@Properties { process_text(yytext); return PROPERTIES;}
+@Properties { process_text(yytext);yylval = new ASTNode(keyword, "", yylineno, cur_char); return PROPERTIES;}
 
-@Order   { process_text(yytext); return ORDER;}
+@Order   { process_text(yytext); yylval = new ASTNode(keyword, "", yylineno, cur_char);return ORDER;}
 
-@Mem    { process_text(yytext); return MEM;}
+@Mem    { process_text(yytext); yylval = new ASTNode(keyword, "", yylineno, cur_char);return MEM;}
 
-@Shared { process_text(yytext); return SHARED_DIRECTIVE;}
+@Shared { process_text(yytext);yylval = new ASTNode(keyword, "", yylineno, cur_char); return SHARED_DIRECTIVE;}
 
-@Supervisor { process_text(yytext); return SUPERVISOR;}
+@Supervisor { process_text(yytext); yylval = new ASTNode(keyword, "", yylineno, cur_char); return SUPERVISOR;}
 
-all { process_text(yytext); return ALL;}
+all { process_text(yytext);yylval = new ASTNode(keyword, "", yylineno, cur_char); return ALL;}
 
-unsafe { process_text(yytext); return UNSAFE;}
+unsafe { process_text(yytext); yylval = new ASTNode(keyword, "", yylineno, cur_char);return UNSAFE;}
 
-join { process_text(yytext); return JOIN;}
+join { process_text(yytext);yylval = new ASTNode(keyword, "", yylineno, cur_char); return JOIN;}
   
-call      { process_text(yytext); return CALL;}
+call      { process_text(yytext); yylval = new ASTNode(keyword, "", yylineno, cur_char);return CALL;}
 
 
 \<-                { process_text(yytext); return CHN_SEND;}
