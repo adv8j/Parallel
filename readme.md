@@ -48,7 +48,6 @@ Currently we are trying to complete Code generation
 
 
 
-
 ## Prerequisites:
 Before running or building the project, ensure the following tools are installed:
 

@@ -1,0 +1,12 @@
+struct person{
+    int age;
+    float salary;
+};
+
+struct person pearson;
+int x = 1;
+float y = 2.5, j = 9.9;
+string str = "apple";
+long m = 99999999;
+bool check = true;
+string[10][2] str_arr;

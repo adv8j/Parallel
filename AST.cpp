@@ -534,6 +534,7 @@ llvm::Value* equality_codegen_element(llvm::Value* L, llvm::Value* R, llvm::Type
 
 
 llvm::Value* expr_code_gen(ASTNode* node,std::vector<std::map<std::string, llvm::Value*>>& NamedValues, const std::string& function_name){
+	if(node == nullptr)	return nullptr;
 	llvm::Value* L = (node -> children)[0] -> codegen(NamedValues, function_name);
 	llvm::Value* R = (node -> children)[1] -> codegen(NamedValues, function_name);
 	llvm::Value* result = nullptr;
@@ -690,17 +691,39 @@ llvm::Value* expr_code_gen(ASTNode* node,std::vector<std::map<std::string, llvm:
 			}
 		}
 
-		if(node -> name == "="){
+		if (node->name == "=") {
+			// Ensure L is a pointer
+			llvm::Type* lhsType = L->getType();
+			if (!lhsType->isPointerTy()) {
+				std::cerr << "Error: Left-hand side of assignment must be a pointer.\n";
+				return nullptr;
+			}
+
+			// Ensure R matches the expected type
+			llvm::Type* rhsType = R->getType();
+			if (lhsType->getPointerElementType() != rhsType) {
+				std::cerr << "Error: Type mismatch in assignment.\n";
+				return nullptr;
+			}
+
+			// Perform the store
 			result = Builder->CreateStore(R, L);
-        	return result;
+			return result;
 		}
 
-		if(node -> name == "+=" || node -> name == "-=" || node -> name == "*=" || node -> name == "/=" || node -> name == "%="){
-			llvm::Value* LValue= Builder->CreateLoad(L->getType()->getPointerElementType(), L, "loadtmp");
-			llvm::Type* lhsType = L->getType();
-    		llvm::Type* rhsType = R->getType();
 
-			// Handle compound assignment operators
+		if (node->name == "+=" || node->name == "-=" || node->name == "*=" || node->name == "/=" || node->name == "%=") {
+			// Ensure L is a pointer and load its current value
+			llvm::Value* LValue = Builder->CreateLoad(L->getType()->getPointerElementType(), L, "loadtmp");
+			llvm::Type* lhsType = L->getType()->getPointerElementType();
+			llvm::Type* rhsType = R->getType();
+			// Check for type compatibility
+			if (lhsType != rhsType) {
+				std::cerr << "Error: Type mismatch in compound assignment.\n";
+				return nullptr;
+			}
+
+			// Perform the arithmetic operation
 			if (node->name == "+=") {
 				result = Builder->CreateAdd(LValue, R, "addtmp");
 			} else if (node->name == "-=") {
@@ -721,10 +744,11 @@ llvm::Value* expr_code_gen(ASTNode* node,std::vector<std::map<std::string, llvm:
 					return nullptr;
 				}
 			}
+			// Store the result back to L
 			Builder->CreateStore(result, L);
-
-    		return result;
+			return result;
 		}
+
 
 		if(node -> name == "==" || node -> name == "!="){
 			llvm::Type* lhsType = L->getType();
@@ -973,9 +997,52 @@ llvm::Value* selective_stmt_codegen(ASTNode* node, std::vector<std::map<std::str
 	return nullptr;
 }
 
-llvm::Value* iterative_stmt_codegen(ASTNode* node, std::vector<std::map<std::string, llvm::Value*>>& NamedValues, const std::string& function_name = "main"){
-	
+//TODO: this is only for `for loop`
+llvm::Value* iterative_stmt_codegen(ASTNode* node, std::vector<std::map<std::string, llvm::Value*>>& NamedValues, const std::string& function_name = "main") {
+    llvm::Function* parent_function = FunctionMap[function_name];
+    if (!parent_function) {
+        std::cerr << "Error: Parent function is null.\n";
+        return nullptr;
+    }
+
+    // Create blocks for the loop
+    llvm::BasicBlock* initBlock = llvm::BasicBlock::Create(*TheContext, "for.init", parent_function);
+    llvm::BasicBlock* condBlock = llvm::BasicBlock::Create(*TheContext, "for.cond", parent_function);
+    llvm::BasicBlock* bodyBlock = llvm::BasicBlock::Create(*TheContext, "for.body", parent_function);
+    llvm::BasicBlock* stepBlock = llvm::BasicBlock::Create(*TheContext, "for.step", parent_function);
+    llvm::BasicBlock* endBlock = llvm::BasicBlock::Create(*TheContext, "for.end", parent_function);
+    // Emit the initialization statement
+    Builder->CreateBr(initBlock);
+    Builder->SetInsertPoint(initBlock);
+    node->children[0] -> children[0]->codegen(NamedValues, function_name); // Initialization statement
+    Builder->CreateBr(condBlock);
+
+    // Emit the condition check
+    Builder->SetInsertPoint(condBlock);
+    llvm::Value* condition = node->children[0] -> children[1]->codegen(NamedValues, function_name); // Condition
+    if (condition->getType()->isFloatingPointTy()) {
+        condition = Builder->CreateFCmpONE(condition, llvm::ConstantFP::get(condition->getType(), 0.0), "forcond");
+    } else if (condition->getType()->isIntegerTy()) {
+        condition = Builder->CreateICmpNE(condition, llvm::ConstantInt::get(condition->getType(), 0), "forcond");
+    }
+    Builder->CreateCondBr(condition, bodyBlock, endBlock);
+
+    // Emit the body of the loop
+    Builder->SetInsertPoint(bodyBlock);
+    node->children[1]->codegen(NamedValues, function_name); // Loop body
+    Builder->CreateBr(stepBlock);
+
+    // Emit the increment (step)
+    Builder->SetInsertPoint(stepBlock);
+    node->children[0] -> children[2]->codegen(NamedValues, function_name); // Step
+    Builder->CreateBr(condBlock);
+
+    // Emit the end of the loop
+    Builder->SetInsertPoint(endBlock);
+
+    return nullptr;
 }
+
 
 llvm::Value* accessArrayElement(ASTNode* node, std::vector<std::map<std::string, llvm::Value*>>& NamedValues, const std::string& function_name = "main") {
     // Get the base pointer of the array
@@ -1027,7 +1094,6 @@ llvm::Value* accessVariable(ASTNode* node, std::vector<std::map<std::string, llv
         std::cerr << "Error: Variable " << node->name << " not found in current scope.\n";
         return nullptr;
     }
-	return nullptr;
     // Load the variable value
     return Builder->CreateLoad(varPtr->getType()->getPointerElementType(), varPtr, node->name);
 }
@@ -1064,7 +1130,6 @@ llvm::Value* accessStructMember(ASTNode* node, std::vector<std::map<std::string,
 
 
 llvm::Value* ASTNode::codegen(std::vector<std::map<std::string, llvm::Value*>>& NamedValues, const std::string& function_name = "main") {
-
     switch(this -> kind){
         case struct_decl:
             struct_decl_codegen(this);
@@ -1107,7 +1172,9 @@ llvm::Value* ASTNode::codegen(std::vector<std::map<std::string, llvm::Value*>>& 
         case identifier_chain:
             // Handle struct member access (dot access)
             return accessStructMember(this, NamedValues, function_name);
-
+		case iterative_stmt:
+			iterative_stmt_codegen(this, NamedValues, function_name);
+			break;
 
 		
 		

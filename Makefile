@@ -33,3 +33,7 @@ yacc_tests: build
 
 clean:
 	rm -f y.tab.c y.tab.h lex.yy.c parser.out ./test/lex/lex_tester.out ./test/lex/token_header.out
+
+code_gen_test:
+	@./parser.out $(debug) --ast< codegen_test_input/$(input);
+	exit 0;
