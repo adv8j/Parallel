@@ -16,7 +16,6 @@ int k = a.b.c;
 u = z + 5 - 7 * 5*(--5);
 char y = u + 5 - 'a';
 
-struct hello u = {'a', 'b', 'c'};
 
 
 int[5] h = {1,2,3,4, {'a', u, 5}};

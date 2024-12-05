@@ -1401,16 +1401,23 @@ int main(int argc, char** argv) {
 
     
 
-    if(codegen && num_errs + sem_errors == 0)
-    {
-
+    if(codegen && num_errs + sem_errors == 0){
         InitializeModule();
-        static std::vector<std::map<std::string, llvm::Value*>> MainNamedValues;
-        addMainFunction(root, MainNamedValues);
+    static std::vector<std::map<std::string, llvm::Value*>> MainNamedValues;
+    addMainFunction(root, MainNamedValues);  // Assuming root is the AST or some data structure.
 
+    // Open the output file for writing the IR (LLVM Intermediate Representation)
+    std::error_code EC;
+    llvm::raw_fd_ostream output("codegen.ll", EC, llvm::sys::fs::OF_None);
+    
+    // Check if there was an error opening the file
+    if (EC) {
+        llvm::errs() << "Error opening file: " << EC.message() << "\n";
+        return -1;
+    }
 
-        TheModule->print(llvm::outs(), nullptr);
-        outputIR("codegen.ll");
+    // Print the module to the file
+    TheModule->print(output, nullptr);
     }
     return num_errs;
 }

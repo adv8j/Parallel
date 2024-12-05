@@ -38,8 +38,8 @@ yacc_tests: build
 	@bash test/parser/yacc_tester.sh $(PRINT_OUT);
 
 clean:
-	rm -f y.tab.c y.tab.h lex.yy.c parser.out ./test/lex/lex_tester.out ./test/lex/token_header.out
+	rm -f y.tab.c y.tab.h lex.yy.c parser.out ./test/lex/lex_tester.out ./test/lex/token_header.out codegen.ll 
 
 code_gen_test:
 	@./parser.out $(debug) --ast< codegen_test_input/$(input);
-	exit 0;
+	@exit 0;
