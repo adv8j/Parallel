@@ -5,18 +5,24 @@ LLVM_FLAGS = `llvm-config --cxxflags --ldflags --system-libs --libs core support
 
 TARGET = parser.out
 
+# Capture options passed to make
+ast := false
+debug := false
+codegen := true
+
+# Capture all flags passed to make (like --ast, --debug, --codegen)
+FLAGS := $(if $(filter true,$(ast)),--ast) $(if $(filter true,$(debug)),--debug) $(if $(filter true,$(codegen)),--codegen)
+
 # Build parser and lexer
 build: parser.y parallel_lex.l AST.cpp symbol_table.cpp semantics.cpp 
 	yacc -dtv parser.y
 	lex $(LEXFLAGS) parallel_lex.l
 	$(CXX) $(CXXFLAGS) y.tab.c $(LLVM_FLAGS) -o $(TARGET)
 
-all: build
-	./parser.out --ast
 
 run: build
-	@./parser.out $(debug) --ast< $(input);
-	@exit 0;
+	@./parser.out $(FLAGS) < $(input)
+	@exit 0
 
 
 build_lex_tests:

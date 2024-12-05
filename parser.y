@@ -1376,6 +1376,7 @@ identifier_list: identifier_list COMMA IDENTIFIER
 %%
 int main(int argc, char** argv) {
     int ast = 0;
+    int codegen = 0;
     if(argc > 1) {
         
         for(int i = 1; i < argc; i++) {
@@ -1384,6 +1385,8 @@ int main(int argc, char** argv) {
                 yydebug = 1;
             if(query == "--ast")
                 ast = 1;
+            if(query == "--codegen")
+                codegen = 1;
         }
     }
     root = new ASTNode();
@@ -1396,13 +1399,19 @@ int main(int argc, char** argv) {
     if(ast)
         traverse(root);
 
-    /* InitializeModule();
-    static std::vector<std::map<std::string, llvm::Value*>> MainNamedValues;
-    addMainFunction(root, MainNamedValues);
+    
+
+    if(codegen && num_errs + sem_errors == 0)
+    {
+
+        InitializeModule();
+        static std::vector<std::map<std::string, llvm::Value*>> MainNamedValues;
+        addMainFunction(root, MainNamedValues);
 
 
-    TheModule->print(llvm::outs(), nullptr); */
-    //outputIR("codegen_output.txt");
+        TheModule->print(llvm::outs(), nullptr);
+        outputIR("codegen.ll");
+    }
     return num_errs;
 }
 
