@@ -23,13 +23,13 @@ make run input=codegen_test.txt
 ```
 
 ### Supported Flags:
-- `debug=1`: To enable debugging mode, where we can see the parsing stack and token details on each input consumed.
-- `ast=1`: To print the Abstract Syntax Tree (AST) after parsing(annotated with the node type).
-- `codegen=1`: To generate the LLVM IR code after parsing and semantic analysis in `codegen.ll` file.
+- `debug=true`: To enable debugging mode, where we can see the parsing stack and token details on each input consumed.
+- `ast=true`: To print the Abstract Syntax Tree (AST) after parsing(annotated with the node type).
+- `codegen=true`: To generate the LLVM IR code after parsing and semantic analysis in `codegen.ll` file.
 
 Example:
 ```bash
-make run input=codegen_test.txt debug=1 ast=1 codegen=1
+make run input=codegen_test.txt debug=true ast=true codegen=true
 ```
 
 
@@ -79,7 +79,7 @@ This will:
 
 2. To execute the parser after building it, use: 
 ```bash
-make run input=<input-file> ast=1 debug=0 codegen=1
+make run input=<input-file> ast=true debug=0 codegen=true
 ```
 
 3. To remove all generated files, run:
