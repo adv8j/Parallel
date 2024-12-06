@@ -1586,10 +1586,10 @@ void handle_statement(ASTNode *node, SymbolTable *current, SymbolTable *global)
 		}
 		new_table->next = nullptr;
 		delete new_table;
+		break;
 	}
 	case channel_stmt:
 	{
-		std::cout << "Checking channel statement" << std::endl;
 		for (ASTNode *thisNode : node->children)
 		{
 			second_pass(thisNode, current, global);
@@ -1599,7 +1599,6 @@ void handle_statement(ASTNode *node, SymbolTable *current, SymbolTable *global)
 	}
 	case parallel_stmt:
 	{
-		std::cout << "Checking parallel statement" << std::endl;
 		for (ASTNode *thisNode : node->children)
 		{
 			if ((thisNode->kind == variable_t))
